@@ -1,0 +1,19 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Bikes collection
+    match /bikes/{bikeId} {
+      allow read, write: if true;
+
+      // Service subcollection
+      match /services/{serviceId} {
+        allow read, write: if true;
+      }
+
+      // Notes subcollection
+      match /notes/{noteId} {
+        allow read, write: if true;
+      }
+    }
+  }
+}

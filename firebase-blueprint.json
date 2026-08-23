@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Bike Service Log Book Firestore Blueprint",
+  "description": "Firestore database blueprint schema for Pulsar N160 bike service logs and maintenance tracking",
+  "entities": {
+    "bikes": {
+      "title": "Bike Document",
+      "description": "Vehicle details, odometer, and target intervals for a registered motorcycle",
+      "type": "object",
+      "properties": {
+        "owner": { "type": "string", "description": "Name of the vehicle owner" },
+        "model": { "type": "string", "description": "Motorcycle make and model" },
+        "colour": { "type": "string", "description": "Color variant" },
+        "regNo": { "type": "string", "description": "Registration number (e.g., BKT-1374)" },
+        "chassisNo": { "type": "string", "description": "Vehicle VIN/Chassis number" },
+        "engineNo": { "type": "string", "description": "Engine serial number" },
+        "bookNo": { "type": "string", "description": "Service book serial number" },
+        "odometer": { "type": "number", "description": "Current total odometer reading in kilometers" },
+        "targets": { "type": "array", "items": { "type": "number" }, "description": "Target kilometers for future service milestones" },
+        "serviceInterval": { "type": "number", "description": "Periodic service distance interval in kilometers" },
+        "userId": { "type": "string", "description": "Auth UID of the owner or creator" },
+        "updatedAt": { "type": "string", "description": "ISO timestamp of last update" }
+      },
+      "required": ["regNo", "odometer"]
+    },
+    "bikes/{bikeId}/services": {
+      "title": "Service Record",
+      "description": "Official maintenance or periodic service log entry",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique service record ID" },
+        "label": { "type": "string", "description": "Service label (e.g. 1st Service, 4th Service)" },
+        "date": { "type": "string", "description": "Date formatted YYYY-MM-DD" },
+        "km": { "type": "number", "description": "Odometer reading at service time" },
+        "dealer": { "type": "string", "description": "Authorized dealer or workshop name" },
+        "note": { "type": "string", "description": "Work performed, remarks, parts changed" },
+        "cost": { "type": "number", "description": "Total cost of service in currency units" },
+        "partsReplaced": { "type": "array", "items": { "type": "string" }, "description": "List of parts or consumables replaced" },
+        "locked": { "type": "boolean", "description": "Whether this record is a locked verified entry" },
+        "createdAt": { "type": "string", "description": "Creation timestamp" }
+      },
+      "required": ["label", "date", "km"]
+    },
+    "bikes/{bikeId}/notes": {
+      "title": "Maintenance Note",
+      "description": "Intermediate garage maintenance logs (chain, wash, tire pressure)",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique note ID" },
+        "text": { "type": "string", "description": "Note description" },
+        "date": { "type": "string", "description": "Date formatted YYYY-MM-DD" },
+        "km": { "type": "number", "description": "Optional odometer reading at time of note" },
+        "category": { "type": "string", "description": "Category (chain, oil, tyre, wash, brake, electrical, general)" },
+        "createdAt": { "type": "string", "description": "Creation timestamp" }
+      },
+      "required": ["text", "date"]
+    }
+  }
+}
