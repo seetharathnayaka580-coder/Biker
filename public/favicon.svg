@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <style>
+    @keyframes ride {
+      0% { transform: translateY(0px) rotate(0deg); }
+      25% { transform: translateY(-3px) rotate(-2deg); }
+      50% { transform: translateY(0px) rotate(0deg); }
+      75% { transform: translateY(-2px) rotate(1deg); }
+      100% { transform: translateY(0px) rotate(0deg); }
+    }
+    .bike { 
+      animation: ride 0.5s infinite linear; 
+      transform-origin: center; 
+    }
+  </style>
+  <text class="bike" y=".9em" font-size="80" x="50" text-anchor="middle">🏍️</text>
+</svg>
