@@ -159,7 +159,7 @@ export default function App() {
     downloadAnchor.remove();
   };
 
-  const handleImportData = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImportData = (e: React.ChangeEvent<HTMLInputElement>) => {
     const fileReader = new FileReader();
     if (e.target.files && e.target.files[0]) {
       fileReader.readAsText(e.target.files[0], 'UTF-8');
@@ -194,7 +194,7 @@ export default function App() {
   };
 
   const handleResetToDefaults = async () => {
-    if (window.confirm('Reset service log book to verified factory initial state and resync with Firebase?')) {
+    if (globalThis.confirm('Reset service log book to verified factory initial state and resync with Firebase?')) {
       const reset = JSON.parse(JSON.stringify(SEED_STATE));
       setState(reset);
       saveState(reset);

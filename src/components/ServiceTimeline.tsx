@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { History, Lock, Trash2, Calendar, MapPin, Wrench, Search, CheckCircle, Tag, DollarSign } from 'lucide-react';
+import { History, Lock, Trash2, Calendar, MapPin, Search, CheckCircle, Tag, DollarSign } from 'lucide-react';
 import { fmtDate, fmtKm } from '../utils/formatters';
 import { ServiceRecord } from '../types';
 
@@ -107,7 +107,7 @@ export const ServiceTimeline: React.FC<ServiceTimelineProps> = ({
         </div>
       ) : (
         <div className="relative pl-4 sm:pl-6 space-y-4 before:content-[''] before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-[#2a303c]">
-          {filtered.map((service, index) => {
+          {filtered.map((service, _index) => {
             // Find interval since previous service
             const currentIndex = sortedByKm.findIndex((s) => s.id === service.id);
             const prevService = currentIndex > 0 ? sortedByKm[currentIndex - 1] : null;

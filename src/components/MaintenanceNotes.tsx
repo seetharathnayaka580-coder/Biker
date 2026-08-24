@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StickyNote, Plus, Trash2, Calendar, Gauge, Disc, Droplets, Zap, ShieldAlert, Sparkles, Filter } from 'lucide-react';
+import { StickyNote, Plus, Trash2, Calendar, Gauge, Disc, Droplets, Zap, ShieldAlert, Sparkles } from 'lucide-react';
 import { fmtDate, fmtKm, uid } from '../utils/formatters';
 import { MaintenanceNote, NoteCategory } from '../types';
 

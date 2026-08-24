@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, CheckCircle2, Clock, Wrench, Shield, AlertCircle, Droplets, Disc, Sparkles } from 'lucide-react';
+import { X, CheckCircle2, Clock, Wrench, Droplets } from 'lucide-react';
 import { fmtKm } from '../utils/formatters';
 
 interface ScheduleGuideModalProps {

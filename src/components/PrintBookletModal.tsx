@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Printer, ShieldCheck, CheckCircle2, QrCode } from 'lucide-react';
+import { X, Printer, ShieldCheck } from 'lucide-react';
 import { AppState } from '../types';
 import { fmtDate, fmtKm } from '../utils/formatters';
 
@@ -10,7 +10,7 @@ interface PrintBookletModalProps {
 
 export const PrintBookletModal: React.FC<PrintBookletModalProps> = ({ state, onClose }) => {
   const handlePrint = () => {
-    window.print();
+    globalThis.print();
   };
 
   const sortedServices = [...state.services].sort((a, b) => a.km - b.km);

@@ -35,7 +35,7 @@ export const auth: Auth = getAuth(app);
 export const DEFAULT_BIKE_ID = 'BKT-1374';
 
 // Initialize anonymous auth session safely
-export async function initAuth(): Promise<User | null> {
+export function initAuth(): Promise<User | null> {
   return new Promise((resolve) => {
     onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -240,7 +240,7 @@ export async function saveVehicleToCloud(vehicle: VehicleDetails, bikeId: string
 
 export async function saveOdometerToCloud(odometer: number, targets?: number[], bikeId: string = DEFAULT_BIKE_ID): Promise<void> {
   const bikeDocRef = doc(db, 'bikes', bikeId);
-  const payload: Record<string, any> = {
+  const payload: Record<string, unknown> = {
     odometer,
     updatedAt: new Date().toISOString(),
   };
@@ -273,7 +273,7 @@ export async function addServiceToCloud(service: ServiceRecord, bikeId: string =
     const curOdo = current.odometer || 0;
     const curTargets = current.targets || [7688];
     const newOdo = Math.max(curOdo, service.km);
-    let newTargets = [...curTargets];
+    const newTargets = [...curTargets];
     if (service.km >= (newTargets[0] || Infinity)) {
       newTargets[0] = service.km + (current.serviceInterval || 2500);
     }
