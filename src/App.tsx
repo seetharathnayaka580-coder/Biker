@@ -72,7 +72,6 @@ export default function App() {
 
   // Handlers with Optimistic UI + Cloud Firestore Persistence
   const handleUpdateVehicle = async (vehicle: VehicleDetails) => {
-    setState((prev) => ({ ...prev, vehicle }));
     try {
       setSyncStatus('syncing');
       await saveVehicleToCloud(vehicle);
@@ -84,7 +83,6 @@ export default function App() {
   };
 
   const handleUpdateOdometer = async (newOdo: number) => {
-    setState((prev) => ({ ...prev, odometer: newOdo }));
     try {
       setSyncStatus('syncing');
       await saveOdometerToCloud(newOdo);
@@ -97,10 +95,6 @@ export default function App() {
 
   const handleUpdateTarget = async (newTarget: number) => {
     const newTargets = [newTarget, ...(state.targets.slice(1) || [])];
-    setState((prev) => ({
-      ...prev,
-      targets: newTargets,
-    }));
     try {
       setSyncStatus('syncing');
       await saveTargetToCloud(newTargets);
@@ -112,28 +106,6 @@ export default function App() {
   };
 
   const handleAddService = async (newService: ServiceRecord) => {
-    // Optimistic local state update
-    setState((prev) => {
-      const updatedServices = [...prev.services, newService];
-      let updatedOdo = prev.odometer;
-      if (newService.km > updatedOdo) {
-        updatedOdo = newService.km;
-      }
-
-      let updatedTargets = [...prev.targets];
-      const currentTgt = updatedTargets[0] || (newService.km + 2500);
-      if (newService.km >= currentTgt) {
-        updatedTargets[0] = newService.km + (prev.serviceInterval || 2500);
-      }
-
-      return {
-        ...prev,
-        services: updatedServices,
-        odometer: updatedOdo,
-        targets: updatedTargets,
-      };
-    });
-
     try {
       setSyncStatus('syncing');
       await addServiceToCloud(newService);
@@ -145,10 +117,6 @@ export default function App() {
   };
 
   const handleDeleteService = async (id: string) => {
-    setState((prev) => ({
-      ...prev,
-      services: prev.services.filter((s) => s.id !== id),
-    }));
     try {
       setSyncStatus('syncing');
       await deleteServiceFromCloud(id);
@@ -160,10 +128,6 @@ export default function App() {
   };
 
   const handleAddNote = async (newNote: MaintenanceNote) => {
-    setState((prev) => ({
-      ...prev,
-      notes: [newNote, ...prev.notes],
-    }));
     try {
       setSyncStatus('syncing');
       await addNoteToCloud(newNote);
@@ -175,10 +139,6 @@ export default function App() {
   };
 
   const handleDeleteNote = async (id: string) => {
-    setState((prev) => ({
-      ...prev,
-      notes: prev.notes.filter((n) => n.id !== id),
-    }));
     try {
       setSyncStatus('syncing');
       await deleteNoteFromCloud(id);
