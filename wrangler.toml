@@ -1,0 +1,9 @@
+name = "biker"
+compatibility_date = "2024-08-24"
+
+# This tells Cloudflare Workers to serve the static Vite build folder
+[assets]
+directory = "dist"
+
+# This ensures React Router works correctly when refreshing pages
+not_found_handling = "single-page-application"
