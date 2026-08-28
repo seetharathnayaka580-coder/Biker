@@ -103,7 +103,7 @@ export default function App() {
 
   // If not logged in, render the Motorcycle-themed Login Page
   if (!authSession) {
-    return <LoginPage onLoginSuccess={handleLoginSuccess} />;
+    return <LoginPage onLoginSuccess={handleLoginSuccess} vehicle={state.vehicle} />;
   }
 
   const isAdmin = authSession.role === 'admin';

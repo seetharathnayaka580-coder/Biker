@@ -18,14 +18,15 @@ import {
   Gauge,
   Zap,
 } from 'lucide-react';
-import { AuthSession } from '../types';
+import { AuthSession, VehicleDetails } from '../types';
 import { signInWithGooglePopup } from '../lib/firebase';
 
 interface LoginPageProps {
   onLoginSuccess: (session: AuthSession) => void;
+  vehicle?: VehicleDetails;
 }
 
-export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
+export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle }) => {
   const [activeTab, setActiveTab] = useState<'admin' | 'google'>('admin');
   
   // Admin form state
@@ -124,12 +125,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         <div className="text-center mb-6">
           {/* Animated Motorcycle Emblem */}
           <div className="relative inline-block mb-3">
-            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl bg-gradient-to-br from-zinc-900 via-[#161a22] to-zinc-950 border-2 border-amber-500/50 flex items-center justify-center p-2 shadow-2xl shadow-amber-500/25 relative group overflow-hidden">
+            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl bg-gradient-to-br from-[#181d28] via-[#121620] to-[#0a0c10] border-2 border-amber-500/50 flex items-center justify-center p-1 shadow-2xl shadow-amber-500/25 relative group overflow-hidden">
               <img
-                src="/pulsar_n160.svg"
+                src={vehicle?.photoUrl || '/pulsar_n160.svg'}
                 alt="Bajaj Pulsar N160"
                 referrerPolicy="no-referrer"
-                className={`w-full h-full object-contain transition-transform duration-300 ${
+                className={`w-full h-full ${
+                  vehicle?.photoUrl ? 'object-cover rounded-2xl' : 'object-contain p-1'
+                } transition-transform duration-300 ${
                   revving ? 'scale-110 rotate-1' : 'group-hover:scale-105'
                 }`}
               />
@@ -138,7 +141,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
               <div className="absolute -inset-1 rounded-3xl border border-amber-400/40 blur-[2px] animate-pulse pointer-events-none" />
               
               {/* Status LED */}
-              <span className="absolute top-2 right-2 flex h-3 w-3">
+              <span className="absolute top-2 right-2 flex h-3 w-3 z-10">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-500 border border-[#0a0c10]"></span>
               </span>
@@ -147,7 +150,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
 
           <div className="flex items-center justify-center gap-2 mb-1">
             <span className="text-xs uppercase font-mono tracking-widest text-amber-400 font-bold px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/25">
-              BKT-1374
+              {vehicle?.regNo || 'BKT-1374'}
             </span>
             <span className="text-xs font-mono uppercase tracking-wider text-zinc-400 px-2 py-0.5 rounded bg-zinc-800/80 border border-zinc-700/50">
               Sri Lanka
@@ -175,7 +178,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             <span className="text-zinc-600">·</span>
             <span className="flex items-center gap-1">
               <Zap className="w-3 h-3 text-red-400" />
-              Brooklyn Black
+              {vehicle?.colour || 'Brooklyn Black'}
             </span>
           </div>
         </div>
