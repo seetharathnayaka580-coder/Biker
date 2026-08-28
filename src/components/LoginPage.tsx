@@ -62,7 +62,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         };
         onLoginSuccess(session);
       } else {
-        setErrorMsg('Invalid Credentials. Admin username is "Sachi" and password is "988800".');
+        setErrorMsg('Invalid username or passcode. Please try again.');
       }
     }, 600);
   };
