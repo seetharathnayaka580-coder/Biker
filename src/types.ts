@@ -61,11 +61,13 @@ export interface ServiceCenter {
   address: string;
   lat: number;
   lng: number;
-  phone: string;
-  openingHours: string;
-  rating: number;
-  servicesOffered: string[];
-  isAuthorizedBajaj: boolean;
+  phone?: string;
+  rating?: number;
+  reviewCount?: number;
+  openNow?: boolean;
+  openingHours?: string;
+  services?: string[];
+  servicesOffered?: string[];
+  isAuthorizedBajaj?: boolean;
   distanceKm?: number;
 }
-

@@ -9,7 +9,6 @@ import {
   DollarSign,
   Check,
   FileText,
-  Lock,
   ShieldCheck,
   ClipboardList,
 } from 'lucide-react';
@@ -23,24 +22,15 @@ interface ServiceLoggerProps {
   onAddService: (service: ServiceRecord) => void;
 }
 
-const COMMON_TASKS = [
-  'Engine Oil Replacement',
-  'Oil Filter Change',
-  'Bike Wash & Foam Clean',
-  'Brake Pads Clean & Inspect',
-  'Drive Chain Clean & Lube',
-  'Chain Slack Adjustment',
+const COMMON_PARTS = [
+  'Engine Oil (Bajaj DTS-i 20W50 1.35L)',
+  'Oil Filter (Genuine Bajaj)',
   'Air Filter Clean / Replace',
-  'Spark Plug Inspection',
-  'Throttle & Clutch Cable Lube',
-  'Battery & Electrical Check',
-];
-
-const DEALER_PRESETS = [
-  'M.V. Electronic & D.S. Motors',
-  'Bajaj Authorized Service Station',
-  'David Pieris Motor Company (DPMC)',
-  'Self Service / Personal Workshop',
+  'Drive Chain Clean & Lubricate',
+  'Chain Slack Adjusted',
+  'Brake Pads Clean / Inspect',
+  'Spark Plug Clean / Check',
+  'General Bike Wash & Polish',
 ];
 
 export const ServiceLogger: React.FC<ServiceLoggerProps> = ({
@@ -54,23 +44,29 @@ export const ServiceLogger: React.FC<ServiceLoggerProps> = ({
 
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [km, setKm] = useState(currentOdometer.toString());
-  const [dealer, setDealer] = useState('M.V. Electronic & D.S. Motors');
-  const [customDealer, setCustomDealer] = useState('');
-  const [selectedTasks, setSelectedTasks] = useState<string[]>([
-    'Engine Oil Replacement',
-    'Oil Filter Change',
-    'Bike Wash & Foam Clean',
-    'Brake Pads Clean & Inspect',
-  ]);
+  const [dealer, setDealer] = useState('M.V. Electronic & D.S. Motors (Matara)');
   const [note, setNote] = useState('');
   const [cost, setCost] = useState('');
+  const [parts, setParts] = useState<string[]>([
+    'Engine Oil (Bajaj DTS-i 20W50 1.35L)',
+    'Oil Filter (Genuine Bajaj)',
+    'Drive Chain Clean & Lubricate',
+  ]);
+  const [customPart, setCustomPart] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const toggleTask = (task: string) => {
-    if (selectedTasks.includes(task)) {
-      setSelectedTasks(selectedTasks.filter((t) => t !== task));
+  const togglePart = (item: string) => {
+    if (parts.includes(item)) {
+      setParts(parts.filter((p) => p !== item));
     } else {
-      setSelectedTasks([...selectedTasks, task]);
+      setParts([...parts, item]);
+    }
+  };
+
+  const handleAddCustomPart = () => {
+    if (customPart.trim() && !parts.includes(customPart.trim())) {
+      setParts([...parts, customPart.trim()]);
+      setCustomPart('');
     }
   };
 
@@ -81,40 +77,35 @@ export const ServiceLogger: React.FC<ServiceLoggerProps> = ({
     const finalKm = Number(km);
     if (isNaN(finalKm) || finalKm <= 0) return;
 
-    const finalDealer = customDealer.trim() || dealer;
-    const taskSummary = selectedTasks.length > 0 ? selectedTasks.join(', ') : '';
-    const finalNote = note.trim() ? `${taskSummary ? taskSummary + '. ' : ''}${note.trim()}` : taskSummary;
-
     const newRecord: ServiceRecord = {
       id: uid('svc'),
       label: defaultLabel,
       date,
       km: finalKm,
-      dealer: finalDealer,
-      note: finalNote || 'Routine maintenance completed.',
+      dealer: dealer.trim() || 'M.V. Electronic & D.S. Motors (Matara)',
+      note: note.trim() || 'Official periodic service completed.',
       cost: cost ? Number(cost) : undefined,
-      partsReplaced: selectedTasks,
+      partsReplaced: parts,
       locked: false,
     };
 
     onAddService(newRecord);
     setIsSuccess(true);
-    setTimeout(() => setIsSuccess(false), 2500);
+    setTimeout(() => setIsSuccess(false), 2000);
 
-    // Reset fields for next entry
+    // Reset optional fields
     setNote('');
     setCost('');
   };
 
-  // CLIENT READ-ONLY INSPECTION VIEW
   if (!isAdmin) {
     return (
-      <div className="bg-[#171a21] border border-[#262b35] rounded-2xl p-5 sm:p-6 shadow-xl flex flex-col justify-between">
+      <div className="bg-[#131722] border border-[#232a3a] rounded-2xl p-5 sm:p-6 shadow-xl flex flex-col justify-between">
         <div>
-          <div className="flex items-center justify-between gap-2 mb-4 pb-3 border-b border-[#242935]">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
-                <Wrench className="w-4 h-4" />
+          <div className="flex items-center justify-between gap-2 mb-4 pb-3 border-b border-[#202737]">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shadow-sm">
+                <Wrench className="w-5 h-5" />
               </div>
               <div>
                 <h2 className="font-display font-bold text-base sm:text-lg text-white tracking-wide">
@@ -129,12 +120,15 @@ export const ServiceLogger: React.FC<ServiceLoggerProps> = ({
             </span>
           </div>
 
-          <div className="p-4 rounded-xl bg-[#11141a] border border-[#222733] space-y-3">
+          <div className="p-4 rounded-xl bg-[#0e111a] border border-[#1f2533] space-y-3">
             <div className="flex items-center gap-2 text-xs font-semibold text-amber-300">
               <ClipboardList className="w-4 h-4 text-amber-400" />
-              <span>Bajaj Authorised Service Records</span>
+              <span>Bajaj Authorised Digital Records</span>
             </div>
-            <div className="pt-2 border-t border-[#1e232e] text-xs text-zinc-400 space-y-2 font-mono">
+            <p className="text-xs text-zinc-400 leading-relaxed">
+              All official service intervals, parts, and workshop stamps are verified and cataloged in the service log below.
+            </p>
+            <div className="pt-2 border-t border-[#1a1f2c] text-xs text-zinc-400 space-y-2 font-mono">
               <div className="flex items-center justify-between">
                 <span>Completed Services:</span>
                 <span className="font-bold text-white">{servicesCount} Completed</span>
@@ -149,179 +143,183 @@ export const ServiceLogger: React.FC<ServiceLoggerProps> = ({
 
         <div className="mt-4 p-3 rounded-xl bg-amber-500/5 border border-amber-500/20 text-xs text-zinc-300 flex items-center gap-2">
           <FileText className="w-4 h-4 text-amber-400 shrink-0" />
-          <span>All official service intervals and workshop details are recorded below.</span>
+          <span>Switch to Owner / Admin mode to register new service events and stamp official mileage.</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-[#171a21] border border-[#262b35] rounded-2xl p-5 sm:p-6 shadow-xl flex flex-col justify-between">
-      <div className="flex items-center justify-between gap-2 mb-4">
-        <div className="flex items-center gap-2">
-          <Wrench className="w-4 h-4 text-red-400" />
-          <h2 className="font-display font-bold text-base sm:text-lg text-white tracking-wide">
-            Log New Service Record
-          </h2>
-        </div>
-        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-red-500/10 text-red-400 border border-red-500/20">
-          Next: {defaultLabel}
-        </span>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Date & KM Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label className="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1 flex items-center gap-1">
-              <Calendar className="w-3 h-3 text-amber-400" />
-              Service Date
-            </label>
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="w-full bg-[#11141a] border border-[#2d3442] rounded-xl px-3 py-2 text-xs text-white focus:border-amber-400 focus:outline-none"
-              required
-            />
+    <div className="bg-[#131722] border border-[#232a3a] rounded-2xl p-5 sm:p-6 shadow-xl flex flex-col justify-between">
+      <div>
+        {/* Header */}
+        <div className="flex items-center justify-between gap-2 mb-4 pb-3 border-b border-[#202737]">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-400 shadow-sm">
+              <Wrench className="w-4 h-4" />
+            </div>
+            <div>
+              <h2 className="font-display font-black text-base sm:text-lg text-white tracking-wide">
+                Log New Service
+              </h2>
+              <p className="text-[11px] text-zinc-400">Record a completed routine maintenance or inspection</p>
+            </div>
           </div>
 
-          <div>
-            <label className="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1">
-              Odometer Reading (km)
-            </label>
-            <input
-              type="number"
-              min="0"
-              value={km}
-              onChange={(e) => setKm(e.target.value)}
-              className="w-full bg-[#11141a] border border-[#2d3442] rounded-xl px-3 py-2 text-xs text-amber-300 font-mono focus:border-amber-400 focus:outline-none"
-              placeholder="e.g. 7400"
-              required
-            />
-          </div>
+          <span className="px-2.5 py-1 rounded-xl text-xs font-mono font-bold bg-amber-500/10 text-amber-300 border border-amber-500/25">
+            {defaultLabel}
+          </span>
         </div>
 
-        {/* Dealer / Workshop */}
-        <div>
-          <label className="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1 flex items-center gap-1">
-            <MapPin className="w-3 h-3 text-amber-400" />
-            Dealer / Workshop
-          </label>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <select
-              value={dealer}
-              onChange={(e) => {
-                setDealer(e.target.value);
-                if (e.target.value !== 'Other') setCustomDealer('');
-              }}
-              className="bg-[#11141a] border border-[#2d3442] rounded-xl px-3 py-2 text-xs text-white focus:border-amber-400 focus:outline-none"
-            >
-              {DEALER_PRESETS.map((d) => (
-                <option key={d} value={d}>
-                  {d}
-                </option>
-              ))}
-              <option value="Other">Other Workshop...</option>
-            </select>
-
-            {dealer === 'Other' && (
+        <form onSubmit={handleSubmit} className="space-y-3.5">
+          {/* Row 1: Date & Km */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                <Calendar className="w-3 h-3 text-amber-400" />
+                Service Date
+              </label>
               <input
-                type="text"
-                value={customDealer}
-                onChange={(e) => setCustomDealer(e.target.value)}
-                placeholder="Enter workshop name"
-                className="bg-[#11141a] border border-[#2d3442] rounded-xl px-3 py-2 text-xs text-white focus:border-amber-400 focus:outline-none"
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="w-full bg-[#0d1017] border border-[#262c3b] rounded-xl px-3 py-2 text-xs text-white focus:border-amber-400 focus:outline-none transition-colors"
                 required
               />
-            )}
-          </div>
-        </div>
+            </div>
 
-        {/* Quick Checklists for maintenance tasks */}
-        <div>
-          <label className="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 flex items-center justify-between">
-            <span>Maintenance Checklist & Parts</span>
-            <span className="text-[10px] text-zinc-500 font-normal">
-              {selectedTasks.length} selected
-            </span>
-          </label>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-36 overflow-y-auto pr-1">
-            {COMMON_TASKS.map((task) => {
-              const isChecked = selectedTasks.includes(task);
-              return (
-                <button
-                  type="button"
-                  key={task}
-                  onClick={() => toggleTask(task)}
-                  className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-left text-xs transition-all cursor-pointer ${
-                    isChecked
-                      ? 'bg-amber-500/15 text-amber-200 border border-amber-500/30'
-                      : 'bg-[#11141a] text-zinc-400 border border-[#262c37] hover:border-zinc-600'
-                  }`}
-                >
-                  {isChecked ? (
-                    <CheckSquare className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                  ) : (
-                    <Square className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
-                  )}
-                  <span className="truncate">{task}</span>
-                </button>
-              );
-            })}
+            <div>
+              <label className="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1 flex items-center justify-between">
+                <span>Odometer (KM)</span>
+                <span className="text-[10px] text-zinc-500 font-mono">Current: {currentOdometer} km</span>
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={km}
+                onChange={(e) => setKm(e.target.value)}
+                className="w-full bg-[#0d1017] border border-[#262c3b] rounded-xl px-3 py-2 text-xs text-amber-300 font-mono font-bold focus:border-amber-400 focus:outline-none transition-colors"
+                placeholder="e.g. 7400"
+                required
+              />
+            </div>
           </div>
-        </div>
 
-        {/* Additional Notes & Cost */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-          <div className="sm:col-span-2">
-            <label className="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1 flex items-center gap-1">
-              <FileText className="w-3 h-3 text-zinc-400" />
-              Additional Remarks
+          {/* Row 2: Dealer & Cost */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                <MapPin className="w-3 h-3 text-amber-400" />
+                Dealer / Workshop
+              </label>
+              <input
+                type="text"
+                value={dealer}
+                onChange={(e) => setDealer(e.target.value)}
+                placeholder="Workshop Name"
+                className="w-full bg-[#0d1017] border border-[#262c3b] rounded-xl px-3 py-2 text-xs text-white focus:border-amber-400 focus:outline-none transition-colors"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                <DollarSign className="w-3 h-3 text-emerald-400" />
+                Cost (Optional LKR)
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={cost}
+                onChange={(e) => setCost(e.target.value)}
+                placeholder="e.g. 3500"
+                className="w-full bg-[#0d1017] border border-[#262c3b] rounded-xl px-3 py-2 text-xs text-white focus:border-amber-400 focus:outline-none transition-colors"
+              />
+            </div>
+          </div>
+
+          {/* Row 3: Parts Replaced Checklist */}
+          <div>
+            <label className="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1">
+              Parts Replaced / Work Checklist ({parts.length})
             </label>
-            <input
-              type="text"
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-36 overflow-y-auto pr-1">
+              {COMMON_PARTS.map((item) => {
+                const isChecked = parts.includes(item);
+                return (
+                  <button
+                    type="button"
+                    key={item}
+                    onClick={() => togglePart(item)}
+                    className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-left text-xs transition-colors cursor-pointer ${
+                      isChecked
+                        ? 'bg-amber-500/15 text-amber-200 border border-amber-500/30'
+                        : 'bg-[#0d1017] text-zinc-400 border border-[#202532] hover:border-zinc-600'
+                    }`}
+                  >
+                    {isChecked ? (
+                      <CheckSquare className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                    ) : (
+                      <Square className="w-3.5 h-3.5 text-zinc-600 shrink-0" />
+                    )}
+                    <span className="truncate">{item}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Custom Part Input */}
+            <div className="flex items-center gap-2 mt-2">
+              <input
+                type="text"
+                value={customPart}
+                onChange={(e) => setCustomPart(e.target.value)}
+                placeholder="Add other custom part..."
+                className="flex-1 bg-[#0d1017] border border-[#262c3b] rounded-xl px-3 py-1.5 text-xs text-white focus:border-amber-400 focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={handleAddCustomPart}
+                className="px-3 py-1.5 rounded-xl bg-[#1d2331] hover:bg-[#262f42] text-xs font-semibold text-zinc-200 border border-[#2d374d] cursor-pointer"
+              >
+                Add
+              </button>
+            </div>
+          </div>
+
+          {/* Row 4: Note */}
+          <div>
+            <label className="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1">
+              Service Notes & Remarks
+            </label>
+            <textarea
+              rows={2}
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="e.g. Front fork oil check, tyre pressure adjusted"
-              className="w-full bg-[#11141a] border border-[#2d3442] rounded-xl px-3 py-2 text-xs text-white focus:border-amber-400 focus:outline-none"
+              placeholder="e.g. Engine oil changed with DTS-i 20W50, chain adjusted, front brake pads cleaned."
+              className="w-full bg-[#0d1017] border border-[#262c3b] rounded-xl px-3 py-2 text-xs text-white focus:border-amber-400 focus:outline-none resize-none"
             />
           </div>
 
-          <div>
-            <label className="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1 flex items-center gap-1">
-              <DollarSign className="w-3 h-3 text-zinc-400" />
-              Cost (LKR/Currency)
-            </label>
-            <input
-              type="number"
-              min="0"
-              value={cost}
-              onChange={(e) => setCost(e.target.value)}
-              placeholder="e.g. 6500"
-              className="w-full bg-[#11141a] border border-[#2d3442] rounded-xl px-3 py-2 text-xs text-white font-mono focus:border-amber-400 focus:outline-none"
-            />
-          </div>
-        </div>
-
-        {/* Submit button */}
-        <button
-          type="submit"
-          className="w-full py-2.5 px-4 rounded-xl font-display font-bold text-sm tracking-wide text-white bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 border border-red-500/40 shadow-lg shadow-red-600/20 active:scale-[0.99] transition-all cursor-pointer flex items-center justify-center gap-2"
-        >
-          {isSuccess ? (
-            <>
-              <Check className="w-4 h-4 text-white animate-bounce" />
-              Record Added Successfully!
-            </>
-          ) : (
-            <>
-              <PlusCircle className="w-4 h-4" />
-              Record {defaultLabel}
-            </>
-          )}
-        </button>
-      </form>
+          {/* Submit Button */}
+          <button
+            type="submit"
+            className="w-full py-2.5 px-4 rounded-xl font-display font-bold text-xs sm:text-sm tracking-wide text-zinc-950 bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 border border-amber-400/50 shadow-md shadow-amber-500/10 active:scale-[0.99] transition-all cursor-pointer flex items-center justify-center gap-2"
+          >
+            {isSuccess ? (
+              <>
+                <Check className="w-4 h-4 text-zinc-950" />
+                Service Record Added!
+              </>
+            ) : (
+              <>
+                <PlusCircle className="w-4 h-4" />
+                Record {defaultLabel} ({Number(km).toLocaleString()} km)
+              </>
+            )}
+          </button>
+        </form>
+      </div>
     </div>
   );
 };
