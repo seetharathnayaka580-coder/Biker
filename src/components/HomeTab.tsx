@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import {
   ShieldCheck,
   Calendar,
@@ -16,12 +16,20 @@ import {
   BookOpen,
   Award,
   ChevronRight,
+  Camera,
+  Upload,
+  Maximize2,
+  X,
+  RotateCcw,
+  Image as ImageIcon,
+  Check,
 } from 'lucide-react';
-import { AppState } from '../types';
+import { AppState, VehicleDetails } from '../types';
 
 interface HomeTabProps {
   state: AppState;
   isAdmin: boolean;
+  onUpdateVehicle?: (updated: VehicleDetails) => void;
   onNavigateToTab: (tab: 'home' | 'vehicle' | 'service' | 'notes' | 'dealers') => void;
   onOpenScheduleGuide: () => void;
   onOpenPrint: () => void;
@@ -30,6 +38,7 @@ interface HomeTabProps {
 export const HomeTab: React.FC<HomeTabProps> = ({
   state,
   isAdmin,
+  onUpdateVehicle,
   onNavigateToTab,
   onOpenScheduleGuide,
   onOpenPrint,
@@ -38,6 +47,112 @@ export const HomeTab: React.FC<HomeTabProps> = ({
   const remainingKm = currentTarget - state.odometer;
   const isOverdue = remainingKm <= 0;
   const isDueSoon = remainingKm > 0 && remainingKm <= 500;
+
+  const [isFullscreenModalOpen, setIsFullscreenModalOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Default bike asset
+  const defaultBikeSvg = '/pulsar_n160.svg';
+  const currentBikePhoto = state.vehicle.photoUrl || defaultBikeSvg;
+  const isCustomPhoto = Boolean(state.vehicle.photoUrl);
+
+  // Compress & convert uploaded image to high-quality data URL
+  const processImageFile = (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      alert('Please upload a valid image file (JPEG, PNG, WEBP).');
+      return;
+    }
+
+    setIsUploading(true);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        // Resize canvas to max 1280px for performance & instant cloud sync
+        const maxDimension = 1280;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxDimension) {
+            height = Math.round((height * maxDimension) / width);
+            width = maxDimension;
+          }
+        } else {
+          if (height > maxDimension) {
+            width = Math.round((width * maxDimension) / height);
+            height = maxDimension;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.88);
+
+          if (onUpdateVehicle) {
+            onUpdateVehicle({
+              ...state.vehicle,
+              photoUrl: compressedDataUrl,
+            });
+          }
+          setIsUploading(false);
+          setUploadSuccess(true);
+          setTimeout(() => setUploadSuccess(false), 3000);
+        } else {
+          setIsUploading(false);
+        }
+      };
+      img.onerror = () => {
+        setIsUploading(false);
+        alert('Could not process this image file.');
+      };
+      img.src = e.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      processImageFile(e.target.files[0]);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (!isAdmin) return;
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      processImageFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    if (isAdmin) setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleResetPhoto = () => {
+    if (!isAdmin) return;
+    if (confirm('Reset bike photo to official factory render?')) {
+      if (onUpdateVehicle) {
+        onUpdateVehicle({
+          ...state.vehicle,
+          photoUrl: undefined,
+        });
+      }
+    }
+  };
 
   // Calculate percentage to next service
   const previousServiceKm = state.services[0]?.km || 0;
@@ -81,38 +196,116 @@ export const HomeTab: React.FC<HomeTabProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* 1. HERO SHOWCASE: ABOUT THE BIKE */}
+      {/* Hidden File Input for Bike Photo */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        accept="image/*"
+        className="hidden"
+      />
+
+      {/* 1. HERO SHOWCASE: ABOUT THE BIKE WITH PHOTO VIEWER */}
       <section className="bg-gradient-to-br from-[#151922] via-[#181d28] to-[#10131a] rounded-2xl border border-[#272f3e] p-5 sm:p-7 shadow-2xl relative overflow-hidden">
         {/* Subtle decorative glow */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-1/3 w-80 h-80 bg-red-500/5 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+          
           {/* Left Column: Bike Image & Visual Branding */}
           <div className="lg:col-span-6 flex flex-col items-center justify-center">
-            <div className="relative w-full max-w-md aspect-[4/3] rounded-2xl bg-gradient-to-b from-[#0e1117] to-[#08090d] border border-amber-500/30 p-4 flex items-center justify-center shadow-xl shadow-black/60 overflow-hidden group">
+            <div
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              className={`relative w-full max-w-md aspect-[4/3] rounded-2xl bg-gradient-to-b from-[#0e1117] to-[#08090d] border transition-all duration-300 p-2 flex items-center justify-center shadow-2xl shadow-black/80 overflow-hidden group ${
+                isDragging ? 'border-amber-400 ring-4 ring-amber-500/20 scale-[1.02]' : 'border-amber-500/30'
+              }`}
+            >
+              {/* Bike Image View */}
               <img
-                src="/pulsar_n160.svg"
+                src={currentBikePhoto}
                 alt="Bajaj Pulsar N160 Brooklyn Black"
                 referrerPolicy="no-referrer"
-                className="w-full h-full object-contain drop-shadow-[0_12px_24px_rgba(0,0,0,0.8)] transition-transform duration-500 group-hover:scale-105"
+                className={`w-full h-full object-cover sm:object-contain rounded-xl transition-transform duration-500 ${
+                  isCustomPhoto ? 'object-cover' : 'object-contain'
+                } group-hover:scale-105`}
               />
-              
+
+              {/* Overlay vignette */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30 pointer-events-none rounded-xl" />
+
               {/* Badges on Image */}
-              <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/80 backdrop-blur-md border border-amber-500/40 text-[10px] font-mono font-bold text-amber-400">
+              <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/80 backdrop-blur-md border border-amber-500/40 text-[10px] font-mono font-bold text-amber-400 shadow-md">
                 <Sparkles className="w-3 h-3 text-amber-400" />
-                BROOKLYN BLACK
+                {state.vehicle.colour || 'BROOKLYN BLACK'}
               </div>
 
-              <div className="absolute top-3 right-3 flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-600/90 text-white text-[10px] font-bold tracking-wider font-mono shadow-md">
-                DUAL ABS
+              <div className="absolute top-3 right-3 flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setIsFullscreenModalOpen(true)}
+                  className="p-1.5 rounded-lg bg-black/80 hover:bg-black/95 text-zinc-300 hover:text-white border border-zinc-700/60 shadow-md backdrop-blur-md transition-colors cursor-pointer"
+                  title="View Full Size Photo"
+                >
+                  <Maximize2 className="w-3.5 h-3.5" />
+                </button>
+
+                <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-600/95 text-white text-[10px] font-bold tracking-wider font-mono shadow-md">
+                  DUAL ABS
+                </div>
               </div>
 
-              <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between px-3 py-1.5 rounded-lg bg-black/85 backdrop-blur-md border border-zinc-700/60 text-xs">
-                <span className="font-mono text-zinc-400 text-[11px]">Reg: <strong className="text-white">{state.vehicle.regNo}</strong></span>
-                <span className="font-mono text-amber-400 text-[11px]">Odo: <strong>{state.odometer.toLocaleString()} km</strong></span>
+              {/* Drag over indicator */}
+              {isDragging && (
+                <div className="absolute inset-0 bg-black/85 backdrop-blur-sm flex flex-col items-center justify-center text-amber-400 z-30 animate-pulse">
+                  <Upload className="w-10 h-10 mb-2" />
+                  <p className="text-xs font-bold uppercase tracking-wider">Drop Photo to Update Bike Image</p>
+                </div>
+              )}
+
+              {/* Image Footer with Reg & Quick Photo Actions */}
+              <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between px-3 py-2 rounded-xl bg-black/85 backdrop-blur-md border border-zinc-700/60 text-xs shadow-lg">
+                <div className="flex flex-col">
+                  <span className="font-mono text-zinc-400 text-[10px]">Reg Number</span>
+                  <strong className="text-white font-mono text-xs">{state.vehicle.regNo}</strong>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  {isAdmin && (
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-[11px] transition-colors shadow cursor-pointer"
+                      title="Upload or Change Photo"
+                    >
+                      <Camera className="w-3 h-3" />
+                      <span>{isCustomPhoto ? 'Change Photo' : 'Upload Photo'}</span>
+                    </button>
+                  )}
+
+                  {isCustomPhoto && isAdmin && (
+                    <button
+                      type="button"
+                      onClick={handleResetPhoto}
+                      className="p-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white border border-zinc-700/40 text-[10px] transition-colors cursor-pointer"
+                      title="Reset to Stock Render"
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
+
+            {/* Upload status banner */}
+            {uploadSuccess && (
+              <div className="mt-2 flex items-center gap-1.5 text-xs text-emerald-400 font-medium px-3 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                <Check className="w-3.5 h-3.5" />
+                <span>Bike photo successfully updated and synced!</span>
+              </div>
+            )}
 
             {/* Quick action buttons under image */}
             <div className="flex items-center gap-2 mt-4 w-full max-w-md">
@@ -432,6 +625,69 @@ export const HomeTab: React.FC<HomeTabProps> = ({
           </button>
         </div>
       </section>
+
+      {/* FULLSCREEN PHOTO LIGHTBOX MODAL */}
+      {isFullscreenModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-xl flex items-center justify-center p-4">
+          <div className="relative max-w-4xl w-full bg-[#12151c] border border-zinc-700/60 rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-zinc-800 bg-[#161a22]">
+              <div className="flex items-center gap-2.5">
+                <ImageIcon className="w-5 h-5 text-amber-400" />
+                <div>
+                  <h3 className="text-sm font-bold text-white">
+                    Bajaj Pulsar N160 · {state.vehicle.regNo}
+                  </h3>
+                  <span className="text-[11px] text-zinc-400">
+                    {state.vehicle.colour} · {state.vehicle.owner}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {isAdmin && (
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs transition-colors cursor-pointer"
+                  >
+                    <Camera className="w-3.5 h-3.5" />
+                    <span>Upload New Photo</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setIsFullscreenModalOpen(false)}
+                  className="p-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Image Body */}
+            <div className="p-4 flex items-center justify-center bg-black/90 overflow-auto flex-1 min-h-[300px]">
+              <img
+                src={currentBikePhoto}
+                alt="Bajaj Pulsar N160"
+                referrerPolicy="no-referrer"
+                className="max-h-[65vh] w-auto max-w-full object-contain rounded-lg shadow-2xl"
+              />
+            </div>
+
+            {/* Modal Footer Info */}
+            <div className="px-5 py-3 border-t border-zinc-800 bg-[#141720] flex items-center justify-between text-xs text-zinc-400">
+              <div className="flex items-center gap-3">
+                <span>Chassis: <strong className="text-white font-mono">{state.vehicle.chassisNo}</strong></span>
+                <span>Engine: <strong className="text-white font-mono">{state.vehicle.engineNo}</strong></span>
+              </div>
+              <span className="font-mono text-amber-400">
+                Odometer: {state.odometer.toLocaleString()} km
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -302,6 +302,7 @@ export default function App() {
           <HomeTab
             state={state}
             isAdmin={isAdmin}
+            onUpdateVehicle={handleUpdateVehicle}
             onNavigateToTab={setActiveTab}
             onOpenScheduleGuide={() => setShowScheduleModal(true)}
             onOpenPrint={() => setShowPrintModal(true)}

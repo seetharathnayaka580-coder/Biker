@@ -16,6 +16,7 @@ export interface VehicleDetails {
   chassisNo: string;
   engineNo: string;
   bookNo: string;
+  photoUrl?: string;
 }
 
 export interface ServiceRecord {

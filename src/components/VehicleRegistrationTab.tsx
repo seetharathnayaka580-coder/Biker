@@ -63,10 +63,10 @@ export const VehicleRegistrationTab: React.FC<VehicleRegistrationTabProps> = ({
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/30 p-1 flex items-center justify-center text-amber-400 shrink-0 shadow-lg shadow-amber-500/10 overflow-hidden">
             <img
-              src="/pulsar_n160.svg"
+              src={vehicle.photoUrl || '/pulsar_n160.svg'}
               alt="Bajaj Pulsar N160"
               referrerPolicy="no-referrer"
-              className="w-full h-full object-contain"
+              className="w-full h-full object-cover rounded-lg"
             />
           </div>
           <div>
