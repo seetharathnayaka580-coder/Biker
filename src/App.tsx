@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Header } from './components/Header';
-import { VehicleDetailsStrip } from './components/VehicleDetailsStrip';
-import { OdometerGauge } from './components/OdometerGauge';
-import { ServiceLogger } from './components/ServiceLogger';
-import { ServiceTimeline } from './components/ServiceTimeline';
-import { MaintenanceNotes } from './components/MaintenanceNotes';
+import { Header, ActiveTab } from './components/Header';
+import { HomeTab } from './components/HomeTab';
+import { VehicleRegistrationTab } from './components/VehicleRegistrationTab';
+import { ServiceTab } from './components/ServiceTab';
+import { MaintenanceNotesTab } from './components/MaintenanceNotesTab';
 import { GoogleMapsServiceLocator } from './components/GoogleMapsServiceLocator';
 import { PrintBookletModal } from './components/PrintBookletModal';
 import { ScheduleGuideModal } from './components/ScheduleGuideModal';
@@ -30,7 +29,7 @@ const AUTH_STORAGE_KEY = 'n160_auth_session';
 
 export default function App() {
   const [state, setState] = useState<AppState>(() => loadState());
-  const [activeTab, setActiveTab] = useState<'logbook' | 'map'>('logbook');
+  const [activeTab, setActiveTab] = useState<ActiveTab>('home');
   const [syncStatus, setSyncStatus] = useState<'synced' | 'syncing' | 'offline' | 'error'>('syncing');
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
@@ -115,6 +114,7 @@ export default function App() {
   const handleUpdateVehicle = async (vehicle: VehicleDetails) => {
     if (!isAdmin) return;
     try {
+      setState((prev) => ({ ...prev, vehicle }));
       setSyncStatus('syncing');
       await saveVehicleToCloud(vehicle);
       setSyncStatus('synced');
@@ -127,6 +127,7 @@ export default function App() {
   const handleUpdateOdometer = async (newOdo: number) => {
     if (!isAdmin) return;
     try {
+      setState((prev) => ({ ...prev, odometer: newOdo }));
       setSyncStatus('syncing');
       await saveOdometerToCloud(newOdo);
       setSyncStatus('synced');
@@ -140,6 +141,7 @@ export default function App() {
     if (!isAdmin) return;
     const newTargets = [newTarget, ...(state.targets.slice(1) || [])];
     try {
+      setState((prev) => ({ ...prev, targets: newTargets }));
       setSyncStatus('syncing');
       await saveTargetToCloud(newTargets);
       setSyncStatus('synced');
@@ -152,6 +154,11 @@ export default function App() {
   const handleAddService = async (newService: ServiceRecord) => {
     if (!isAdmin) return;
     try {
+      setState((prev) => ({
+        ...prev,
+        odometer: Math.max(prev.odometer, newService.km),
+        services: [newService, ...prev.services],
+      }));
       setSyncStatus('syncing');
       await addServiceToCloud(newService);
       setSyncStatus('synced');
@@ -164,6 +171,10 @@ export default function App() {
   const handleDeleteService = async (id: string) => {
     if (!isAdmin) return;
     try {
+      setState((prev) => ({
+        ...prev,
+        services: prev.services.filter((s) => s.id !== id),
+      }));
       setSyncStatus('syncing');
       await deleteServiceFromCloud(id);
       setSyncStatus('synced');
@@ -176,6 +187,10 @@ export default function App() {
   const handleAddNote = async (newNote: MaintenanceNote) => {
     if (!isAdmin) return;
     try {
+      setState((prev) => ({
+        ...prev,
+        notes: [newNote, ...prev.notes],
+      }));
       setSyncStatus('syncing');
       await addNoteToCloud(newNote);
       setSyncStatus('synced');
@@ -188,6 +203,10 @@ export default function App() {
   const handleDeleteNote = async (id: string) => {
     if (!isAdmin) return;
     try {
+      setState((prev) => ({
+        ...prev,
+        notes: prev.notes.filter((n) => n.id !== id),
+      }));
       setSyncStatus('syncing');
       await deleteNoteFromCloud(id);
       setSyncStatus('synced');
@@ -259,8 +278,8 @@ export default function App() {
   };
 
   return (
-    <div className={`min-h-screen bg-[#0f1116] text-[#eef1f4] flex flex-col selection:bg-amber-500/30 selection:text-amber-200 ${!isAdmin ? 'select-none' : ''}`}>
-      {/* Top Bar Navigation */}
+    <div className={`min-h-screen bg-[#0d0f14] text-[#eef1f4] flex flex-col selection:bg-amber-500/30 selection:text-amber-200 ${!isAdmin ? 'select-none' : ''}`}>
+      {/* Top Bar Navigation with 5 Category Tabs */}
       <Header
         state={state}
         authSession={authSession}
@@ -276,63 +295,60 @@ export default function App() {
         stats={stats}
       />
 
-      {/* Main Container */}
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 py-5 sm:px-6">
-        {activeTab === 'map' ? (
+      {/* Main Tabbed Views Container */}
+      <main className="flex-1 max-w-6xl w-full mx-auto px-3 sm:px-6 py-5">
+        {/* TAB 1: HOME (Bike About & Upcoming Service) */}
+        {activeTab === 'home' && (
+          <HomeTab
+            state={state}
+            isAdmin={isAdmin}
+            onNavigateToTab={setActiveTab}
+            onOpenScheduleGuide={() => setShowScheduleModal(true)}
+            onOpenPrint={() => setShowPrintModal(true)}
+          />
+        )}
+
+        {/* TAB 2: VEHICLE IDENTIFICATION & REGISTRATION (Bike Details & Owner Details) */}
+        {activeTab === 'vehicle' && (
+          <VehicleRegistrationTab
+            vehicle={state.vehicle}
+            isAdmin={isAdmin}
+            onUpdateVehicle={handleUpdateVehicle}
+            onOpenPrintBooklet={() => setShowPrintModal(true)}
+          />
+        )}
+
+        {/* TAB 3: SERVICE (Distance to Next Service, Log New Service & History) */}
+        {activeTab === 'service' && (
+          <ServiceTab
+            state={state}
+            isAdmin={isAdmin}
+            onUpdateOdometer={handleUpdateOdometer}
+            onUpdateTarget={handleUpdateTarget}
+            onAddService={handleAddService}
+            onDeleteService={handleDeleteService}
+            onOpenScheduleGuide={() => setShowScheduleModal(true)}
+          />
+        )}
+
+        {/* TAB 4: MAINTENANCE NOTES (Garage Remarks & Quick Notes) */}
+        {activeTab === 'notes' && (
+          <MaintenanceNotesTab
+            notes={state.notes}
+            currentOdo={state.odometer}
+            isAdmin={isAdmin}
+            onAddNote={handleAddNote}
+            onDeleteNote={handleDeleteNote}
+          />
+        )}
+
+        {/* TAB 5: BAJAJ DEALERS (Google Map & Service Centers) */}
+        {activeTab === 'dealers' && (
           <GoogleMapsServiceLocator
             currentOdometer={state.odometer}
             nextServiceKm={currentTarget}
             isAdmin={isAdmin}
           />
-        ) : (
-          <>
-            {/* Vehicle Identity Badges */}
-            <VehicleDetailsStrip
-              vehicle={state.vehicle}
-              isAdmin={isAdmin}
-              onUpdateVehicle={handleUpdateVehicle}
-              onOpenMap={() => setActiveTab('map')}
-            />
-
-            {/* Top 2-Column Grid: Gauge & Logger */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 mb-6">
-              <div className="lg:col-span-6 flex flex-col">
-                <OdometerGauge
-                  odometer={state.odometer}
-                  targets={state.targets}
-                  services={state.services}
-                  isAdmin={isAdmin}
-                  onUpdateOdometer={handleUpdateOdometer}
-                  onUpdateTarget={handleUpdateTarget}
-                />
-              </div>
-
-              <div className="lg:col-span-6 flex flex-col">
-                <ServiceLogger
-                  currentOdometer={state.odometer}
-                  servicesCount={state.services.length}
-                  isAdmin={isAdmin}
-                  onAddService={handleAddService}
-                />
-              </div>
-            </div>
-
-            {/* Service History Timeline */}
-            <ServiceTimeline
-              services={state.services}
-              isAdmin={isAdmin}
-              onDeleteService={handleDeleteService}
-            />
-
-            {/* Maintenance Notes & Intermediate Logs */}
-            <MaintenanceNotes
-              notes={state.notes}
-              currentOdo={state.odometer}
-              isAdmin={isAdmin}
-              onAddNote={handleAddNote}
-              onDeleteNote={handleDeleteNote}
-            />
-          </>
         )}
 
         {/* Footer */}
@@ -341,7 +357,7 @@ export default function App() {
             Bajaj Pulsar N160 (BKT-1374) Service Log Book · Official Digital Record.
           </p>
           <span className="font-mono text-[11px] text-zinc-400">
-            Database: {syncStatus === 'synced' ? '● Connected' : syncStatus === 'syncing' ? '◐ Syncing' : '○ Offline Mode'}
+            Database: {syncStatus === 'synced' ? '● Connected (Firestore)' : syncStatus === 'syncing' ? '◐ Syncing...' : '○ Local Mode'}
           </span>
         </footer>
       </main>
@@ -363,4 +379,3 @@ export default function App() {
     </div>
   );
 }
-
