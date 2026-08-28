@@ -1,6 +1,6 @@
 {
   "name": "Bike Service Log Book",
-  "description": "Digital maintenance record and service log book for Pulsar N160 (BKT-1374) with odometer gauge, service reminders, and quick logs.",
-  "requestFramePermissions": [],
+  "description": "Digital maintenance record, Google Maps service locator, and service log book for Pulsar N160 (BKT-1374) with odometer gauge and live service reminders.",
+  "requestFramePermissions": ["geolocation"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

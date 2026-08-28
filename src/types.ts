@@ -48,3 +48,23 @@ export interface AppState {
   targets: number[];
   serviceInterval: number;
 }
+
+export type CenterCategory = 'dealer' | 'spare_parts' | 'fuel' | 'mechanic' | 'emergency';
+
+export interface ServiceCenter {
+  id: string;
+  name: string;
+  category: CenterCategory;
+  city: string;
+  district: string;
+  address: string;
+  lat: number;
+  lng: number;
+  phone: string;
+  openingHours: string;
+  rating: number;
+  servicesOffered: string[];
+  isAuthorizedBajaj: boolean;
+  distanceKm?: number;
+}
+

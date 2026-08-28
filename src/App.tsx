@@ -5,6 +5,7 @@ import { OdometerGauge } from './components/OdometerGauge';
 import { ServiceLogger } from './components/ServiceLogger';
 import { ServiceTimeline } from './components/ServiceTimeline';
 import { MaintenanceNotes } from './components/MaintenanceNotes';
+import { GoogleMapsServiceLocator } from './components/GoogleMapsServiceLocator';
 import { PrintBookletModal } from './components/PrintBookletModal';
 import { ScheduleGuideModal } from './components/ScheduleGuideModal';
 import { LoginPage } from './components/LoginPage';
@@ -29,6 +30,7 @@ const AUTH_STORAGE_KEY = 'n160_auth_session';
 
 export default function App() {
   const [state, setState] = useState<AppState>(() => loadState());
+  const [activeTab, setActiveTab] = useState<'logbook' | 'map'>('logbook');
   const [syncStatus, setSyncStatus] = useState<'synced' | 'syncing' | 'offline' | 'error'>('syncing');
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
@@ -262,6 +264,8 @@ export default function App() {
       <Header
         state={state}
         authSession={authSession}
+        activeTab={activeTab}
+        onSelectTab={setActiveTab}
         onSignOut={handleSignOut}
         onOpenPrint={() => setShowPrintModal(true)}
         onOpenSchedule={() => setShowScheduleModal(true)}
@@ -274,51 +278,62 @@ export default function App() {
 
       {/* Main Container */}
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 py-5 sm:px-6">
-        {/* Vehicle Identity Badges */}
-        <VehicleDetailsStrip
-          vehicle={state.vehicle}
-          isAdmin={isAdmin}
-          onUpdateVehicle={handleUpdateVehicle}
-        />
+        {activeTab === 'map' ? (
+          <GoogleMapsServiceLocator
+            currentOdometer={state.odometer}
+            nextServiceKm={currentTarget}
+            isAdmin={isAdmin}
+          />
+        ) : (
+          <>
+            {/* Vehicle Identity Badges */}
+            <VehicleDetailsStrip
+              vehicle={state.vehicle}
+              isAdmin={isAdmin}
+              onUpdateVehicle={handleUpdateVehicle}
+              onOpenMap={() => setActiveTab('map')}
+            />
 
-        {/* Top 2-Column Grid: Gauge & Logger */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 mb-6">
-          <div className="lg:col-span-6 flex flex-col">
-            <OdometerGauge
-              odometer={state.odometer}
-              targets={state.targets}
+            {/* Top 2-Column Grid: Gauge & Logger */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 mb-6">
+              <div className="lg:col-span-6 flex flex-col">
+                <OdometerGauge
+                  odometer={state.odometer}
+                  targets={state.targets}
+                  services={state.services}
+                  isAdmin={isAdmin}
+                  onUpdateOdometer={handleUpdateOdometer}
+                  onUpdateTarget={handleUpdateTarget}
+                />
+              </div>
+
+              <div className="lg:col-span-6 flex flex-col">
+                <ServiceLogger
+                  currentOdometer={state.odometer}
+                  servicesCount={state.services.length}
+                  isAdmin={isAdmin}
+                  onAddService={handleAddService}
+                />
+              </div>
+            </div>
+
+            {/* Service History Timeline */}
+            <ServiceTimeline
               services={state.services}
               isAdmin={isAdmin}
-              onUpdateOdometer={handleUpdateOdometer}
-              onUpdateTarget={handleUpdateTarget}
+              onDeleteService={handleDeleteService}
             />
-          </div>
 
-          <div className="lg:col-span-6 flex flex-col">
-            <ServiceLogger
-              currentOdometer={state.odometer}
-              servicesCount={state.services.length}
+            {/* Maintenance Notes & Intermediate Logs */}
+            <MaintenanceNotes
+              notes={state.notes}
+              currentOdo={state.odometer}
               isAdmin={isAdmin}
-              onAddService={handleAddService}
+              onAddNote={handleAddNote}
+              onDeleteNote={handleDeleteNote}
             />
-          </div>
-        </div>
-
-        {/* Service History Timeline */}
-        <ServiceTimeline
-          services={state.services}
-          isAdmin={isAdmin}
-          onDeleteService={handleDeleteService}
-        />
-
-        {/* Maintenance Notes & Intermediate Logs */}
-        <MaintenanceNotes
-          notes={state.notes}
-          currentOdo={state.odometer}
-          isAdmin={isAdmin}
-          onAddNote={handleAddNote}
-          onDeleteNote={handleDeleteNote}
-        />
+          </>
+        )}
 
         {/* Footer */}
         <footer className="text-center py-6 text-xs text-zinc-500 border-t border-[#1d212a] mt-8 flex flex-col sm:flex-row items-center justify-between gap-2">

@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
-import { Copy, Check, Edit2, Shield, Hash, KeyRound, Palette, User, BookOpen, Lock, ShieldAlert } from 'lucide-react';
+import { Copy, Check, Edit2, Shield, Hash, KeyRound, Palette, User, BookOpen, Lock, ShieldAlert, MapPin } from 'lucide-react';
 import { VehicleDetails } from '../types';
 
 interface VehicleDetailsStripProps {
   vehicle: VehicleDetails;
   isAdmin?: boolean;
   onUpdateVehicle: (updated: VehicleDetails) => void;
+  onOpenMap?: () => void;
 }
 
 export const VehicleDetailsStrip: React.FC<VehicleDetailsStripProps> = ({
   vehicle,
   isAdmin = true,
   onUpdateVehicle,
+  onOpenMap,
 }) => {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -173,16 +175,28 @@ export const VehicleDetailsStrip: React.FC<VehicleDetailsStripProps> = ({
                 className="w-full h-full object-contain"
               />
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <div className="text-xs font-display font-black text-white tracking-wider">
                 PULSAR <span className="text-amber-400">N160</span>
               </div>
               <div className="text-[10px] text-zinc-400 truncate">
                 {vehicle.colour}
               </div>
-              <div className="text-[9px] font-mono text-emerald-400">
-                Dual-ABS Verified
-              </div>
+              {onOpenMap ? (
+                <button
+                  type="button"
+                  onClick={onOpenMap}
+                  className="mt-1 flex items-center gap-1 text-[9px] font-mono text-amber-400 hover:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 px-1.5 py-0.5 rounded cursor-pointer transition-colors"
+                  title="Open Google Maps Service Locator"
+                >
+                  <MapPin className="w-2.5 h-2.5 text-amber-400" />
+                  <span>Map Locator</span>
+                </button>
+              ) : (
+                <div className="text-[9px] font-mono text-emerald-400">
+                  Dual-ABS Verified
+                </div>
+              )}
             </div>
           </div>
 
