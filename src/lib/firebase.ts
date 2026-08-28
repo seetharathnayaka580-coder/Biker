@@ -10,7 +10,16 @@ import {
   deleteDoc,
   Firestore,
 } from 'firebase/firestore';
-import { getAuth, signInAnonymously, onAuthStateChanged, Auth, User } from 'firebase/auth';
+import {
+  getAuth,
+  signInAnonymously,
+  onAuthStateChanged,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signOut as fbSignOut,
+  Auth,
+  User,
+} from 'firebase/auth';
 import firebaseConfigJson from '../../firebase-applet-config.json';
 import { AppState, MaintenanceNote, ServiceRecord, VehicleDetails } from '../types';
 import { SEED_STATE } from '../data/seed';
@@ -51,6 +60,23 @@ export function initAuth(): Promise<User | null> {
       }
     });
   });
+}
+
+// Google Sign-In with popup
+export async function signInWithGooglePopup(): Promise<User> {
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
+  const result = await signInWithPopup(auth, provider);
+  return result.user;
+}
+
+// Sign out function
+export async function signOutFromFirebase(): Promise<void> {
+  try {
+    await fbSignOut(auth);
+  } catch (err) {
+    console.warn('Firebase sign out notice:', err);
+  }
 }
 
 // Subscribe to real-time bike document and its services / notes subcollections

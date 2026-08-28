@@ -6,6 +6,7 @@ import { MaintenanceNote, NoteCategory } from '../types';
 interface MaintenanceNotesProps {
   notes: MaintenanceNote[];
   currentOdo: number;
+  isAdmin?: boolean;
   onAddNote: (note: MaintenanceNote) => void;
   onDeleteNote: (id: string) => void;
 }
@@ -23,6 +24,7 @@ const CATEGORIES: { key: NoteCategory; label: string; icon: React.FC<{ className
 export const MaintenanceNotes: React.FC<MaintenanceNotesProps> = ({
   notes,
   currentOdo,
+  isAdmin = true,
   onAddNote,
   onDeleteNote,
 }) => {
@@ -100,52 +102,54 @@ export const MaintenanceNotes: React.FC<MaintenanceNotesProps> = ({
         </div>
       </div>
 
-      {/* Add Note Form */}
-      <form onSubmit={handleSubmit} className="mb-5 p-3 rounded-xl bg-[#11141a] border border-[#262c37]">
-        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 mb-2">
-          <div className="sm:col-span-7">
-            <input
-              type="text"
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              placeholder="Quick log — chain lubed with Motul, tyre pressure filled to 28 PSI, oil level checked..."
-              className="w-full bg-[#181c23] border border-[#2d3443] rounded-xl px-3 py-2 text-xs text-white placeholder:text-zinc-500 focus:border-amber-400 focus:outline-none"
-              required
-            />
+      {/* Add Note Form - Admin Only */}
+      {isAdmin && (
+        <form onSubmit={handleSubmit} className="mb-5 p-3 rounded-xl bg-[#11141a] border border-[#262c37]">
+          <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 mb-2">
+            <div className="sm:col-span-7">
+              <input
+                type="text"
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                placeholder="Quick log — chain lubed with Motul, tyre pressure filled to 28 PSI, oil level checked..."
+                className="w-full bg-[#181c23] border border-[#2d3443] rounded-xl px-3 py-2 text-xs text-white placeholder:text-zinc-500 focus:border-amber-400 focus:outline-none"
+                required
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <input
+                type="number"
+                value={km}
+                onChange={(e) => setKm(e.target.value)}
+                placeholder="km"
+                className="w-full bg-[#181c23] border border-[#2d3443] rounded-xl px-3 py-2 text-xs font-mono text-amber-300 focus:border-amber-400 focus:outline-none"
+              />
+            </div>
+            <div className="sm:col-span-3">
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value as NoteCategory)}
+                className="w-full bg-[#181c23] border border-[#2d3443] rounded-xl px-3 py-2 text-xs text-zinc-200 focus:border-amber-400 focus:outline-none"
+              >
+                {CATEGORIES.map((c) => (
+                  <option key={c.key} value={c.key}>
+                    {c.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
-          <div className="sm:col-span-2">
-            <input
-              type="number"
-              value={km}
-              onChange={(e) => setKm(e.target.value)}
-              placeholder="km"
-              className="w-full bg-[#181c23] border border-[#2d3443] rounded-xl px-3 py-2 text-xs font-mono text-amber-300 focus:border-amber-400 focus:outline-none"
-            />
-          </div>
-          <div className="sm:col-span-3">
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value as NoteCategory)}
-              className="w-full bg-[#181c23] border border-[#2d3443] rounded-xl px-3 py-2 text-xs text-zinc-200 focus:border-amber-400 focus:outline-none"
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              className="px-4 py-1.5 rounded-lg text-xs font-bold bg-amber-500 hover:bg-amber-400 text-zinc-950 transition-colors cursor-pointer flex items-center gap-1.5 shadow-md shadow-amber-500/20"
             >
-              {CATEGORIES.map((c) => (
-                <option key={c.key} value={c.key}>
-                  {c.label}
-                </option>
-              ))}
-            </select>
+              <Plus className="w-3.5 h-3.5" />
+              Add Remark
+            </button>
           </div>
-        </div>
-        <div className="flex justify-end">
-          <button
-            type="submit"
-            className="px-4 py-1.5 rounded-lg text-xs font-bold bg-amber-500 hover:bg-amber-400 text-zinc-950 transition-colors cursor-pointer flex items-center gap-1.5 shadow-md shadow-amber-500/20"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            Add Remark
-          </button>
-        </div>
-      </form>
+        </form>
+      )}
 
       {/* Notes List */}
       {filteredNotes.length === 0 ? (
@@ -188,13 +192,15 @@ export const MaintenanceNotes: React.FC<MaintenanceNotesProps> = ({
                   </div>
                 </div>
 
-                <button
-                  onClick={() => onDeleteNote(note.id)}
-                  className="text-zinc-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity p-1 cursor-pointer"
-                  title="Delete note"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
+                {isAdmin && (
+                  <button
+                    onClick={() => onDeleteNote(note.id)}
+                    className="text-zinc-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity p-1 cursor-pointer"
+                    title="Delete note"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
             );
           })}

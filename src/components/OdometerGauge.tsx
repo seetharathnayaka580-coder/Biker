@@ -7,6 +7,7 @@ interface OdometerGaugeProps {
   odometer: number;
   targets: number[];
   services: ServiceRecord[];
+  isAdmin?: boolean;
   onUpdateOdometer: (newOdo: number) => void;
   onUpdateTarget: (newTarget: number) => void;
 }
@@ -15,6 +16,7 @@ export const OdometerGauge: React.FC<OdometerGaugeProps> = ({
   odometer,
   targets,
   services,
+  isAdmin = true,
   onUpdateOdometer,
   onUpdateTarget,
 }) => {
@@ -76,25 +78,33 @@ export const OdometerGauge: React.FC<OdometerGaugeProps> = ({
           </h2>
         </div>
         <div className="flex items-center gap-1.5">
-          <button
-            onClick={() => {
-              setTempOdo(odometer.toString());
-              setShowOdoModal(true);
-            }}
-            className="px-2.5 py-1 text-[11px] font-medium text-zinc-300 hover:text-white bg-[#222732] hover:bg-[#2c3240] border border-[#313847] rounded-lg transition-colors cursor-pointer flex items-center gap-1"
-          >
-            <Edit3 className="w-3 h-3 text-amber-400" />
-            Edit Odo
-          </button>
-          <button
-            onClick={() => {
-              setTempTarget(currentTarget.toString());
-              setShowTargetModal(true);
-            }}
-            className="px-2.5 py-1 text-[11px] font-medium text-zinc-300 hover:text-white bg-[#222732] hover:bg-[#2c3240] border border-[#313847] rounded-lg transition-colors cursor-pointer"
-          >
-            Target: {currentTarget} km
-          </button>
+          {isAdmin ? (
+            <>
+              <button
+                onClick={() => {
+                  setTempOdo(odometer.toString());
+                  setShowOdoModal(true);
+                }}
+                className="px-2.5 py-1 text-[11px] font-medium text-zinc-300 hover:text-white bg-[#222732] hover:bg-[#2c3240] border border-[#313847] rounded-lg transition-colors cursor-pointer flex items-center gap-1"
+              >
+                <Edit3 className="w-3 h-3 text-amber-400" />
+                Edit Odo
+              </button>
+              <button
+                onClick={() => {
+                  setTempTarget(currentTarget.toString());
+                  setShowTargetModal(true);
+                }}
+                className="px-2.5 py-1 text-[11px] font-medium text-zinc-300 hover:text-white bg-[#222732] hover:bg-[#2c3240] border border-[#313847] rounded-lg transition-colors cursor-pointer"
+              >
+                Target: {currentTarget} km
+              </button>
+            </>
+          ) : (
+            <span className="px-2.5 py-1 text-[11px] font-mono text-zinc-400 bg-[#202430] border border-[#2e3544] rounded-lg">
+              Target: {currentTarget} km
+            </span>
+          )}
         </div>
       </div>
 
@@ -153,21 +163,27 @@ export const OdometerGauge: React.FC<OdometerGaugeProps> = ({
           </span>
         </div>
 
-        {/* Quick Increment Chips */}
-        <div className="flex items-center gap-1.5 mt-2">
-          <span className="text-[11px] text-zinc-400 font-medium mr-1">Quick Add:</span>
-          {[10, 25, 50, 100].map((inc) => (
-            <button
-              key={inc}
-              onClick={() => handleQuickAdd(inc)}
-              className="px-2 py-0.5 text-[11px] font-mono text-amber-300 hover:text-amber-200 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-md transition-all cursor-pointer flex items-center gap-0.5"
-              title={`Add ${inc} km to current odometer`}
-            >
-              <Plus className="w-2.5 h-2.5" />
-              {inc}
-            </button>
-          ))}
-        </div>
+        {/* Quick Increment Chips / Admin only */}
+        {isAdmin ? (
+          <div className="flex items-center gap-1.5 mt-2">
+            <span className="text-[11px] text-zinc-400 font-medium mr-1">Quick Add:</span>
+            {[10, 25, 50, 100].map((inc) => (
+              <button
+                key={inc}
+                onClick={() => handleQuickAdd(inc)}
+                className="px-2 py-0.5 text-[11px] font-mono text-amber-300 hover:text-amber-200 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-md transition-all cursor-pointer flex items-center gap-0.5"
+                title={`Add ${inc} km to current odometer`}
+              >
+                <Plus className="w-2.5 h-2.5" />
+                {inc}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="text-[11px] font-mono text-zinc-500 mt-2 flex items-center gap-1">
+            <span>🔒 Odometer updates managed by Administrator (Sachi)</span>
+          </div>
+        )}
       </div>
 
       {/* Stats Breakdown Bar */}

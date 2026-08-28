@@ -7,7 +7,8 @@ import { ServiceTimeline } from './components/ServiceTimeline';
 import { MaintenanceNotes } from './components/MaintenanceNotes';
 import { PrintBookletModal } from './components/PrintBookletModal';
 import { ScheduleGuideModal } from './components/ScheduleGuideModal';
-import { AppState, MaintenanceNote, ServiceRecord, VehicleDetails } from './types';
+import { LoginPage } from './components/LoginPage';
+import { AppState, AuthSession, MaintenanceNote, ServiceRecord, VehicleDetails } from './types';
 import { loadState, saveState, calculateServiceStats } from './utils/formatters';
 import { SEED_STATE } from './data/seed';
 import {
@@ -21,13 +22,45 @@ import {
   addNoteToCloud,
   deleteNoteFromCloud,
   initializeFirestoreSeed,
+  signOutFromFirebase,
 } from './lib/firebase';
+
+const AUTH_STORAGE_KEY = 'n160_auth_session';
 
 export default function App() {
   const [state, setState] = useState<AppState>(() => loadState());
   const [syncStatus, setSyncStatus] = useState<'synced' | 'syncing' | 'offline' | 'error'>('syncing');
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
+
+  // Auth Session State
+  const [authSession, setAuthSession] = useState<AuthSession | null>(() => {
+    try {
+      const saved = localStorage.getItem(AUTH_STORAGE_KEY);
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const handleLoginSuccess = (session: AuthSession) => {
+    setAuthSession(session);
+    try {
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
+    } catch (e) {
+      console.warn('Could not save auth session:', e);
+    }
+  };
+
+  const handleSignOut = async () => {
+    await signOutFromFirebase();
+    setAuthSession(null);
+    try {
+      localStorage.removeItem(AUTH_STORAGE_KEY);
+    } catch (e) {
+      console.warn('Could not clear auth session:', e);
+    }
+  };
 
   // Initialize Firebase and Subscribe to Firestore in real-time
   useEffect(() => {
@@ -67,11 +100,18 @@ export default function App() {
     saveState(state);
   }, [state]);
 
+  // If not logged in, render the Motorcycle-themed Login Page
+  if (!authSession) {
+    return <LoginPage onLoginSuccess={handleLoginSuccess} />;
+  }
+
+  const isAdmin = authSession.role === 'admin';
   const currentTarget = state.targets[0] || 7688;
   const stats = calculateServiceStats(state.services, state.odometer, currentTarget);
 
   // Handlers with Optimistic UI + Cloud Firestore Persistence
   const handleUpdateVehicle = async (vehicle: VehicleDetails) => {
+    if (!isAdmin) return;
     try {
       setSyncStatus('syncing');
       await saveVehicleToCloud(vehicle);
@@ -83,6 +123,7 @@ export default function App() {
   };
 
   const handleUpdateOdometer = async (newOdo: number) => {
+    if (!isAdmin) return;
     try {
       setSyncStatus('syncing');
       await saveOdometerToCloud(newOdo);
@@ -94,6 +135,7 @@ export default function App() {
   };
 
   const handleUpdateTarget = async (newTarget: number) => {
+    if (!isAdmin) return;
     const newTargets = [newTarget, ...(state.targets.slice(1) || [])];
     try {
       setSyncStatus('syncing');
@@ -106,6 +148,7 @@ export default function App() {
   };
 
   const handleAddService = async (newService: ServiceRecord) => {
+    if (!isAdmin) return;
     try {
       setSyncStatus('syncing');
       await addServiceToCloud(newService);
@@ -117,6 +160,7 @@ export default function App() {
   };
 
   const handleDeleteService = async (id: string) => {
+    if (!isAdmin) return;
     try {
       setSyncStatus('syncing');
       await deleteServiceFromCloud(id);
@@ -128,6 +172,7 @@ export default function App() {
   };
 
   const handleAddNote = async (newNote: MaintenanceNote) => {
+    if (!isAdmin) return;
     try {
       setSyncStatus('syncing');
       await addNoteToCloud(newNote);
@@ -139,6 +184,7 @@ export default function App() {
   };
 
   const handleDeleteNote = async (id: string) => {
+    if (!isAdmin) return;
     try {
       setSyncStatus('syncing');
       await deleteNoteFromCloud(id);
@@ -160,6 +206,7 @@ export default function App() {
   };
 
   const handleImportData = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!isAdmin) return;
     const fileReader = new FileReader();
     if (e.target.files && e.target.files[0]) {
       fileReader.readAsText(e.target.files[0], 'UTF-8');
@@ -194,6 +241,7 @@ export default function App() {
   };
 
   const handleResetToDefaults = async () => {
+    if (!isAdmin) return;
     if (globalThis.confirm('Reset service log book to verified factory initial state and resync with Firebase?')) {
       const reset = JSON.parse(JSON.stringify(SEED_STATE));
       setState(reset);
@@ -209,10 +257,12 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0f1116] text-[#eef1f4] flex flex-col selection:bg-amber-500/30 selection:text-amber-200">
+    <div className={`min-h-screen bg-[#0f1116] text-[#eef1f4] flex flex-col selection:bg-amber-500/30 selection:text-amber-200 ${!isAdmin ? 'select-none' : ''}`}>
       {/* Top Bar Navigation */}
       <Header
         state={state}
+        authSession={authSession}
+        onSignOut={handleSignOut}
         onOpenPrint={() => setShowPrintModal(true)}
         onOpenSchedule={() => setShowScheduleModal(true)}
         onExportData={handleExportData}
@@ -224,9 +274,31 @@ export default function App() {
 
       {/* Main Container */}
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 py-5 sm:px-6">
+        {/* Client View Security Notice Banner */}
+        {!isAdmin && (
+          <div className="mb-4 p-3.5 rounded-2xl bg-gradient-to-r from-red-950/40 via-[#181a24] to-zinc-900 border border-red-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg">
+            <div className="flex items-center gap-2.5 text-xs">
+              <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping shrink-0" />
+              <div>
+                <span className="font-bold text-white">Client Inspection Mode ({authSession.username})</span>
+                <span className="text-zinc-400 block sm:inline sm:ml-2">
+                  Edit operations and data copying are disabled for vehicle record protection.
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={handleSignOut}
+              className="text-xs text-amber-400 hover:text-amber-300 font-semibold cursor-pointer shrink-0 py-1 px-2.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-all"
+            >
+              Sign In as Admin (Sachi) →
+            </button>
+          </div>
+        )}
+
         {/* Vehicle Identity Badges */}
         <VehicleDetailsStrip
           vehicle={state.vehicle}
+          isAdmin={isAdmin}
           onUpdateVehicle={handleUpdateVehicle}
         />
 
@@ -237,6 +309,7 @@ export default function App() {
               odometer={state.odometer}
               targets={state.targets}
               services={state.services}
+              isAdmin={isAdmin}
               onUpdateOdometer={handleUpdateOdometer}
               onUpdateTarget={handleUpdateTarget}
             />
@@ -246,6 +319,7 @@ export default function App() {
             <ServiceLogger
               currentOdometer={state.odometer}
               servicesCount={state.services.length}
+              isAdmin={isAdmin}
               onAddService={handleAddService}
             />
           </div>
@@ -254,6 +328,7 @@ export default function App() {
         {/* Service History Timeline */}
         <ServiceTimeline
           services={state.services}
+          isAdmin={isAdmin}
           onDeleteService={handleDeleteService}
         />
 
@@ -261,6 +336,7 @@ export default function App() {
         <MaintenanceNotes
           notes={state.notes}
           currentOdo={state.odometer}
+          isAdmin={isAdmin}
           onAddNote={handleAddNote}
           onDeleteNote={handleDeleteNote}
         />
@@ -268,7 +344,7 @@ export default function App() {
         {/* Footer */}
         <footer className="text-center py-6 text-xs text-zinc-500 border-t border-[#1d212a] mt-8 flex flex-col sm:flex-row items-center justify-between gap-2">
           <p>
-            Bajaj Pulsar N160 (BKT-1374) Service Log Book · Cloud-synchronized with Firebase Firestore.
+            Bajaj Pulsar N160 (BKT-1374) Service Log Book · Official Digital Record.
           </p>
           <span className="font-mono text-[11px] text-zinc-400">
             Database: {syncStatus === 'synced' ? '● Connected' : syncStatus === 'syncing' ? '◐ Syncing' : '○ Offline Mode'}

@@ -5,11 +5,13 @@ import { ServiceRecord } from '../types';
 
 interface ServiceTimelineProps {
   services: ServiceRecord[];
+  isAdmin?: boolean;
   onDeleteService: (id: string) => void;
 }
 
 export const ServiceTimeline: React.FC<ServiceTimelineProps> = ({
   services,
+  isAdmin = true,
   onDeleteService,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -194,7 +196,7 @@ export const ServiceTimeline: React.FC<ServiceTimelineProps> = ({
                     </span>
                   )}
 
-                  {!service.locked && (
+                  {isAdmin && !service.locked && (
                     <button
                       onClick={() => onDeleteService(service.id)}
                       className="text-zinc-500 hover:text-red-400 flex items-center gap-1 transition-colors cursor-pointer px-2 py-0.5 rounded hover:bg-red-500/10"

@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
-import { Copy, Check, Edit2, Shield, Hash, KeyRound, Palette, User, BookOpen } from 'lucide-react';
+import { Copy, Check, Edit2, Shield, Hash, KeyRound, Palette, User, BookOpen, Lock, ShieldAlert } from 'lucide-react';
 import { VehicleDetails } from '../types';
 
 interface VehicleDetailsStripProps {
   vehicle: VehicleDetails;
+  isAdmin?: boolean;
   onUpdateVehicle: (updated: VehicleDetails) => void;
 }
 
 export const VehicleDetailsStrip: React.FC<VehicleDetailsStripProps> = ({
   vehicle,
+  isAdmin = true,
   onUpdateVehicle,
 }) => {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
@@ -16,6 +18,8 @@ export const VehicleDetailsStrip: React.FC<VehicleDetailsStripProps> = ({
   const [editData, setEditData] = useState<VehicleDetails>(vehicle);
 
   const handleCopy = (key: string, text: string) => {
+    // If not admin (client mode), copying is strictly restricted
+    if (!isAdmin) return;
     navigator.clipboard.writeText(text);
     setCopiedKey(key);
     setTimeout(() => setCopiedKey(null), 1800);
@@ -23,6 +27,7 @@ export const VehicleDetailsStrip: React.FC<VehicleDetailsStripProps> = ({
 
   const handleSaveEdit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isAdmin) return;
     onUpdateVehicle(editData);
     setIsEditing(false);
   };
@@ -38,25 +43,35 @@ export const VehicleDetailsStrip: React.FC<VehicleDetailsStripProps> = ({
   ];
 
   return (
-    <div className="mb-6">
+    <div className={`mb-6 ${!isAdmin ? 'select-none' : ''}`} onContextMenu={(e) => { if (!isAdmin) e.preventDefault(); }}>
       <div className="flex items-center justify-between mb-2.5 px-1">
         <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
           <Shield className="w-3.5 h-3.5 text-amber-400" />
           Vehicle Identification & Registration
+          {!isAdmin && (
+            <span className="inline-flex items-center gap-1 text-[10px] lowercase font-normal px-2 py-0.2 rounded bg-zinc-800/80 text-zinc-400 border border-zinc-700/50">
+              <Lock className="w-2.5 h-2.5 text-amber-400" />
+              read-only (copy disabled)
+            </span>
+          )}
         </span>
-        <button
-          onClick={() => {
-            setEditData(vehicle);
-            setIsEditing(!isEditing);
-          }}
-          className="text-xs text-zinc-400 hover:text-amber-400 flex items-center gap-1 transition-colors cursor-pointer"
-        >
-          <Edit2 className="w-3 h-3" />
-          {isEditing ? 'Cancel' : 'Edit info'}
-        </button>
+
+        {/* Edit button is only visible to Admin */}
+        {isAdmin && (
+          <button
+            onClick={() => {
+              setEditData(vehicle);
+              setIsEditing(!isEditing);
+            }}
+            className="text-xs text-zinc-400 hover:text-amber-400 flex items-center gap-1 transition-colors cursor-pointer"
+          >
+            <Edit2 className="w-3 h-3" />
+            {isEditing ? 'Cancel' : 'Edit info'}
+          </button>
+        )}
       </div>
 
-      {isEditing ? (
+      {isEditing && isAdmin ? (
         <form onSubmit={handleSaveEdit} className="p-4 rounded-xl bg-[#181b22] border border-[#2a2f3b] shadow-xl">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mb-4">
             <div>
@@ -152,21 +167,27 @@ export const VehicleDetailsStrip: React.FC<VehicleDetailsStripProps> = ({
             <div
               key={item.key}
               onClick={() => handleCopy(item.key, item.value)}
-              className="group relative bg-[#181c23] hover:bg-[#202530] border border-[#262c37] hover:border-amber-500/40 rounded-xl p-2.5 sm:p-3 transition-all duration-200 cursor-pointer flex flex-col justify-between"
-              title="Click to copy"
+              className={`group relative bg-[#181c23] border border-[#262c37] rounded-xl p-2.5 sm:p-3 transition-all duration-200 flex flex-col justify-between ${
+                isAdmin
+                  ? 'hover:bg-[#202530] hover:border-amber-500/40 cursor-pointer'
+                  : 'cursor-default'
+              }`}
+              title={isAdmin ? 'Click to copy' : 'Official registration data (copy restricted)'}
             >
               <div className="flex items-center justify-between gap-1 mb-1">
                 <span className="text-[10px] uppercase tracking-wider font-semibold text-zinc-400 flex items-center gap-1">
-                  <item.icon className="w-3 h-3 text-zinc-400 group-hover:text-amber-400 transition-colors" />
+                  <item.icon className={`w-3 h-3 ${isAdmin ? 'text-zinc-400 group-hover:text-amber-400' : 'text-zinc-500'} transition-colors`} />
                   {item.label}
                 </span>
-                <span className="text-zinc-500 group-hover:text-amber-400 transition-colors">
-                  {copiedKey === item.key ? (
-                    <Check className="w-3 h-3 text-emerald-400" />
-                  ) : (
-                    <Copy className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  )}
-                </span>
+                {isAdmin && (
+                  <span className="text-zinc-500 group-hover:text-amber-400 transition-colors">
+                    {copiedKey === item.key ? (
+                      <Check className="w-3 h-3 text-emerald-400" />
+                    ) : (
+                      <Copy className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    )}
+                  </span>
+                )}
               </div>
               <div
                 className={`text-xs font-semibold truncate ${

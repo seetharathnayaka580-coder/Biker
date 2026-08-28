@@ -1,3 +1,13 @@
+export type UserRole = 'admin' | 'client';
+
+export interface AuthSession {
+  role: UserRole;
+  username: string;
+  email?: string;
+  photoURL?: string;
+  signedInAt: string;
+}
+
 export interface VehicleDetails {
   owner: string;
   model: string;
