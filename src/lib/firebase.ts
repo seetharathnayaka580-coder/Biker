@@ -159,6 +159,7 @@ export function subscribeToBike(
           engineNo: data.engineNo ?? SEED_STATE.vehicle.engineNo,
           bookNo: data.bookNo ?? SEED_STATE.vehicle.bookNo,
           photoUrl: data.photoUrl ?? SEED_STATE.vehicle.photoUrl,
+          ownerPhotoUrl: data.ownerPhotoUrl ?? SEED_STATE.vehicle.ownerPhotoUrl,
         };
         currentOdo = typeof data.odometer === 'number' ? data.odometer : SEED_STATE.odometer;
         currentTargets = Array.isArray(data.targets) && data.targets.length ? data.targets : [...SEED_STATE.targets];

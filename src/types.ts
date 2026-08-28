@@ -17,6 +17,7 @@ export interface VehicleDetails {
   engineNo: string;
   bookNo: string;
   photoUrl?: string;
+  ownerPhotoUrl?: string;
 }
 
 export interface ServiceRecord {

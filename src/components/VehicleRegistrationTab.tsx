@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Shield,
   Hash,
@@ -22,6 +22,10 @@ import {
   CheckCircle2,
   Printer,
   ShieldCheck,
+  Camera,
+  Upload,
+  Trash2,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { VehicleDetails } from '../types';
 
@@ -41,12 +45,85 @@ export const VehicleRegistrationTab: React.FC<VehicleRegistrationTabProps> = ({
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState<VehicleDetails>(vehicle);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const editFileInputRef = useRef<HTMLInputElement>(null);
 
   const handleCopy = (key: string, text: string) => {
     if (!isAdmin) return;
     navigator.clipboard.writeText(text);
     setCopiedKey(key);
     setTimeout(() => setCopiedKey(null), 1800);
+  };
+
+  const processOwnerPhoto = (file: File, isForEditForm = false) => {
+    if (!file.type.startsWith('image/')) {
+      alert('Please select a valid image file (JPG, PNG, WEBP).');
+      return;
+    }
+
+    setIsUploading(true);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        // Compress & scale to max 800px for crisp avatar rendering & efficient Firestore storage
+        const maxDim = 800;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxDim) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          }
+        } else {
+          if (height > maxDim) {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.88);
+
+          if (isForEditForm) {
+            setEditData((prev) => ({ ...prev, ownerPhotoUrl: compressedDataUrl }));
+          } else {
+            onUpdateVehicle({ ...vehicle, ownerPhotoUrl: compressedDataUrl });
+          }
+
+          setIsUploading(false);
+          setUploadSuccess(true);
+          setTimeout(() => setUploadSuccess(false), 2500);
+        }
+      };
+      img.src = e.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, isForEditForm = false) => {
+    if (e.target.files && e.target.files[0]) {
+      processOwnerPhoto(e.target.files[0], isForEditForm);
+    }
+  };
+
+  const handleRemovePhoto = (e: React.MouseEvent, isForEditForm = false) => {
+    e.stopPropagation();
+    if (!isAdmin) return;
+    if (isForEditForm) {
+      setEditData((prev) => ({ ...prev, ownerPhotoUrl: undefined }));
+    } else {
+      onUpdateVehicle({ ...vehicle, ownerPhotoUrl: undefined });
+    }
   };
 
   const handleSaveEdit = (e: React.FormEvent) => {
@@ -58,6 +135,22 @@ export const VehicleRegistrationTab: React.FC<VehicleRegistrationTabProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* Hidden File Inputs */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={(e) => handleFileChange(e, false)}
+        accept="image/*"
+        className="hidden"
+      />
+      <input
+        type="file"
+        ref={editFileInputRef}
+        onChange={(e) => handleFileChange(e, true)}
+        accept="image/*"
+        className="hidden"
+      />
+
       {/* Top Banner & Action Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#171a23] via-[#1a1f2b] to-[#14161f] border border-[#272d3b] shadow-xl">
         <div className="flex items-center gap-3">
@@ -113,11 +206,64 @@ export const VehicleRegistrationTab: React.FC<VehicleRegistrationTabProps> = ({
       {/* Admin Edit Form */}
       {isEditing && isAdmin && (
         <form onSubmit={handleSaveEdit} className="p-5 rounded-2xl bg-[#161a22] border border-amber-500/30 shadow-2xl space-y-4">
-          <div className="flex items-center gap-2 pb-2 border-b border-[#2a3040]">
-            <Edit2 className="w-4 h-4 text-amber-400" />
-            <h2 className="text-xs font-bold uppercase tracking-wider text-white">
-              Edit Vehicle & Owner Information
-            </h2>
+          <div className="flex items-center justify-between pb-2 border-b border-[#2a3040]">
+            <div className="flex items-center gap-2">
+              <Edit2 className="w-4 h-4 text-amber-400" />
+              <h2 className="text-xs font-bold uppercase tracking-wider text-white">
+                Edit Vehicle & Owner Information
+              </h2>
+            </div>
+            <span className="text-[10px] text-zinc-400">Admin Mode Active</span>
+          </div>
+
+          {/* Owner Photo in Edit Form */}
+          <div className="p-3.5 rounded-xl bg-[#1d222e] border border-[#2d3648] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="relative w-14 h-14 rounded-2xl bg-[#131722] border-2 border-amber-500/40 overflow-hidden shrink-0 flex items-center justify-center shadow-md">
+                {editData.ownerPhotoUrl ? (
+                  <img
+                    src={editData.ownerPhotoUrl}
+                    alt={editData.owner}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-tr from-amber-500 to-amber-300 text-zinc-950 flex items-center justify-center font-bold text-lg font-display">
+                    {editData.owner.slice(0, 2).toUpperCase()}
+                  </div>
+                )}
+              </div>
+              <div>
+                <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                  <User className="w-3.5 h-3.5 text-amber-400" />
+                  Owner Profile Photo
+                </div>
+                <p className="text-[11px] text-zinc-400 mt-0.5">
+                  {editData.ownerPhotoUrl ? 'Custom photo attached' : 'Default initials avatar active'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => editFileInputRef.current?.click()}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 font-bold text-xs transition-colors cursor-pointer"
+              >
+                <Camera className="w-3.5 h-3.5" />
+                <span>{editData.ownerPhotoUrl ? 'Change Photo' : 'Upload Photo'}</span>
+              </button>
+
+              {editData.ownerPhotoUrl && (
+                <button
+                  type="button"
+                  onClick={(e) => handleRemovePhoto(e, true)}
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 font-semibold text-xs transition-colors cursor-pointer"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Remove</span>
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
@@ -217,7 +363,7 @@ export const VehicleRegistrationTab: React.FC<VehicleRegistrationTabProps> = ({
             <button
               type="button"
               onClick={() => setIsEditing(false)}
-              className="px-4 py-2 rounded-xl text-xs font-semibold text-zinc-400 hover:bg-[#202530] transition-colors"
+              className="px-4 py-2 rounded-xl text-xs font-semibold text-zinc-400 hover:bg-[#202530] transition-colors cursor-pointer"
             >
               Cancel
             </button>
@@ -343,7 +489,23 @@ export const VehicleRegistrationTab: React.FC<VehicleRegistrationTabProps> = ({
         </div>
 
         {/* CARD 2: OWNER DETAILS (Registration & Ownership) */}
-        <div className="lg:col-span-5 bg-[#141720] rounded-2xl border border-[#272d3b] p-5 sm:p-6 shadow-xl space-y-5 flex flex-col justify-between">
+        <div
+          onDragOver={(e) => {
+            e.preventDefault();
+            if (isAdmin) setIsDragging(true);
+          }}
+          onDragLeave={() => setIsDragging(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setIsDragging(false);
+            if (isAdmin && e.dataTransfer.files && e.dataTransfer.files[0]) {
+              processOwnerPhoto(e.dataTransfer.files[0], false);
+            }
+          }}
+          className={`lg:col-span-5 bg-[#141720] rounded-2xl border transition-all duration-200 p-5 sm:p-6 shadow-xl space-y-5 flex flex-col justify-between ${
+            isDragging ? 'border-amber-400 bg-amber-500/5' : 'border-[#272d3b]'
+          }`}
+        >
           <div className="space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-[#222734]">
               <div className="flex items-center gap-2.5">
@@ -363,18 +525,83 @@ export const VehicleRegistrationTab: React.FC<VehicleRegistrationTabProps> = ({
               </span>
             </div>
 
-            {/* Owner Identity Profile Box */}
-            <div className="p-4 rounded-xl bg-[#191d27] border border-[#2a3242] space-y-3">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-amber-500 to-amber-300 text-zinc-950 flex items-center justify-center font-bold text-lg shadow-md font-display">
-                  {vehicle.owner.slice(0, 2).toUpperCase()}
+            {/* Owner Identity Profile Box with Photo Upload */}
+            <div className="p-4 rounded-xl bg-[#191d27] border border-[#2a3242] space-y-3 relative overflow-hidden">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3.5">
+                  {/* Avatar / Photo with Camera Hover Trigger */}
+                  <div
+                    onClick={() => {
+                      if (isAdmin) fileInputRef.current?.click();
+                    }}
+                    className={`relative w-14 h-14 rounded-2xl overflow-hidden shrink-0 border-2 transition-all shadow-md group ${
+                      isAdmin ? 'cursor-pointer hover:border-amber-400 hover:shadow-amber-500/20' : 'border-amber-500/30'
+                    } ${vehicle.ownerPhotoUrl ? 'border-amber-500/40 bg-[#0e1118]' : 'border-amber-500/30'}`}
+                    title={isAdmin ? 'Click to upload or change owner photo' : ''}
+                  >
+                    {vehicle.ownerPhotoUrl ? (
+                      <img
+                        src={vehicle.ownerPhotoUrl}
+                        alt={vehicle.owner}
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-tr from-amber-500 to-amber-300 text-zinc-950 flex items-center justify-center font-bold text-lg font-display">
+                        {vehicle.owner.slice(0, 2).toUpperCase()}
+                      </div>
+                    )}
+
+                    {/* Camera overlay on hover / active */}
+                    {isAdmin && (
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-amber-300">
+                        <Camera className="w-4 h-4" />
+                        <span className="text-[9px] font-bold mt-0.5">Change</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <div className="text-base font-bold text-white flex items-center gap-2">
+                      <span>{vehicle.owner}</span>
+                      {uploadSuccess && (
+                        <span className="text-[10px] text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 rounded-full flex items-center gap-1 font-sans">
+                          <Check className="w-3 h-3" /> Photo Saved
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-xs text-amber-400 font-mono">Authorized Registered Owner</span>
+                  </div>
                 </div>
-                <div>
-                  <div className="text-base font-bold text-white">{vehicle.owner}</div>
-                  <span className="text-xs text-amber-400 font-mono">Authorized Registered Owner</span>
-                </div>
+
+                {/* Photo Action Buttons for Admin */}
+                {isAdmin && (
+                  <div className="flex items-center gap-1.5 self-end sm:self-center">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isUploading}
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-semibold transition-all cursor-pointer shadow-sm active:scale-95"
+                    >
+                      <Camera className="w-3.5 h-3.5" />
+                      <span>{vehicle.ownerPhotoUrl ? 'Change' : 'Upload Photo'}</span>
+                    </button>
+
+                    {vehicle.ownerPhotoUrl && (
+                      <button
+                        type="button"
+                        onClick={(e) => handleRemovePhoto(e, false)}
+                        className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/25 transition-colors cursor-pointer"
+                        title="Remove photo"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
 
+              {/* Status details */}
               <div className="pt-2 border-t border-[#252c3b] space-y-2 text-xs">
                 <div className="flex justify-between">
                   <span className="text-zinc-400">Authority:</span>
@@ -417,3 +644,4 @@ export const VehicleRegistrationTab: React.FC<VehicleRegistrationTabProps> = ({
     </div>
   );
 };
+

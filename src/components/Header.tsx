@@ -153,9 +153,18 @@ export const Header: React.FC<HeaderProps> = ({
                   </span>
                 )}
               </div>
-              <p className="text-[11px] text-zinc-400 font-medium mt-0.5">
-                {state.vehicle.owner} · Odometer: <strong className="text-zinc-100 font-mono">{state.odometer.toLocaleString()} km</strong>
-              </p>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                {state.vehicle.ownerPhotoUrl && (
+                  <img
+                    src={state.vehicle.ownerPhotoUrl}
+                    alt={state.vehicle.owner}
+                    className="w-4 h-4 rounded-full object-cover border border-amber-500/40 shrink-0"
+                  />
+                )}
+                <p className="text-[11px] text-zinc-400 font-medium">
+                  {state.vehicle.owner} · Odometer: <strong className="text-zinc-100 font-mono">{state.odometer.toLocaleString()} km</strong>
+                </p>
+              </div>
             </div>
           </div>
 

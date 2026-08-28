@@ -82,30 +82,41 @@ export const PrintBookletModal: React.FC<PrintBookletModalProps> = ({ state, onC
           </div>
 
           {/* Vehicle & Owner Dossier */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-zinc-50 border border-zinc-200 rounded-xl p-4 mb-6">
-            <div>
-              <span className="block text-[10px] uppercase font-bold text-zinc-500">Registered Owner</span>
-              <span className="font-bold text-zinc-900 text-sm">{state.vehicle.owner}</span>
-            </div>
-            <div>
-              <span className="block text-[10px] uppercase font-bold text-zinc-500">Vehicle Model</span>
-              <span className="font-bold text-zinc-900">{state.vehicle.model}</span>
-            </div>
-            <div>
-              <span className="block text-[10px] uppercase font-bold text-zinc-500">Colour</span>
-              <span className="font-semibold text-zinc-900">{state.vehicle.colour}</span>
-            </div>
-            <div>
-              <span className="block text-[10px] uppercase font-bold text-zinc-500">Current Odometer</span>
-              <span className="font-mono font-bold text-zinc-900 text-sm">{fmtKm(state.odometer)}</span>
-            </div>
-            <div className="sm:col-span-2">
-              <span className="block text-[10px] uppercase font-bold text-zinc-500">Chassis / Frame Number</span>
-              <span className="font-mono font-bold text-zinc-800">{state.vehicle.chassisNo}</span>
-            </div>
-            <div className="sm:col-span-2">
-              <span className="block text-[10px] uppercase font-bold text-zinc-500">Engine Number</span>
-              <span className="font-mono font-bold text-zinc-800">{state.vehicle.engineNo}</span>
+          <div className="flex flex-col sm:flex-row items-start gap-4 bg-zinc-50 border border-zinc-200 rounded-xl p-4 mb-6">
+            {state.vehicle.ownerPhotoUrl && (
+              <div className="w-16 h-20 rounded-lg overflow-hidden border border-zinc-300 bg-white shrink-0 shadow-sm p-0.5">
+                <img
+                  src={state.vehicle.ownerPhotoUrl}
+                  alt={state.vehicle.owner}
+                  className="w-full h-full object-cover rounded"
+                />
+              </div>
+            )}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 flex-1 w-full">
+              <div>
+                <span className="block text-[10px] uppercase font-bold text-zinc-500">Registered Owner</span>
+                <span className="font-bold text-zinc-900 text-sm">{state.vehicle.owner}</span>
+              </div>
+              <div>
+                <span className="block text-[10px] uppercase font-bold text-zinc-500">Vehicle Model</span>
+                <span className="font-bold text-zinc-900">{state.vehicle.model}</span>
+              </div>
+              <div>
+                <span className="block text-[10px] uppercase font-bold text-zinc-500">Colour</span>
+                <span className="font-semibold text-zinc-900">{state.vehicle.colour}</span>
+              </div>
+              <div>
+                <span className="block text-[10px] uppercase font-bold text-zinc-500">Current Odometer</span>
+                <span className="font-mono font-bold text-zinc-900 text-sm">{fmtKm(state.odometer)}</span>
+              </div>
+              <div className="sm:col-span-2">
+                <span className="block text-[10px] uppercase font-bold text-zinc-500">Chassis / Frame Number</span>
+                <span className="font-mono font-bold text-zinc-800">{state.vehicle.chassisNo}</span>
+              </div>
+              <div className="sm:col-span-2">
+                <span className="block text-[10px] uppercase font-bold text-zinc-500">Engine Number</span>
+                <span className="font-mono font-bold text-zinc-800">{state.vehicle.engineNo}</span>
+              </div>
             </div>
           </div>
 
