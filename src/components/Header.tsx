@@ -102,12 +102,12 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           {/* Brand & Plate */}
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-zinc-900 to-zinc-950 border border-amber-500/40 p-1 flex items-center justify-center shadow-lg shadow-amber-500/10 overflow-hidden shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#181d28] to-[#0c0f15] border border-amber-500/40 p-0.5 flex items-center justify-center shadow-lg shadow-amber-500/10 overflow-hidden shrink-0">
               <img
-                src="/pulsar_n160.svg"
+                src={state.vehicle.photoUrl || '/pulsar_n160.svg'}
                 alt="Bajaj Pulsar N160"
                 referrerPolicy="no-referrer"
-                className="w-full h-full object-contain"
+                className={`w-full h-full ${state.vehicle.photoUrl ? 'object-cover' : 'object-contain'} rounded-lg`}
               />
             </div>
             <div>

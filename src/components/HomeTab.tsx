@@ -228,8 +228,8 @@ export const HomeTab: React.FC<HomeTabProps> = ({
                 src={currentBikePhoto}
                 alt="Bajaj Pulsar N160 Brooklyn Black"
                 referrerPolicy="no-referrer"
-                className={`w-full h-full object-cover sm:object-contain rounded-xl transition-transform duration-500 ${
-                  isCustomPhoto ? 'object-cover' : 'object-contain'
+                className={`w-full h-full rounded-xl transition-transform duration-500 ${
+                  isCustomPhoto ? 'object-cover' : 'object-contain p-1'
                 } group-hover:scale-105`}
               />
 
@@ -260,50 +260,57 @@ export const HomeTab: React.FC<HomeTabProps> = ({
               {/* Drag over indicator */}
               {isDragging && (
                 <div className="absolute inset-0 bg-black/85 backdrop-blur-sm flex flex-col items-center justify-center text-amber-400 z-30 animate-pulse">
-                  <Upload className="w-10 h-10 mb-2" />
-                  <p className="text-xs font-bold uppercase tracking-wider">Drop Photo to Update Bike Image</p>
+                  <Upload className="w-8 h-8 mb-2" />
+                  <p className="text-xs font-bold uppercase tracking-wider">Drop Photo Here</p>
                 </div>
               )}
 
-              {/* Image Footer with Reg & Quick Photo Actions */}
-              <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between px-3 py-2 rounded-xl bg-black/85 backdrop-blur-md border border-zinc-700/60 text-xs shadow-lg">
-                <div className="flex flex-col">
-                  <span className="font-mono text-zinc-400 text-[10px]">Reg Number</span>
-                  <strong className="text-white font-mono text-xs">{state.vehicle.regNo}</strong>
-                </div>
-
-                <div className="flex items-center gap-1.5">
-                  {isAdmin && (
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-[11px] transition-colors shadow cursor-pointer"
-                      title="Upload or Change Photo"
-                    >
-                      <Camera className="w-3 h-3" />
-                      <span>{isCustomPhoto ? 'Change Photo' : 'Upload Photo'}</span>
-                    </button>
-                  )}
-
-                  {isCustomPhoto && isAdmin && (
-                    <button
-                      type="button"
-                      onClick={handleResetPhoto}
-                      className="p-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white border border-zinc-700/40 text-[10px] transition-colors cursor-pointer"
-                      title="Reset to Stock Render"
-                    >
-                      <RotateCcw className="w-3 h-3" />
-                    </button>
-                  )}
-                </div>
+              {/* Bottom plate overlay on image */}
+              <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between px-3 py-1.5 rounded-lg bg-black/75 backdrop-blur-md border border-zinc-800/80 text-xs shadow-md">
+                <span className="font-mono text-zinc-400 text-[10px]">Registration</span>
+                <strong className="text-white font-mono text-xs tracking-wider">{state.vehicle.regNo}</strong>
               </div>
+            </div>
+
+            {/* Compact controls under photo */}
+            <div className="flex items-center justify-between w-full max-w-md mt-2 px-1 text-xs">
+              <div className="flex items-center gap-1.5">
+                {isAdmin && (
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploading}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-amber-500/15 hover:bg-amber-500/25 active:scale-95 text-amber-400 border border-amber-500/30 text-[11px] font-semibold transition-all cursor-pointer shadow-sm"
+                    title="Upload or Change Bike Photo"
+                  >
+                    <Camera className="w-3 h-3" />
+                    <span>{isUploading ? 'Saving...' : isCustomPhoto ? 'Change Photo' : 'Add Photo'}</span>
+                  </button>
+                )}
+
+                {isCustomPhoto && isAdmin && (
+                  <button
+                    type="button"
+                    onClick={handleResetPhoto}
+                    className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-zinc-800/80 hover:bg-zinc-700 active:scale-95 text-zinc-400 hover:text-zinc-200 border border-zinc-700/50 text-[11px] transition-all cursor-pointer"
+                    title="Reset to Stock Factory Render"
+                  >
+                    <RotateCcw className="w-2.5 h-2.5" />
+                    <span>Reset</span>
+                  </button>
+                )}
+              </div>
+
+              <span className="text-[10px] text-zinc-500 font-mono">
+                {isCustomPhoto ? 'Custom photo active' : 'Official render'}
+              </span>
             </div>
 
             {/* Upload status banner */}
             {uploadSuccess && (
-              <div className="mt-2 flex items-center gap-1.5 text-xs text-emerald-400 font-medium px-3 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+              <div className="mt-2 flex items-center gap-1.5 text-xs text-emerald-400 font-medium px-3 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 w-full max-w-md">
                 <Check className="w-3.5 h-3.5" />
-                <span>Bike photo successfully updated and synced!</span>
+                <span>Bike photo updated and synced!</span>
               </div>
             )}
 
