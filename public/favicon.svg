@@ -1,59 +1,92 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%">
   <defs>
     <linearGradient id="favBg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0f1219" />
-      <stop offset="100%" stop-color="#050608" />
+      <stop offset="0%" stop-color="#141822" />
+      <stop offset="100%" stop-color="#07090c" />
     </linearGradient>
     <linearGradient id="favAmber" x1="0%" y1="0%" x2="100%" y2="0%">
       <stop offset="0%" stop-color="#fbbf24" />
       <stop offset="100%" stop-color="#f59e0b" />
     </linearGradient>
+    <linearGradient id="favRed" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ef4444" />
+      <stop offset="100%" stop-color="#dc2626" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
   </defs>
   
-  <!-- Base Squircle -->
-  <rect width="100" height="100" rx="24" fill="url(#favBg)" stroke="#f59e0b" stroke-width="2" stroke-opacity="0.8" />
+  <!-- Outer Dark Squircle Container -->
+  <rect width="128" height="128" rx="30" fill="url(#favBg)" stroke="#f59e0b" stroke-width="2.5" stroke-opacity="0.8" />
   
-  <!-- Wheels -->
-  <!-- Rear Wheel -->
-  <circle cx="28" cy="65" r="14" fill="#11141b" stroke="#334155" stroke-width="2.5" />
-  <circle cx="28" cy="65" r="9" fill="#090b0e" />
-  <circle cx="28" cy="65" r="8" fill="none" stroke="#ef4444" stroke-width="1" stroke-dasharray="8 4" />
-  <!-- Front Wheel -->
-  <circle cx="74" cy="65" r="14" fill="#11141b" stroke="#334155" stroke-width="2.5" />
-  <circle cx="74" cy="65" r="9" fill="#090b0e" />
-  <circle cx="74" cy="65" r="8" fill="none" stroke="#ef4444" stroke-width="1" stroke-dasharray="8 4" />
-  <!-- Discs -->
-  <circle cx="74" cy="65" r="5" fill="none" stroke="#cbd5e1" stroke-width="1.5" />
-  
-  <!-- Swingarm & Engine -->
-  <path d="M28 65 L48 64 L54 55 L42 55 Z" fill="#1e293b" />
-  <path d="M44 54 L60 52 L62 67 L46 67 Z" fill="#1e2430" stroke="#334155" stroke-width="1" />
-  <!-- Underbelly Exhaust -->
-  <path d="M48 68 L58 68 L60 65 L50 65 Z" fill="#94a3b8" />
-  
-  <!-- Front Fork -->
-  <line x1="68" y1="38" x2="74" y2="65" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round" />
-  <path d="M66 52 Q72 49 80 56" fill="none" stroke="#1e293b" stroke-width="2" />
-  
-  <!-- Tail & Seat -->
-  <path d="M22 45 L38 46 L46 52 L34 52 Z" fill="#161b24" stroke="#2c3545" stroke-width="1" />
-  <path d="M21 44 L25 45 L23 47 Z" fill="#ef4444" />
-  <path d="M28 44 Q36 45 42 47 L38 50 L30 47 Z" fill="#0b0e14" />
-  
-  <!-- Tank & Shrouds (Brooklyn Black with Red Decal) -->
-  <path d="M44 50 Q50 38 60 38 Q66 39 68 44 Q64 54 56 55 Z" fill="#161a22" stroke="#384252" stroke-width="1.5" />
-  <path d="M54 40 L67 42 L68 50 L61 54 Z" fill="#0d1017" stroke="#ef4444" stroke-width="1" />
-  <path d="M52 42 L64 43" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round" />
-  
-  <!-- Projector Headlight Mask -->
-  <path d="M68 37 L74 38 L78 43 L73 47 L69 43 Z" fill="#161b24" />
-  <circle cx="75" cy="43" r="1.8" fill="#38bdf8" />
-  <line x1="72" y1="39" x2="76" y2="41" stroke="#ffffff" stroke-width="1" />
-  
-  <!-- Handlebars -->
-  <path d="M64 36 L68 35 L70 36" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" />
-  
-  <!-- N160 Text Badge at bottom -->
-  <rect x="25" y="83" width="50" height="12" rx="4" fill="#0a0c10" stroke="#f59e0b" stroke-width="0.8" />
-  <text x="50" y="92" font-family="sans-serif" font-size="7.5" font-weight="900" fill="#f59e0b" text-anchor="middle" letter-spacing="1">N160</text>
+  <!-- Inner Glow Border -->
+  <rect width="120" height="120" x="4" y="4" rx="26" fill="none" stroke="#252c3b" stroke-width="1.5" />
+
+  <!-- MOTORCYCLE SILHOUETTE (High-Contrast Pulsar N160) -->
+  <g transform="translate(4, 8)">
+    <!-- Rear Wheel & Red Rim Tape -->
+    <circle cx="32" cy="74" r="18" fill="#0d1017" stroke="#334155" stroke-width="3" />
+    <circle cx="32" cy="74" r="12" fill="#05070a" />
+    <circle cx="32" cy="74" r="11" fill="none" stroke="url(#favRed)" stroke-width="2" stroke-dasharray="10 5 15 5" />
+    <circle cx="32" cy="74" r="6" fill="#1e293b" />
+
+    <!-- Front Wheel & Red Rim Tape + ABS Disc -->
+    <circle cx="92" cy="74" r="18" fill="#0d1017" stroke="#334155" stroke-width="3" />
+    <circle cx="92" cy="74" r="12" fill="#05070a" />
+    <circle cx="92" cy="74" r="11" fill="none" stroke="url(#favRed)" stroke-width="2" stroke-dasharray="10 5 15 5" />
+    <circle cx="92" cy="74" r="7" fill="none" stroke="#94a3b8" stroke-width="2" />
+    <circle cx="92" cy="74" r="3" fill="#f59e0b" />
+
+    <!-- Rear Swingarm & Chain -->
+    <path d="M32 74 L60 72 L66 60 L50 60 Z" fill="#1e293b" stroke="#334155" stroke-width="1.5" />
+    <!-- Rear Mudguard -->
+    <path d="M22 66 Q32 55 46 62" fill="none" stroke="#0f172a" stroke-width="3" />
+
+    <!-- DTS-i Engine Block & Underbelly Exhaust -->
+    <path d="M52 58 L76 55 L78 76 L55 76 Z" fill="#181d28" stroke="#374151" stroke-width="1.5" />
+    <!-- Underbelly Exhaust Silencer -->
+    <path d="M58 78 L72 78 L74 74 L60 74 Z" fill="#94a3b8" stroke="#64748b" stroke-width="1" />
+
+    <!-- Engine Belly Cowl with Red Stripe -->
+    <path d="M54 77 L78 74 L84 66 L74 80 L54 80 Z" fill="#111622" stroke="#374151" stroke-width="1" />
+    <line x1="62" y1="78" x2="74" y2="76" stroke="#ef4444" stroke-width="1.5" stroke-linecap="round" />
+
+    <!-- Telescopic Front Forks -->
+    <line x1="84" y1="38" x2="92" y2="74" stroke="#94a3b8" stroke-width="3.5" stroke-linecap="round" />
+    <path d="M82 58 Q90 52 100 62" fill="none" stroke="#181d28" stroke-width="3" />
+
+    <!-- Upswept Tail & Split Seats -->
+    <path d="M26 48 L48 50 L58 58 L42 58 Z" fill="#181e2b" stroke="#334155" stroke-width="1.2" />
+    <!-- Red Tail Light Tip -->
+    <path d="M24 47 L30 48 L27 51 Z" fill="#ef4444" filter="url(#glow)" />
+    <!-- Rider Seat Scoop -->
+    <path d="M46 48 Q58 50 65 54 L60 58 L48 52 Z" fill="#080a0e" stroke="#1f2937" />
+
+    <!-- Muscular Fuel Tank (Brooklyn Black) -->
+    <path d="M56 54 Q64 38 78 38 Q85 39 88 47 Q80 60 70 61 Z" fill="#181e2b" stroke="#3b485d" stroke-width="1.5" />
+    <!-- Extended Tank Shroud Wing -->
+    <path d="M70 41 L88 44 L90 56 L78 60 Z" fill="#0e121b" stroke="#ef4444" stroke-width="1.2" />
+    <!-- N160 Red Slash Graphic -->
+    <line x1="68" y1="44" x2="85" y2="47" stroke="#ef4444" stroke-width="2" stroke-linecap="round" />
+
+    <!-- Bi-Functional LED Projector Headlamp -->
+    <path d="M88 38 L96 40 L101 48 L94 53 L89 47 Z" fill="#181e2b" stroke="#374151" stroke-width="1" />
+    <!-- LED DRL Brow -->
+    <line x1="93" y1="41" x2="98" y2="44" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" />
+    <!-- Projector Eye (Cyan) -->
+    <circle cx="96" cy="47" r="2.5" fill="#38bdf8" stroke="#ffffff" stroke-width="0.8" filter="url(#glow)" />
+    <!-- Handlebar & Mirror -->
+    <path d="M82 36 L88 34 L90 36" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" />
+    <line x1="84" y1="34" x2="80" y2="28" stroke="#475569" stroke-width="1.2" />
+  </g>
+
+  <!-- URL LOGO / BRAND TEXT PILL (N160) -->
+  <g transform="translate(64, 108)">
+    <rect x="-42" y="-12" width="84" height="20" rx="6" fill="#080a0f" stroke="#f59e0b" stroke-width="1.2" />
+    <text x="-2" y="2" font-family="'Rajdhani', sans-serif, system-ui" font-size="12" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="1">
+      PULSAR <tspan fill="#f59e0b" font-weight="900">N160</tspan>
+    </text>
+  </g>
 </svg>

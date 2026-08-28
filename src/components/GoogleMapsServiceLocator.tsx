@@ -250,8 +250,13 @@ export const GoogleMapsServiceLocator: React.FC<GoogleMapsServiceLocatorProps> =
       <div className="bg-gradient-to-r from-[#171a23] via-[#1a1f2c] to-[#141720] border border-[#2a3040] rounded-2xl p-4 sm:p-6 shadow-xl relative overflow-hidden">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
           <div className="flex items-start sm:items-center gap-3.5">
-            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0 shadow-lg shadow-amber-500/10">
-              <MapIcon className="w-6 h-6" />
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-zinc-900 to-zinc-950 border border-amber-500/30 p-1 flex items-center justify-center text-amber-400 shrink-0 shadow-lg shadow-amber-500/10 overflow-hidden">
+              <img
+                src="/pulsar_n160.svg"
+                alt="Bajaj Pulsar N160"
+                referrerPolicy="no-referrer"
+                className="w-full h-full object-contain"
+              />
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">

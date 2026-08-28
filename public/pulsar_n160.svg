@@ -1,196 +1,275 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 450" width="100%" height="100%">
   <defs>
-    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0a0c10" />
-      <stop offset="50%" stop-color="#141824" />
-      <stop offset="100%" stop-color="#08090d" />
+    <!-- Background Vignette Gradient -->
+    <radialGradient id="bgGlow" cx="50%" cy="50%" r="75%">
+      <stop offset="0%" stop-color="#181d28" />
+      <stop offset="60%" stop-color="#0e1117" />
+      <stop offset="100%" stop-color="#06070a" />
+    </radialGradient>
+
+    <!-- Metallic Black Bodywork Gradient -->
+    <linearGradient id="bodyBlack" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3d4452" />
+      <stop offset="25%" stop-color="#242a35" />
+      <stop offset="70%" stop-color="#151921" />
+      <stop offset="100%" stop-color="#0a0c10" />
     </linearGradient>
-    <linearGradient id="tankGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#2c3240" />
-      <stop offset="40%" stop-color="#161922" />
-      <stop offset="100%" stop-color="#090b10" />
+
+    <!-- Tank Shroud Gradient -->
+    <linearGradient id="shroudGrad" x1="0%" y1="0%" x2="100%" y2="50%">
+      <stop offset="0%" stop-color="#4a5363" />
+      <stop offset="40%" stop-color="#282f3c" />
+      <stop offset="100%" stop-color="#12151c" />
     </linearGradient>
-    <linearGradient id="accentRed" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#ef4444" />
-      <stop offset="100%" stop-color="#dc2626" />
+
+    <!-- Racing Red Accent -->
+    <linearGradient id="n160Red" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ff3344" />
+      <stop offset="100%" stop-color="#d91424" />
     </linearGradient>
-    <linearGradient id="amberGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+
+    <!-- Amber Gold Metallic -->
+    <linearGradient id="amberGold" x1="0%" y1="0%" x2="100%" y2="0%">
       <stop offset="0%" stop-color="#fbbf24" />
       <stop offset="100%" stop-color="#f59e0b" />
     </linearGradient>
-    <linearGradient id="metalGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#94a3b8" />
-      <stop offset="50%" stop-color="#475569" />
-      <stop offset="100%" stop-color="#1e293b" />
+
+    <!-- Engine Metal Finish -->
+    <linearGradient id="engineDark" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#333a46" />
+      <stop offset="50%" stop-color="#1c212a" />
+      <stop offset="100%" stop-color="#0f1217" />
     </linearGradient>
-    <linearGradient id="rimGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#334155" />
-      <stop offset="50%" stop-color="#0f172a" />
-      <stop offset="100%" stop-color="#1e293b" />
+
+    <!-- Chrome & Stainless Steel -->
+    <linearGradient id="steelGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e2e8f0" />
+      <stop offset="50%" stop-color="#94a3b8" />
+      <stop offset="100%" stop-color="#475569" />
     </linearGradient>
-    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="8" result="blur" />
+
+    <!-- Glow Filter -->
+    <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
       <feComposite in="SourceGraphic" in2="blur" operator="over" />
     </filter>
-    <filter id="subtleGlow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="4" result="blur" />
+    <filter id="crispGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
       <feComposite in="SourceGraphic" in2="blur" operator="over" />
     </filter>
   </defs>
 
-  <!-- Background Squircle / Shield -->
-  <rect width="512" height="512" rx="110" fill="url(#bgGrad)" />
-  <rect width="504" height="504" x="4" y="4" rx="106" fill="none" stroke="#f59e0b" stroke-width="3" stroke-opacity="0.3" />
-  <rect width="496" height="496" x="8" y="8" rx="102" fill="none" stroke="#2a3040" stroke-width="2" />
-
-  <!-- Speed lines background subtle -->
-  <path d="M40 380 L472 380" stroke="#f59e0b" stroke-opacity="0.15" stroke-width="2" stroke-dasharray="16 8" />
-  <path d="M60 400 L452 400" stroke="#ef4444" stroke-opacity="0.1" stroke-width="1.5" />
-
-  <!-- BAJAJ PULSAR N160 DETAILED MOTORCYCLE VECTOR (Side-Streetfighter Stance) -->
-  <g transform="translate(10, 10)">
-    <!-- Shadow beneath bike -->
-    <ellipse cx="246" cy="378" rx="190" ry="18" fill="#000000" opacity="0.75" filter="url(#glow)" />
-
-    <!-- REAR WHEEL & TIRE -->
-    <g id="rear-wheel">
-      <!-- Outer Tire -->
-      <circle cx="115" cy="320" r="62" fill="#12151c" stroke="#1e2430" stroke-width="4" />
-      <circle cx="115" cy="320" r="54" fill="#0d0f15" />
-      <!-- Rim -->
-      <circle cx="115" cy="320" r="42" fill="url(#rimGrad)" stroke="#475569" stroke-width="2" />
-      <!-- N160 Red Rim Tape Accent -->
-      <circle cx="115" cy="320" r="41" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-dasharray="25 15 35 15" />
-      <!-- Rear Brake Disc -->
-      <circle cx="115" cy="320" r="26" fill="none" stroke="#94a3b8" stroke-width="3" stroke-dasharray="6 3" />
-      <!-- Rim Spokes (Sporty Alloy) -->
-      <path d="M115 320 L115 278 M115 320 L115 362 M115 320 L78 300 M115 320 L152 340 M115 320 L78 340 M115 320 L152 300" stroke="#cbd5e1" stroke-width="3.5" stroke-linecap="round" />
-      <!-- Hub -->
-      <circle cx="115" cy="320" r="12" fill="#0f172a" stroke="#f59e0b" stroke-width="2" />
-    </g>
-
-    <!-- FRONT WHEEL & TIRE -->
-    <g id="front-wheel">
-      <!-- Outer Tire -->
-      <circle cx="375" cy="320" r="62" fill="#12151c" stroke="#1e2430" stroke-width="4" />
-      <circle cx="375" cy="320" r="54" fill="#0d0f15" />
-      <!-- Rim -->
-      <circle cx="375" cy="320" r="42" fill="url(#rimGrad)" stroke="#475569" stroke-width="2" />
-      <!-- N160 Red Rim Tape Accent -->
-      <circle cx="375" cy="320" r="41" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-dasharray="25 15 35 15" />
-      <!-- Front Large Petal Disc (300mm Dual Channel ABS Disc) -->
-      <circle cx="375" cy="320" r="32" fill="none" stroke="#cbd5e1" stroke-width="4" stroke-dasharray="7 2" />
-      <!-- ABS Ring -->
-      <circle cx="375" cy="320" r="18" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="3 2" />
-      <!-- Front Rim Spokes -->
-      <path d="M375 320 L375 278 M375 320 L375 362 M375 320 L338 300 M375 320 L412 340 M375 320 L338 340 M375 320 L412 300" stroke="#cbd5e1" stroke-width="3.5" stroke-linecap="round" />
-      <!-- Hub -->
-      <circle cx="375" cy="320" r="12" fill="#0f172a" stroke="#f59e0b" stroke-width="2" />
-    </g>
-
-    <!-- REAR SWINGARM & DRIVE CHAIN -->
-    <path d="M115 320 L205 315 L230 285 L180 280 Z" fill="#1e293b" stroke="#334155" stroke-width="2" />
-    <path d="M115 320 L195 270" stroke="#f59e0b" stroke-width="3" stroke-opacity="0.8" />
-    <!-- Rear Hugger / Mudguard -->
-    <path d="M90 290 Q120 255 160 270 Q130 275 105 305 Z" fill="#0f172a" stroke="#1e293b" />
-
-    <!-- ENGINE & CRANKCASE (164.82cc Oil-Cooled Engine) -->
-    <!-- Underbelly Exhaust (N160 signature) -->
-    <path d="M210 338 L255 338 Q268 338 272 328 L258 322 L210 324 Z" fill="url(#metalGrad)" stroke="#64748b" stroke-width="1.5" />
-    <ellipse cx="266" cy="330" rx="4" ry="6" fill="#0f172a" />
-    
-    <!-- Engine Block & Cooling Fins -->
-    <path d="M195 260 L275 255 L285 315 L200 325 Z" fill="#181e29" stroke="#334155" stroke-width="2" />
-    <!-- Engine Fins -->
-    <line x1="210" y1="270" x2="265" y2="267" stroke="#475569" stroke-width="2" />
-    <line x1="208" y1="280" x2="268" y2="277" stroke="#475569" stroke-width="2" />
-    <line x1="206" y1="290" x2="270" y2="287" stroke="#475569" stroke-width="2" />
-    <line x1="204" y1="300" x2="272" y2="297" stroke="#475569" stroke-width="2" />
-    <!-- Oil Cooler Radiator (front of engine) -->
-    <rect x="282" y="245" width="12" height="38" rx="2" fill="#0f172a" stroke="#64748b" stroke-width="1.5" />
-    <line x1="285" y1="250" x2="285" y2="278" stroke="#ef4444" stroke-width="1" />
-
-    <!-- ENGINE COWL / BELLY PAN (Aggressive sporty aerodynamic chin) -->
-    <path d="M195 328 L285 320 L305 295 L275 335 L195 335 Z" fill="url(#tankGrad)" stroke="#384252" stroke-width="1.5" />
-    <path d="M220 332 L260 326" stroke="#ef4444" stroke-width="2" stroke-linecap="round" />
-
-    <!-- PERIMETER FRAME / CHASSIS (Dual Tone) -->
-    <path d="M190 245 L255 240 L280 215 L230 215 Z" fill="#334155" stroke="#475569" stroke-width="2" />
-
-    <!-- FRONT FORK (37mm Telescopic Suspension) -->
-    <g id="front-forks">
-      <!-- Upper Fork Stanchion -->
-      <line x1="345" y1="185" x2="368" y2="275" stroke="#94a3b8" stroke-width="6" stroke-linecap="round" />
-      <!-- Lower Fork Slider -->
-      <line x1="365" y1="265" x2="375" y2="320" stroke="#1e293b" stroke-width="8" stroke-linecap="round" />
-      <circle cx="375" cy="320" r="6" fill="#64748b" />
-      <!-- Front Fender / Mudguard (Brooklyn Black with red tip) -->
-      <path d="M335 255 Q365 240 405 270 Q370 252 342 270 Z" fill="url(#tankGrad)" stroke="#334155" stroke-width="1.5" />
-      <path d="M395 264 L404 269" stroke="#ef4444" stroke-width="3" stroke-linecap="round" />
-    </g>
-
-    <!-- REAR MONOSHOCK (Nitrox Sub-tank) -->
-    <rect x="188" y="260" width="10" height="24" rx="3" transform="rotate(-30 188 260)" fill="#ef4444" stroke="#dc2626" stroke-width="1" />
-
-    <!-- REAR TAIL & SPLIT SEAT (N160 Streetfighter Shape) -->
-    <!-- Rear Subframe & Tail Cowl -->
-    <path d="M100 210 L175 220 L210 245 L155 245 Z" fill="url(#tankGrad)" stroke="#2d3748" stroke-width="2" />
-    <!-- Sharp LED Tail Tip -->
-    <path d="M96 208 L115 212 L105 218 Z" fill="#ef4444" filter="url(#subtleGlow)" />
-    <!-- Split Grab Rails (Signature Pulsar Horn Grabrails) -->
-    <path d="M120 200 L155 208 L150 214 L125 208 Z" fill="#1e293b" stroke="#475569" stroke-width="1" />
-    <!-- Pillion Seat -->
-    <path d="M125 205 Q150 208 175 215 L170 223 L130 216 Z" fill="#0b0d13" stroke="#1f242f" />
-    <!-- Rider Seat (Ergonomic Scoop) -->
-    <path d="M175 215 Q215 222 235 242 L215 245 L175 225 Z" fill="#0a0c11" stroke="#1f242f" stroke-width="1.5" />
-
-    <!-- MUSCULAR FUEL TANK (Sculpted with Extended Aerodynamic Shrouds) -->
-    <path d="M225 240 Q245 195 295 190 Q325 192 340 215 Q325 255 285 260 Q250 260 225 240 Z" fill="url(#tankGrad)" stroke="#334155" stroke-width="2" />
-    <!-- Tank Shroud Extension (Sharp forward wing) -->
-    <path d="M290 198 L345 205 L355 245 L320 262 L295 245 Z" fill="#111520" stroke="#3b4252" stroke-width="1.5" />
-    <!-- Tank Graphics / Pulsar N160 Red Decal Accent -->
-    <path d="M270 205 L325 208 L345 235" fill="none" stroke="url(#accentRed)" stroke-width="3.5" stroke-linecap="round" />
-    <path d="M290 222 L330 224" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round" />
-    <!-- Aircraft Style Fuel Filler Cap -->
-    <ellipse cx="282" cy="194" rx="10" ry="4" fill="#475569" stroke="#94a3b8" stroke-width="1" />
-
-    <!-- HEADLIGHT CLUSTER & MASK (Signature Bi-Functional LED Projector with Wolf-Eye DRLs) -->
-    <g id="headlamp-mask">
-      <!-- Aggressive Headlight Fairing -->
-      <path d="M335 180 L365 182 L385 208 L360 230 L342 205 Z" fill="url(#tankGrad)" stroke="#334155" stroke-width="1.5" />
-      <!-- Wolf-Eye LED DRL Brows -->
-      <path d="M362 190 L380 200" stroke="#f8fafc" stroke-width="3" stroke-linecap="round" filter="url(#subtleGlow)" />
-      <!-- Central Projector LED Lens (Gleaming white-cyan beam) -->
-      <circle cx="374" cy="208" r="6" fill="#38bdf8" stroke="#ffffff" stroke-width="2" filter="url(#glow)" />
-      <circle cx="374" cy="208" r="3" fill="#ffffff" />
-      <!-- Tinted Flyscreen / Visor -->
-      <path d="M340 178 L355 158 L368 180 Z" fill="#020617" stroke="#1e293b" />
-    </g>
-
-    <!-- HANDLEBARS & CONTROLS -->
-    <!-- Handlebar Bar -->
-    <path d="M328 178 L348 172 L360 174" stroke="#94a3b8" stroke-width="3.5" stroke-linecap="round" />
-    <!-- Bar End & Throttle Grip -->
-    <rect x="320" y="174" width="10" height="6" rx="2" fill="#0f172a" stroke="#475569" />
-    <!-- Rearview Mirror (Sporty angular) -->
-    <path d="M338 172 L330 148 L312 144 L322 156 Z" fill="#0f172a" stroke="#334155" stroke-width="1.2" />
-    <!-- Digital Instrument Console (Infinity Display) -->
-    <rect x="342" y="166" width="14" height="8" rx="2" fill="#0369a1" stroke="#38bdf8" stroke-width="1" />
+  <!-- Container Backdrop / Card Shape -->
+  <rect width="600" height="450" rx="32" fill="url(#bgGlow)" />
+  <rect width="596" height="446" x="2" y="2" rx="30" fill="none" stroke="#f59e0b" stroke-width="2" stroke-opacity="0.35" />
+  
+  <!-- Subtle High-Tech Speed Grid -->
+  <g opacity="0.12" stroke="#f59e0b" stroke-width="1">
+    <line x1="40" y1="360" x2="560" y2="360" />
+    <line x1="40" y1="380" x2="560" y2="380" stroke-dasharray="12 6" />
+    <line x1="80" y1="100" x2="80" y2="380" stroke-dasharray="4 8" />
+    <line x1="520" y1="100" x2="520" y2="380" stroke-dasharray="4 8" />
   </g>
 
-  <!-- N160 SPEED BADGE (Embossed Bottom Overlay) -->
-  <g transform="translate(256, 435)">
-    <!-- Plate backing -->
-    <rect x="-140" y="-22" width="280" height="44" rx="14" fill="#0a0c10" stroke="#f59e0b" stroke-width="1.5" stroke-opacity="0.6" />
+  <!-- MOTORCYCLE SHADOW -->
+  <ellipse cx="295" cy="355" rx="235" ry="20" fill="#000000" opacity="0.85" filter="url(#softGlow)" />
+
+  <!-- ================= BAJAJ PULSAR N160 (BROOKLYN BLACK) ================= -->
+  <g id="pulsar-n160-motorcycle" transform="translate(10, 15)">
     
-    <text x="-95" y="6" font-family="'Rajdhani', 'Impact', sans-serif" font-size="20" font-weight="900" fill="#ffffff" letter-spacing="3">
-      PULSAR
+    <!-- 1. REAR WHEEL & BRAKE ASSEMBLY -->
+    <g id="rear-wheel">
+      <!-- 130/70 R17 Tubeless Radial Tire -->
+      <circle cx="120" cy="275" r="74" fill="#0c0e13" stroke="#1c212c" stroke-width="4" />
+      <circle cx="120" cy="275" r="64" fill="#06070a" />
+      
+      <!-- 17-inch Alloy Rim -->
+      <circle cx="120" cy="275" r="50" fill="#141822" stroke="#2e3748" stroke-width="2.5" />
+      
+      <!-- Signature Red Racing Rim Decal (Photo detail) -->
+      <circle cx="120" cy="275" r="48.5" fill="none" stroke="url(#n160Red)" stroke-width="3" stroke-dasharray="35 20 45 20" stroke-linecap="round" />
+      
+      <!-- Rear Disc Brake Rotor (230mm) -->
+      <circle cx="120" cy="275" r="30" fill="none" stroke="#94a3b8" stroke-width="4" stroke-dasharray="6 3" />
+      <circle cx="120" cy="275" r="18" fill="none" stroke="#64748b" stroke-width="1.5" stroke-dasharray="3 3" />
+      
+      <!-- Sport Alloy Spokes -->
+      <path d="M120 275 L120 226 M120 275 L120 324 M120 275 L77 250 M120 275 L163 300 M120 275 L77 300 M120 275 L163 250" stroke="#94a3b8" stroke-width="4" stroke-linecap="round" />
+      <circle cx="120" cy="275" r="12" fill="#0f131a" stroke="#f59e0b" stroke-width="2" />
+    </g>
+
+    <!-- 2. FRONT WHEEL & BRAKE ASSEMBLY -->
+    <g id="front-wheel">
+      <!-- 100/80 R17 Tubeless Front Tire -->
+      <circle cx="455" cy="275" r="74" fill="#0c0e13" stroke="#1c212c" stroke-width="4" />
+      <circle cx="455" cy="275" r="64" fill="#06070a" />
+      
+      <!-- 17-inch Alloy Rim -->
+      <circle cx="455" cy="275" r="50" fill="#141822" stroke="#2e3748" stroke-width="2.5" />
+      
+      <!-- Signature Red Racing Rim Decal (Photo detail) -->
+      <circle cx="455" cy="275" r="48.5" fill="none" stroke="url(#n160Red)" stroke-width="3" stroke-dasharray="35 20 45 20" stroke-linecap="round" />
+      
+      <!-- Large 300mm Petal Front Disc Brake with ABS Grimeca Calliper -->
+      <circle cx="455" cy="275" r="38" fill="none" stroke="url(#steelGrad)" stroke-width="5" stroke-dasharray="9 2" />
+      <!-- Dual-Channel ABS Sensor Pulser Ring -->
+      <circle cx="455" cy="275" r="22" fill="none" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4 2" />
+      
+      <!-- Front Alloy Spokes -->
+      <path d="M455 275 L455 226 M455 275 L455 324 M455 275 L412 250 M455 275 L498 300 M455 275 L412 300 M455 275 L498 250" stroke="#94a3b8" stroke-width="4" stroke-linecap="round" />
+      
+      <!-- Brake Caliper Bracket (ByBre / Grimeca) -->
+      <rect x="420" y="258" width="16" height="28" rx="4" fill="#1e2430" stroke="#f59e0b" stroke-width="1.5" />
+      <circle cx="455" cy="275" r="12" fill="#0f131a" stroke="#f59e0b" stroke-width="2" />
+    </g>
+
+    <!-- 3. REAR SWINGARM, CHAIN GUARD & TIRE HUGGER -->
+    <path d="M120 275 L230 268 L255 235 L190 230 Z" fill="#181d27" stroke="#2f3747" stroke-width="2" />
+    <!-- Rear Tire Hugger / Splash Guard (Photo signature) -->
+    <path d="M78 245 Q125 205 175 225 L165 240 Q125 222 90 258 Z" fill="#0c0e14" stroke="#1f2633" stroke-width="1.5" />
+    <path d="M70 248 L82 280 L76 288 L65 252 Z" fill="#141822" stroke="#242b38" />
+
+    <!-- 4. REAR MONOSHOCK SUSPENSION (Nitrox with Red Coil) -->
+    <rect x="205" y="208" width="14" height="32" rx="4" transform="rotate(-32 205 208)" fill="url(#n160Red)" stroke="#b91c1c" stroke-width="1.5" />
+
+    <!-- 5. 164.82cc OIL-COOLED DTS-i ENGINE & CRANKCASE -->
+    <g id="engine-block">
+      <!-- Engine Body -->
+      <path d="M225 210 L335 200 L350 280 L235 292 Z" fill="url(#engineDark)" stroke="#333c4d" stroke-width="2" />
+      
+      <!-- Cylinder Head & Cooling Fins -->
+      <line x1="250" y1="220" x2="320" y2="215" stroke="#4b5568" stroke-width="2.5" />
+      <line x1="248" y1="232" x2="325" y2="227" stroke="#4b5568" stroke-width="2.5" />
+      <line x1="245" y1="244" x2="328" y2="239" stroke="#4b5568" stroke-width="2.5" />
+      <line x1="242" y1="256" x2="330" y2="251" stroke="#4b5568" stroke-width="2.5" />
+
+      <!-- Crankcase Roundel with Bajaj Logo -->
+      <circle cx="282" cy="268" r="18" fill="#1b202a" stroke="#475569" stroke-width="2" />
+      <circle cx="282" cy="268" r="14" fill="#0d1017" />
+      <!-- Stylized Bajaj 'B' Emblem in Engine -->
+      <path d="M276 262 L284 262 Q288 262 288 265 Q288 268 284 268 L276 268 Z M276 268 L285 268 Q289 268 289 271 Q289 274 285 274 L276 274 Z" fill="none" stroke="#94a3b8" stroke-width="1.5" />
+
+      <!-- Oil Cooler Radiator (Front Mounted) -->
+      <rect x="345" y="195" width="16" height="48" rx="3" fill="#0f131a" stroke="#64748b" stroke-width="1.5" />
+      <line x1="349" y1="202" x2="349" y2="238" stroke="#ef4444" stroke-width="1.5" />
+      <line x1="355" y1="202" x2="355" y2="238" stroke="#94a3b8" stroke-width="1.5" />
+
+      <!-- Underbelly Exhaust Silencer (N160 Underbelly Exhaust) -->
+      <path d="M250 300 L310 300 Q328 300 334 288 L318 282 L250 286 Z" fill="url(#steelGrad)" stroke="#64748b" stroke-width="1.5" />
+      <ellipse cx="328" cy="291" rx="5" ry="7" fill="#090b0f" />
+    </g>
+
+    <!-- 6. AERODYNAMIC BELLY PAN / ENGINE COWL (With Red Slash) -->
+    <path d="M230 295 L345 285 L372 250 L335 306 L230 306 Z" fill="url(#bodyBlack)" stroke="#3e485a" stroke-width="1.5" />
+    <!-- Red Racing Decal on Belly Pan -->
+    <path d="M265 300 L320 294" stroke="url(#n160Red)" stroke-width="3" stroke-linecap="round" />
+
+    <!-- 7. TUBULAR PERIMETER FRAME / CHASSIS -->
+    <path d="M220 188 L305 182 L340 152 L275 152 Z" fill="#2d3545" stroke="#424e63" stroke-width="2" />
+
+    <!-- 8. FRONT TELESCOPIC FORKS & FRONT FENDER -->
+    <g id="front-suspension">
+      <!-- 37mm Telescopic Front Fork Stanchions -->
+      <line x1="418" y1="118" x2="446" y2="225" stroke="url(#steelGrad)" stroke-width="8" stroke-linecap="round" />
+      <!-- Lower Fork Sliders (Black with Reflector) -->
+      <line x1="442" y1="210" x2="455" y2="275" stroke="#121620" stroke-width="10" stroke-linecap="round" />
+      <rect x="444" y="228" width="5" height="14" rx="2" fill="#f59e0b" />
+      
+      <!-- Front Fender / Mudguard (Brooklyn Black with Red Tip) -->
+      <path d="M400 200 Q440 178 495 218 Q450 196 410 216 Z" fill="url(#bodyBlack)" stroke="#384355" stroke-width="1.5" />
+      <!-- Red Accent on Fender Tip -->
+      <path d="M482 210 L494 217" stroke="url(#n160Red)" stroke-width="3.5" stroke-linecap="round" />
+    </g>
+
+    <!-- 9. REAR TAIL SECTION, GRAB RAILS & SPLIT SEAT -->
+    <g id="tail-and-seats">
+      <!-- Sharp Upswept Tail Cowl -->
+      <path d="M105 145 L198 158 L248 190 L175 190 Z" fill="url(#bodyBlack)" stroke="#333d4e" stroke-width="2" />
+      
+      <!-- Red "N160" Tail Badge (Photo detail) -->
+      <text x="135" y="166" font-family="'Rajdhani', 'Impact', sans-serif" font-size="10" font-weight="900" fill="#ef4444" letter-spacing="1">
+        N160
+      </text>
+
+      <!-- Signature LED Tail Lamp Tip -->
+      <path d="M98 143 L122 147 L110 155 Z" fill="#ff2233" filter="url(#crispGlow)" />
+
+      <!-- Horn-Style Split Grab Rails (Photo signature) -->
+      <path d="M128 135 L172 144 L165 152 L134 144 Z" fill="#1e2532" stroke="#475569" stroke-width="1.5" />
+
+      <!-- Pillion Step-up Seat -->
+      <path d="M135 140 Q168 144 202 152 L196 162 L142 154 Z" fill="#080a0e" stroke="#1e2430" stroke-width="1.5" />
+      
+      <!-- Rider Ergonomic Scoop Seat -->
+      <path d="M202 152 Q248 160 274 185 L248 189 L202 164 Z" fill="#06070a" stroke="#1c222c" stroke-width="1.5" />
+    </g>
+
+    <!-- 10. MUSCULAR SCULPTED FUEL TANK (BROOKLYN BLACK) -->
+    <g id="sculpted-tank">
+      <!-- Main Tank Mass -->
+      <path d="M260 185 Q285 125 348 120 Q390 122 410 152 Q390 205 340 212 Q295 212 260 185 Z" fill="url(#shroudGrad)" stroke="#3b4658" stroke-width="2" />
+      
+      <!-- Aerodynamic Tank Shroud Extension Wing (Photo detail) -->
+      <path d="M342 130 L418 140 L430 190 L385 212 L350 190 Z" fill="url(#bodyBlack)" stroke="#455167" stroke-width="1.5" />
+
+      <!-- BOLD "N160" TANK DECAL GRAPHIC (Exact from User Photo) -->
+      <!-- Large Stylized 'N' in Silver Metallic with Red Slashes -->
+      <path d="M362 148 L374 148 L392 178 L392 148 L402 148 L402 185 L390 185 L372 155 L372 185 L362 185 Z" fill="#e2e8f0" opacity="0.9" />
+      
+      <!-- '160' Sub-Decal -->
+      <text x="368" y="196" font-family="'Rajdhani', 'Impact', sans-serif" font-size="13" font-weight="900" fill="#f8fafc" letter-spacing="1">
+        160
+      </text>
+
+      <!-- Red Graphic Accent Slash on Tank Shroud (From Photo) -->
+      <path d="M335 142 L402 146 L422 178" fill="none" stroke="url(#n160Red)" stroke-width="4" stroke-linecap="round" />
+      <path d="M360 162 L408 164" fill="none" stroke="#f1f5f9" stroke-width="2" stroke-linecap="round" />
+
+      <!-- Aircraft-Type Fuel Tank Cap -->
+      <ellipse cx="332" cy="126" rx="12" ry="5" fill="#475569" stroke="#94a3b8" stroke-width="1.5" />
+    </g>
+
+    <!-- 11. HEADLIGHT UNIT (BI-FUNCTIONAL LED PROJECTOR + WOLF EYE DRLs) -->
+    <g id="projector-headlamp">
+      <!-- Streetfighter Headlamp Cowl -->
+      <path d="M405 110 L445 114 L468 145 L438 172 L415 142 Z" fill="url(#bodyBlack)" stroke="#384355" stroke-width="1.5" />
+      
+      <!-- Wolf-Eye DRL LED Brow (High-Tech White Beam) -->
+      <path d="M440 122 L462 134" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" filter="url(#crispGlow)" />
+      
+      <!-- Central Bi-Functional Projector Lens (Cyan Glow) -->
+      <circle cx="454" cy="146" r="8" fill="#38bdf8" stroke="#ffffff" stroke-width="2" filter="url(#softGlow)" />
+      <circle cx="454" cy="146" r="4" fill="#ffffff" />
+
+      <!-- Dark Smoked Visor / Flyscreen -->
+      <path d="M410 108 L430 84 L446 110 Z" fill="#020617" stroke="#1e293b" stroke-width="1.5" />
+    </g>
+
+    <!-- 12. SPORT HANDLEBARS, CLIP-ONS & REARVIEW MIRRORS -->
+    <g id="controls">
+      <path d="M395 108 L422 100 L438 102" stroke="url(#steelGrad)" stroke-width="4" stroke-linecap="round" />
+      <!-- Left & Right Sport Angular Rearview Mirrors -->
+      <path d="M410 98 L398 70 L376 66 L388 80 Z" fill="#090b10" stroke="#333f52" stroke-width="1.5" />
+      <!-- Infinity Digital Instrument Console -->
+      <rect x="414" y="92" width="18" height="10" rx="3" fill="#0369a1" stroke="#38bdf8" stroke-width="1.2" />
+    </g>
+  </g>
+
+  <!-- BOTTOM OFFICIAL EMBLEM STRIP -->
+  <g transform="translate(300, 405)">
+    <rect x="-170" y="-18" width="340" height="36" rx="12" fill="#090b10" stroke="#f59e0b" stroke-width="1.5" stroke-opacity="0.8" />
+    
+    <text x="-120" y="6" font-family="'Rajdhani', 'Impact', sans-serif" font-size="17" font-weight="900" fill="#ffffff" letter-spacing="3">
+      BAJAJ PULSAR
     </text>
-    <text x="35" y="8" font-family="'Rajdhani', 'Impact', sans-serif" font-size="26" font-weight="900" fill="#f59e0b" letter-spacing="2">
+    <text x="32" y="7" font-family="'Rajdhani', 'Impact', sans-serif" font-size="21" font-weight="900" fill="#f59e0b" letter-spacing="2">
       N160
     </text>
-
-    <!-- ABS Dual-Channel Pip -->
-    <circle cx="115" cy="0" r="4" fill="#ef4444" filter="url(#subtleGlow)" />
+    
+    <!-- Red Dual-Channel ABS badge -->
+    <rect x="98" y="-9" width="54" height="18" rx="5" fill="#ef4444" />
+    <text x="125" y="4" font-family="'Rajdhani', sans-serif" font-size="10" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="0.5">
+      DUAL ABS
+    </text>
   </g>
 </svg>
