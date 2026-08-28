@@ -47,18 +47,28 @@ export const PrintBookletModal: React.FC<PrintBookletModalProps> = ({ state, onC
         <div className="p-6 sm:p-8 overflow-y-auto font-sans text-xs print:p-0 print:text-black">
           {/* Header & Logo */}
           <div className="border-b-2 border-zinc-900 pb-4 mb-6 flex items-start justify-between">
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold font-display uppercase tracking-wider text-zinc-900">
-                  BAJAJ PULSAR N160
-                </h1>
-                <span className="bg-zinc-900 text-white font-mono font-bold px-2 py-0.5 rounded text-xs">
-                  {state.vehicle.regNo}
-                </span>
+            <div className="flex items-center gap-3">
+              <div className="w-14 h-14 rounded-lg bg-zinc-900 border border-zinc-800 p-1 flex items-center justify-center shrink-0">
+                <img
+                  src="/pulsar_n160.svg"
+                  alt="Bajaj Pulsar N160"
+                  referrerPolicy="no-referrer"
+                  className="w-full h-full object-contain"
+                />
               </div>
-              <p className="text-sm font-semibold text-zinc-600 tracking-wide mt-0.5">
-                OFFICIAL VEHICLE SERVICE & MAINTENANCE LOG BOOK
-              </p>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-2xl font-bold font-display uppercase tracking-wider text-zinc-900">
+                    BAJAJ PULSAR N160
+                  </h1>
+                  <span className="bg-zinc-900 text-white font-mono font-bold px-2 py-0.5 rounded text-xs">
+                    {state.vehicle.regNo}
+                  </span>
+                </div>
+                <p className="text-sm font-semibold text-zinc-600 tracking-wide mt-0.5">
+                  OFFICIAL VEHICLE SERVICE & MAINTENANCE LOG BOOK
+                </p>
+              </div>
             </div>
 
             <div className="text-right">

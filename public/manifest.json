@@ -1,0 +1,22 @@
+{
+  "name": "Bajaj Pulsar N160 Service Log Book",
+  "short_name": "N160 Service",
+  "description": "Official Digital Service Log Book for Bajaj Pulsar N160 (BKT-1374)",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f1116",
+  "theme_color": "#f59e0b",
+  "icons": [
+    {
+      "src": "/pulsar_n160.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    }
+  ]
+}

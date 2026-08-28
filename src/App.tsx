@@ -274,27 +274,6 @@ export default function App() {
 
       {/* Main Container */}
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 py-5 sm:px-6">
-        {/* Client View Security Notice Banner */}
-        {!isAdmin && (
-          <div className="mb-4 p-3.5 rounded-2xl bg-gradient-to-r from-red-950/40 via-[#181a24] to-zinc-900 border border-red-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg">
-            <div className="flex items-center gap-2.5 text-xs">
-              <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping shrink-0" />
-              <div>
-                <span className="font-bold text-white">Client Inspection Mode ({authSession.username})</span>
-                <span className="text-zinc-400 block sm:inline sm:ml-2">
-                  Edit operations and data copying are disabled for vehicle record protection.
-                </span>
-              </div>
-            </div>
-            <button
-              onClick={handleSignOut}
-              className="text-xs text-amber-400 hover:text-amber-300 font-semibold cursor-pointer shrink-0 py-1 px-2.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-all"
-            >
-              Sign In as Admin (Sachi) →
-            </button>
-          </div>
-        )}
-
         {/* Vehicle Identity Badges */}
         <VehicleDetailsStrip
           vehicle={state.vehicle}

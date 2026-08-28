@@ -162,46 +162,72 @@ export const VehicleDetailsStrip: React.FC<VehicleDetailsStripProps> = ({
           </div>
         </form>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2 bg-[#12151b] p-2 rounded-2xl border border-[#262b35] shadow-lg">
-          {items.map((item) => (
-            <div
-              key={item.key}
-              onClick={() => handleCopy(item.key, item.value)}
-              className={`group relative bg-[#181c23] border border-[#262c37] rounded-xl p-2.5 sm:p-3 transition-all duration-200 flex flex-col justify-between ${
-                isAdmin
-                  ? 'hover:bg-[#202530] hover:border-amber-500/40 cursor-pointer'
-                  : 'cursor-default'
-              }`}
-              title={isAdmin ? 'Click to copy' : 'Official registration data (copy restricted)'}
-            >
-              <div className="flex items-center justify-between gap-1 mb-1">
-                <span className="text-[10px] uppercase tracking-wider font-semibold text-zinc-400 flex items-center gap-1">
-                  <item.icon className={`w-3 h-3 ${isAdmin ? 'text-zinc-400 group-hover:text-amber-400' : 'text-zinc-500'} transition-colors`} />
-                  {item.label}
-                </span>
-                {isAdmin && (
-                  <span className="text-zinc-500 group-hover:text-amber-400 transition-colors">
-                    {copiedKey === item.key ? (
-                      <Check className="w-3 h-3 text-emerald-400" />
-                    ) : (
-                      <Copy className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    )}
-                  </span>
-                )}
+        <div className="flex flex-col md:flex-row gap-2.5 bg-[#12151b] p-2.5 rounded-2xl border border-[#262b35] shadow-lg">
+          {/* N160 Photo Showcase Badge */}
+          <div className="flex items-center gap-3 p-2 bg-[#181c24] border border-[#2d3444] rounded-xl shrink-0 md:w-48">
+            <div className="w-14 h-14 rounded-lg bg-black/50 border border-amber-500/30 p-1 flex items-center justify-center shrink-0 overflow-hidden">
+              <img
+                src="/pulsar_n160.svg"
+                alt="Bajaj Pulsar N160"
+                referrerPolicy="no-referrer"
+                className="w-full h-full object-contain"
+              />
+            </div>
+            <div className="min-w-0">
+              <div className="text-xs font-display font-black text-white tracking-wider">
+                PULSAR <span className="text-amber-400">N160</span>
               </div>
-              <div
-                className={`text-xs font-semibold truncate ${
-                  item.isPrimary
-                    ? 'text-amber-300 font-mono font-bold'
-                    : item.isMono
-                    ? 'font-mono text-zinc-200 text-[11px]'
-                    : 'text-zinc-200'
-                }`}
-              >
-                {item.value}
+              <div className="text-[10px] text-zinc-400 truncate">
+                {vehicle.colour}
+              </div>
+              <div className="text-[9px] font-mono text-emerald-400">
+                Dual-ABS Verified
               </div>
             </div>
-          ))}
+          </div>
+
+          {/* Details Grid */}
+          <div className="flex-1 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2">
+            {items.map((item) => (
+              <div
+                key={item.key}
+                onClick={() => handleCopy(item.key, item.value)}
+                className={`group relative bg-[#181c23] border border-[#262c37] rounded-xl p-2.5 sm:p-3 transition-all duration-200 flex flex-col justify-between ${
+                  isAdmin
+                    ? 'hover:bg-[#202530] hover:border-amber-500/40 cursor-pointer'
+                    : 'cursor-default'
+                }`}
+                title={isAdmin ? 'Click to copy' : 'Official registration data (copy restricted)'}
+              >
+                <div className="flex items-center justify-between gap-1 mb-1">
+                  <span className="text-[10px] uppercase tracking-wider font-semibold text-zinc-400 flex items-center gap-1">
+                    <item.icon className={`w-3 h-3 ${isAdmin ? 'text-zinc-400 group-hover:text-amber-400' : 'text-zinc-500'} transition-colors`} />
+                    {item.label}
+                  </span>
+                  {isAdmin && (
+                    <span className="text-zinc-500 group-hover:text-amber-400 transition-colors">
+                      {copiedKey === item.key ? (
+                        <Check className="w-3 h-3 text-emerald-400" />
+                      ) : (
+                        <Copy className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      )}
+                    </span>
+                  )}
+                </div>
+                <div
+                  className={`text-xs font-semibold truncate ${
+                    item.isPrimary
+                      ? 'text-amber-300 font-mono font-bold'
+                      : item.isMono
+                      ? 'font-mono text-zinc-200 text-[11px]'
+                      : 'text-zinc-200'
+                  }`}
+                >
+                  {item.value}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

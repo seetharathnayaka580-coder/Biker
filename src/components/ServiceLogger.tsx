@@ -109,49 +109,47 @@ export const ServiceLogger: React.FC<ServiceLoggerProps> = ({
   // CLIENT READ-ONLY INSPECTION VIEW
   if (!isAdmin) {
     return (
-      <div className="bg-[#171a21] border border-[#262b35] rounded-2xl p-5 sm:p-6 shadow-xl flex flex-col justify-between select-none">
+      <div className="bg-[#171a21] border border-[#262b35] rounded-2xl p-5 sm:p-6 shadow-xl flex flex-col justify-between">
         <div>
           <div className="flex items-center justify-between gap-2 mb-4 pb-3 border-b border-[#242935]">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-400">
-                <Lock className="w-4 h-4" />
+              <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                <Wrench className="w-4 h-4" />
               </div>
               <div>
                 <h2 className="font-display font-bold text-base sm:text-lg text-white tracking-wide">
-                  Service Logging
+                  Service Summary
                 </h2>
-                <p className="text-xs text-zinc-400">Client Inspection Mode (Read-Only)</p>
+                <p className="text-xs text-zinc-400">Official Genuine Maintenance History</p>
               </div>
             </div>
-            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-0.5 rounded-full">
-              Protected
+            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+              <ShieldCheck className="w-3 h-3" />
+              Verified
             </span>
           </div>
 
           <div className="p-4 rounded-xl bg-[#11141a] border border-[#222733] space-y-3">
             <div className="flex items-center gap-2 text-xs font-semibold text-amber-300">
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              <span>Official Genuine Service History</span>
+              <ClipboardList className="w-4 h-4 text-amber-400" />
+              <span>Bajaj Authorised Service Records</span>
             </div>
-            <p className="text-xs text-zinc-400 leading-relaxed">
-              Recording new maintenance jobs or altering past service records is restricted to Administrator <strong className="text-white">Sachi</strong>.
-            </p>
-            <div className="pt-2 border-t border-[#1e232e] text-[11px] text-zinc-400 space-y-1.5 font-mono">
+            <div className="pt-2 border-t border-[#1e232e] text-xs text-zinc-400 space-y-2 font-mono">
               <div className="flex items-center justify-between">
-                <span>Total Recorded Services:</span>
+                <span>Completed Services:</span>
                 <span className="font-bold text-white">{servicesCount} Completed</span>
               </div>
               <div className="flex items-center justify-between">
-                <span>Current Clock:</span>
+                <span>Recorded Clock:</span>
                 <span className="font-bold text-amber-400">{currentOdometer.toLocaleString()} km</span>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="mt-4 p-3 rounded-xl bg-amber-500/5 border border-amber-500/20 text-xs text-amber-200/90 flex items-center gap-2">
-          <ClipboardList className="w-4 h-4 text-amber-400 shrink-0" />
-          <span>All historical service records and receipts are listed in the timeline.</span>
+        <div className="mt-4 p-3 rounded-xl bg-amber-500/5 border border-amber-500/20 text-xs text-zinc-300 flex items-center gap-2">
+          <FileText className="w-4 h-4 text-amber-400 shrink-0" />
+          <span>All official service intervals and workshop details are recorded below.</span>
         </div>
       </div>
     );

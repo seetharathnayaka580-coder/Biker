@@ -124,16 +124,23 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         <div className="text-center mb-6">
           {/* Animated Motorcycle Emblem */}
           <div className="relative inline-block mb-3">
-            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-gradient-to-br from-zinc-900 via-[#161a22] to-zinc-950 border-2 border-amber-500/40 flex items-center justify-center shadow-2xl shadow-amber-500/20 relative group">
-              <Bike className={`w-10 h-10 sm:w-12 sm:h-12 text-amber-400 transition-transform duration-300 ${revving ? 'animate-bounce' : 'group-hover:scale-110'}`} />
+            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl bg-gradient-to-br from-zinc-900 via-[#161a22] to-zinc-950 border-2 border-amber-500/50 flex items-center justify-center p-2 shadow-2xl shadow-amber-500/25 relative group overflow-hidden">
+              <img
+                src="/pulsar_n160.svg"
+                alt="Bajaj Pulsar N160"
+                referrerPolicy="no-referrer"
+                className={`w-full h-full object-contain transition-transform duration-300 ${
+                  revving ? 'scale-110 rotate-1' : 'group-hover:scale-105'
+                }`}
+              />
               
               {/* Tachometer RPM Ring Glow */}
-              <div className="absolute -inset-1 rounded-3xl border border-amber-400/30 blur-[2px] animate-pulse pointer-events-none" />
+              <div className="absolute -inset-1 rounded-3xl border border-amber-400/40 blur-[2px] animate-pulse pointer-events-none" />
               
               {/* Status LED */}
-              <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4">
+              <span className="absolute top-2 right-2 flex h-3 w-3">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-4 w-4 bg-amber-500 border-2 border-[#0a0c10]"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-500 border border-[#0a0c10]"></span>
               </span>
             </div>
           </div>
@@ -191,11 +198,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             >
               <Lock className="w-4 h-4" />
               Admin Login
-              <span className={`text-[10px] uppercase font-mono px-1.5 py-0.2 rounded ${
-                activeTab === 'admin' ? 'bg-zinc-950/30 text-zinc-900 font-black' : 'bg-zinc-800 text-zinc-400'
-              }`}>
-                Sachi
-              </span>
             </button>
 
             <button
@@ -212,11 +214,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             >
               <User className="w-4 h-4" />
               Google Sign-In
-              <span className={`text-[10px] uppercase font-mono px-1.5 py-0.2 rounded ${
-                activeTab === 'google' ? 'bg-black/30 text-white font-bold' : 'bg-zinc-800 text-zinc-400'
-              }`}>
-                Client View
-              </span>
             </button>
           </div>
 
@@ -230,16 +227,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                   </div>
                   <div>
                     <h2 className="text-sm sm:text-base font-display font-bold text-white tracking-wide">
-                      Admin Portal (Full Access)
+                      Admin Portal
                     </h2>
                     <p className="text-[11px] text-zinc-400">
-                      Edit odometer, record maintenance, manage bike details
+                      Sign in to manage vehicle records & maintenance logs
                     </p>
                   </div>
                 </div>
-                <span className="hidden sm:inline-flex text-[10px] font-mono font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">
-                  Owner Level
-                </span>
               </div>
 
               {errorMsg && (
@@ -256,19 +250,16 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                     <User className="w-3.5 h-3.5 text-amber-400" />
                     Admin Username
                   </label>
-                  <div className="relative">
+                  <div>
                     <input
                       type="text"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      placeholder="Enter username (Sachi)"
+                      placeholder="Enter username"
                       className="w-full bg-[#0a0c11] border border-[#2a303f] focus:border-amber-400 focus:ring-1 focus:ring-amber-400 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 transition-all font-mono"
                       required
                       autoFocus
                     />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-mono text-zinc-500">
-                      User: Sachi
-                    </span>
                   </div>
                 </div>
 
@@ -283,7 +274,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                       type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Enter password (988800)"
+                      placeholder="Enter password"
                       className="w-full bg-[#0a0c11] border border-[#2a303f] focus:border-amber-400 focus:ring-1 focus:ring-amber-400 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 transition-all font-mono tracking-widest"
                       required
                     />
@@ -298,31 +289,16 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                   </div>
                 </div>
 
-                {/* Quick Auto-Fill Credential Helper for Convenience */}
-                <div className="flex items-center justify-between text-[11px] text-zinc-400 pt-1">
-                  <span>Authorized bike master credentials</span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setUsername('Sachi');
-                      setPassword('988800');
-                    }}
-                    className="text-amber-400 hover:text-amber-300 hover:underline font-mono cursor-pointer"
-                  >
-                    Quick Fill (Sachi / 988800)
-                  </button>
-                </div>
-
                 {/* Ignition / Submit Button */}
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full mt-2 py-3 px-4 rounded-xl font-display font-black text-sm tracking-wider text-zinc-950 bg-gradient-to-r from-amber-400 via-amber-500 to-amber-400 hover:from-amber-300 hover:to-amber-400 border border-amber-300/40 shadow-xl shadow-amber-500/20 active:scale-[0.99] transition-all cursor-pointer flex items-center justify-center gap-2 uppercase disabled:opacity-50"
+                  className="w-full mt-3 py-3 px-4 rounded-xl font-display font-black text-sm tracking-wider text-zinc-950 bg-gradient-to-r from-amber-400 via-amber-500 to-amber-400 hover:from-amber-300 hover:to-amber-400 border border-amber-300/40 shadow-xl shadow-amber-500/20 active:scale-[0.99] transition-all cursor-pointer flex items-center justify-center gap-2 uppercase disabled:opacity-50"
                 >
                   {isSubmitting ? (
                     <>
                       <Sparkles className="w-4 h-4 animate-spin text-zinc-950" />
-                      Igniting Engine & Verifying...
+                      Verifying Credentials...
                     </>
                   ) : (
                     <>
@@ -339,23 +315,20 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
           {/* TAB 2: GOOGLE SIGN-IN / CLIENT ACCESS */}
           {activeTab === 'google' && (
             <div>
-              <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#212632]">
+              <div className="flex items-center justify-between mb-5 pb-3 border-b border-[#212632]">
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-lg bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-400">
                     <Shield className="w-4 h-4" />
                   </div>
                   <div>
                     <h2 className="text-sm sm:text-base font-display font-bold text-white tracking-wide">
-                      Client / Buyer / Guest View
+                      Client / Buyer View
                     </h2>
                     <p className="text-[11px] text-zinc-400">
-                      Official verified inspection view with restricted editing & copying
+                      Official verified inspection & service history viewer
                     </p>
                   </div>
                 </div>
-                <span className="hidden sm:inline-flex text-[10px] font-mono font-bold text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-0.5 rounded-full">
-                  Read Only
-                </span>
               </div>
 
               {googleError && (
@@ -364,32 +337,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                   <span>{googleError}</span>
                 </div>
               )}
-
-              {/* Client Access Policy Card */}
-              <div className="p-3.5 rounded-2xl bg-[#0a0c11] border border-[#202532] mb-5 space-y-2">
-                <div className="text-xs font-semibold text-zinc-200 flex items-center gap-1.5">
-                  <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
-                  Client Mode Security Policies Enforced:
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-zinc-400">
-                  <div className="flex items-center gap-1.5 text-emerald-400">
-                    <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                    <span>View complete service logs</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-emerald-400">
-                    <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                    <span>View odometer & schedule</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-red-400">
-                    <ShieldAlert className="w-3.5 h-3.5 shrink-0" />
-                    <span>Editing options disabled</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-red-400">
-                    <ShieldAlert className="w-3.5 h-3.5 shrink-0" />
-                    <span>Text & detail copy disabled</span>
-                  </div>
-                </div>
-              </div>
 
               {/* Official Google Sign-In Button */}
               <button
