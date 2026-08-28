@@ -3,6 +3,8 @@
 @layer base {
   body {
     font-family: 'Inter', sans-serif;
+    background-color: #0b0d12;
+    color: #e6ebf2;
   }
 }
 
@@ -14,13 +16,36 @@
   font-family: 'JetBrains Mono', monospace;
 }
 
+/* Subtle carbon mesh background for cockpit feel */
+.bg-carbon-mesh {
+  background-image: radial-gradient(#1c2230 1px, transparent 1px), radial-gradient(#131722 1px, #0b0d12 1px);
+  background-size: 24px 24px;
+  background-position: 0 0, 12px 12px;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0d1017;
+}
+::-webkit-scrollbar-thumb {
+  background: #242c3d;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3b465f;
+}
+
 @keyframes pulseGlow {
-  0%, 100% { opacity: 0.7; }
-  50% { opacity: 1; }
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.02); }
 }
 
 .animate-glow {
-  animation: pulseGlow 2.5s ease-in-out infinite;
+  animation: pulseGlow 3s ease-in-out infinite;
 }
 
 /* Print Styles for Exporting Service Book */
@@ -45,4 +70,5 @@
     box-shadow: none !important;
   }
 }
+
 

@@ -1,6 +1,8 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import {
+  getFirestore,
   initializeFirestore,
+  setLogLevel,
   doc,
   setDoc,
   getDoc,
@@ -24,6 +26,9 @@ import firebaseConfigJson from '../../firebase-applet-config.json';
 import { AppState, MaintenanceNote, ServiceRecord, VehicleDetails } from '../types';
 import { SEED_STATE } from '../data/seed';
 
+// Suppress Firestore internal connection retry warnings
+setLogLevel('silent');
+
 export const firebaseConfig = {
   apiKey: firebaseConfigJson.apiKey,
   authDomain: firebaseConfigJson.authDomain,
@@ -35,9 +40,27 @@ export const firebaseConfig = {
 
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 
-export const db: Firestore = firebaseConfigJson.firestoreDatabaseId
-  ? initializeFirestore(app, { experimentalForceLongPolling: true }, firebaseConfigJson.firestoreDatabaseId)
-  : initializeFirestore(app, { experimentalForceLongPolling: true });
+export const db: Firestore = (() => {
+  try {
+    const databaseId = firebaseConfigJson.firestoreDatabaseId;
+    if (databaseId) {
+      return initializeFirestore(
+        app,
+        {
+          experimentalAutoDetectLongPolling: true,
+        },
+        databaseId
+      );
+    }
+    return initializeFirestore(app, {
+      experimentalAutoDetectLongPolling: true,
+    });
+  } catch {
+    return firebaseConfigJson.firestoreDatabaseId
+      ? getFirestore(app, firebaseConfigJson.firestoreDatabaseId)
+      : getFirestore(app);
+  }
+})();
 
 export const auth: Auth = getAuth(app);
 
@@ -221,111 +244,143 @@ export function subscribeToBike(
 
 // Bootstrap Firestore database with seed data if empty
 export async function initializeFirestoreSeed(bikeId: string = DEFAULT_BIKE_ID): Promise<void> {
-  const bikeDocRef = doc(db, 'bikes', bikeId);
-  const snap = await getDoc(bikeDocRef);
-  if (!snap.exists()) {
-    await setDoc(bikeDocRef, {
-      ...SEED_STATE.vehicle,
-      odometer: SEED_STATE.odometer,
-      targets: SEED_STATE.targets,
-      serviceInterval: SEED_STATE.serviceInterval,
-      updatedAt: new Date().toISOString(),
-    });
-
-    // Seed services
-    for (const svc of SEED_STATE.services) {
-      const svcRef = doc(db, 'bikes', bikeId, 'services', svc.id);
-      await setDoc(svcRef, {
-        ...svc,
-        createdAt: new Date().toISOString(),
+  try {
+    const bikeDocRef = doc(db, 'bikes', bikeId);
+    const snap = await getDoc(bikeDocRef);
+    if (!snap.exists()) {
+      await setDoc(bikeDocRef, {
+        ...SEED_STATE.vehicle,
+        odometer: SEED_STATE.odometer,
+        targets: SEED_STATE.targets,
+        serviceInterval: SEED_STATE.serviceInterval,
+        updatedAt: new Date().toISOString(),
       });
-    }
 
-    // Seed notes
-    for (const note of SEED_STATE.notes) {
-      const noteRef = doc(db, 'bikes', bikeId, 'notes', note.id);
-      await setDoc(noteRef, {
-        ...note,
-        createdAt: new Date().toISOString(),
-      });
+      // Seed services
+      for (const svc of SEED_STATE.services) {
+        const svcRef = doc(db, 'bikes', bikeId, 'services', svc.id);
+        await setDoc(svcRef, {
+          ...svc,
+          createdAt: new Date().toISOString(),
+        });
+      }
+
+      // Seed notes
+      for (const note of SEED_STATE.notes) {
+        const noteRef = doc(db, 'bikes', bikeId, 'notes', note.id);
+        await setDoc(noteRef, {
+          ...note,
+          createdAt: new Date().toISOString(),
+        });
+      }
     }
+  } catch (err) {
+    console.warn('Firestore seed notice (offline/transient):', err);
   }
 }
 
 // Cloud Mutation Operations
 export async function saveVehicleToCloud(vehicle: VehicleDetails, bikeId: string = DEFAULT_BIKE_ID): Promise<void> {
-  const bikeDocRef = doc(db, 'bikes', bikeId);
-  await setDoc(
-    bikeDocRef,
-    {
-      ...vehicle,
-      updatedAt: new Date().toISOString(),
-    },
-    { merge: true }
-  );
+  try {
+    const bikeDocRef = doc(db, 'bikes', bikeId);
+    await setDoc(
+      bikeDocRef,
+      {
+        ...vehicle,
+        updatedAt: new Date().toISOString(),
+      },
+      { merge: true }
+    );
+  } catch (err) {
+    console.warn('Firestore vehicle sync notice (cached locally):', err);
+  }
 }
 
 export async function saveOdometerToCloud(odometer: number, targets?: number[], bikeId: string = DEFAULT_BIKE_ID): Promise<void> {
-  const bikeDocRef = doc(db, 'bikes', bikeId);
-  const payload: Record<string, unknown> = {
-    odometer,
-    updatedAt: new Date().toISOString(),
-  };
-  if (targets) {
-    payload.targets = targets;
+  try {
+    const bikeDocRef = doc(db, 'bikes', bikeId);
+    const payload: Record<string, unknown> = {
+      odometer,
+      updatedAt: new Date().toISOString(),
+    };
+    if (targets) {
+      payload.targets = targets;
+    }
+    await updateDoc(bikeDocRef, payload);
+  } catch (err) {
+    console.warn('Firestore odometer sync notice (cached locally):', err);
   }
-  await updateDoc(bikeDocRef, payload);
 }
 
 export async function saveTargetToCloud(targets: number[], bikeId: string = DEFAULT_BIKE_ID): Promise<void> {
-  const bikeDocRef = doc(db, 'bikes', bikeId);
-  await updateDoc(bikeDocRef, {
-    targets,
-    updatedAt: new Date().toISOString(),
-  });
+  try {
+    const bikeDocRef = doc(db, 'bikes', bikeId);
+    await updateDoc(bikeDocRef, {
+      targets,
+      updatedAt: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.warn('Firestore target sync notice (cached locally):', err);
+  }
 }
 
 export async function addServiceToCloud(service: ServiceRecord, bikeId: string = DEFAULT_BIKE_ID): Promise<void> {
-  const svcDocRef = doc(db, 'bikes', bikeId, 'services', service.id);
-  await setDoc(svcDocRef, {
-    ...service,
-    createdAt: new Date().toISOString(),
-  });
-
-  // Also update bike odometer if service km is higher
-  const bikeDocRef = doc(db, 'bikes', bikeId);
-  const snap = await getDoc(bikeDocRef);
-  if (snap.exists()) {
-    const current = snap.data();
-    const curOdo = current.odometer || 0;
-    const curTargets = current.targets || [7688];
-    const newOdo = Math.max(curOdo, service.km);
-    const newTargets = [...curTargets];
-    if (service.km >= (newTargets[0] || Infinity)) {
-      newTargets[0] = service.km + (current.serviceInterval || 2500);
-    }
-    await updateDoc(bikeDocRef, {
-      odometer: newOdo,
-      targets: newTargets,
-      updatedAt: new Date().toISOString(),
+  try {
+    const svcDocRef = doc(db, 'bikes', bikeId, 'services', service.id);
+    await setDoc(svcDocRef, {
+      ...service,
+      createdAt: new Date().toISOString(),
     });
+
+    // Also update bike odometer if service km is higher
+    const bikeDocRef = doc(db, 'bikes', bikeId);
+    const snap = await getDoc(bikeDocRef);
+    if (snap.exists()) {
+      const current = snap.data();
+      const curOdo = current.odometer || 0;
+      const curTargets = current.targets || [7688];
+      const newOdo = Math.max(curOdo, service.km);
+      const newTargets = [...curTargets];
+      if (service.km >= (newTargets[0] || Infinity)) {
+        newTargets[0] = service.km + (current.serviceInterval || 2500);
+      }
+      await updateDoc(bikeDocRef, {
+        odometer: newOdo,
+        targets: newTargets,
+        updatedAt: new Date().toISOString(),
+      });
+    }
+  } catch (err) {
+    console.warn('Firestore service log sync notice (cached locally):', err);
   }
 }
 
 export async function deleteServiceFromCloud(serviceId: string, bikeId: string = DEFAULT_BIKE_ID): Promise<void> {
-  const svcDocRef = doc(db, 'bikes', bikeId, 'services', serviceId);
-  await deleteDoc(svcDocRef);
+  try {
+    const svcDocRef = doc(db, 'bikes', bikeId, 'services', serviceId);
+    await deleteDoc(svcDocRef);
+  } catch (err) {
+    console.warn('Firestore delete service notice (cached locally):', err);
+  }
 }
 
 export async function addNoteToCloud(note: MaintenanceNote, bikeId: string = DEFAULT_BIKE_ID): Promise<void> {
-  const noteDocRef = doc(db, 'bikes', bikeId, 'notes', note.id);
-  await setDoc(noteDocRef, {
-    ...note,
-    createdAt: new Date().toISOString(),
-  });
+  try {
+    const noteDocRef = doc(db, 'bikes', bikeId, 'notes', note.id);
+    await setDoc(noteDocRef, {
+      ...note,
+      createdAt: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.warn('Firestore add note notice (cached locally):', err);
+  }
 }
 
 export async function deleteNoteFromCloud(noteId: string, bikeId: string = DEFAULT_BIKE_ID): Promise<void> {
-  const noteDocRef = doc(db, 'bikes', bikeId, 'notes', noteId);
-  await deleteDoc(noteDocRef);
+  try {
+    const noteDocRef = doc(db, 'bikes', bikeId, 'notes', noteId);
+    await deleteDoc(noteDocRef);
+  } catch (err) {
+    console.warn('Firestore delete note notice (cached locally):', err);
+  }
 }

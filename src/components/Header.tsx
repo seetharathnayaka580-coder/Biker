@@ -96,37 +96,38 @@ export const Header: React.FC<HeaderProps> = ({
   ];
 
   return (
-    <header className="border-b border-[#242932] bg-[#12151c]/95 backdrop-blur-md sticky top-0 z-40 px-3 sm:px-6 py-2.5">
+    <header className="border-b border-[#222734] bg-[#10131a]/95 backdrop-blur-xl sticky top-0 z-40 px-3 sm:px-6 py-2.5 shadow-xl shadow-black/40">
       <div className="max-w-6xl mx-auto space-y-2.5">
         {/* Top Row: Brand, Reg No, Cloud Status & Quick Tool Actions */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           {/* Brand & Plate */}
-          <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#181d28] to-[#0c0f15] border border-amber-500/40 p-0.5 flex items-center justify-center shadow-lg shadow-amber-500/10 overflow-hidden shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#181d28] via-[#121620] to-[#0a0c12] border border-amber-500/40 p-0.5 flex items-center justify-center shadow-lg shadow-amber-500/10 overflow-hidden shrink-0 relative group">
               <img
                 src={state.vehicle.photoUrl || '/pulsar_n160.svg'}
                 alt="Bajaj Pulsar N160"
                 referrerPolicy="no-referrer"
-                className={`w-full h-full ${state.vehicle.photoUrl ? 'object-cover' : 'object-contain'} rounded-lg`}
+                className={`w-full h-full ${state.vehicle.photoUrl ? 'object-cover' : 'object-contain'} rounded-lg transition-transform duration-300 group-hover:scale-105`}
               />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none rounded-lg" />
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-display font-bold text-lg sm:text-xl tracking-wider text-white">
+                <span className="font-display font-black text-lg sm:text-xl tracking-wider text-white">
                   PULSAR <span className="text-amber-400">N160</span>
                 </span>
-                <span className="text-xs uppercase tracking-widest px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 font-mono font-bold">
+                <span className="text-[11px] uppercase tracking-widest px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-300 border border-amber-500/25 font-mono font-bold shadow-sm">
                   {state.vehicle.regNo}
                 </span>
 
                 {/* Role Indicator */}
                 {isAdmin ? (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 shadow-sm">
                     <Flame className="w-3 h-3 text-amber-400" />
                     Admin
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-red-500/15 text-red-300 border border-red-500/30">
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-red-500/15 text-red-300 border border-red-500/30 shadow-sm">
                     <ShieldAlert className="w-3 h-3 text-red-400" />
                     Client
                   </span>
@@ -134,8 +135,8 @@ export const Header: React.FC<HeaderProps> = ({
 
                 {/* Sync Status */}
                 {syncStatus === 'synced' && (
-                  <span className="hidden md:inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/25" title="Firebase Firestore Realtime Sync Active">
-                    <Cloud className="w-2.5 h-2.5 text-sky-400" />
+                  <span className="hidden md:inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/25" title="Firebase Firestore Realtime Sync Active">
+                    <Cloud className="w-2.5 h-2.5 text-emerald-400" />
                     Synced
                   </span>
                 )}
@@ -145,9 +146,15 @@ export const Header: React.FC<HeaderProps> = ({
                     Syncing
                   </span>
                 )}
+                {syncStatus === 'offline' && (
+                  <span className="hidden md:inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded-full bg-zinc-800/80 text-zinc-400 border border-zinc-700/40" title="Offline Cache Active - Changes saved locally">
+                    <CloudOff className="w-2.5 h-2.5 text-zinc-400" />
+                    Offline Mode
+                  </span>
+                )}
               </div>
-              <p className="text-[11px] text-zinc-400 font-medium">
-                {state.vehicle.owner} · Odo: <strong className="text-zinc-200 font-mono">{state.odometer.toLocaleString()} km</strong>
+              <p className="text-[11px] text-zinc-400 font-medium mt-0.5">
+                {state.vehicle.owner} · Odometer: <strong className="text-zinc-100 font-mono">{state.odometer.toLocaleString()} km</strong>
               </p>
             </div>
           </div>
@@ -155,20 +162,21 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Right Action Icons & Utilities */}
           <div className="flex items-center gap-1.5 flex-wrap self-end sm:self-auto">
             {stats.isOverdue ? (
-              <span className="px-2 py-1 rounded-md text-[11px] font-bold bg-red-500/15 text-red-400 border border-red-500/30 animate-pulse flex items-center gap-1">
+              <span className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-red-500/15 text-red-400 border border-red-500/30 animate-pulse flex items-center gap-1.5 shadow-sm">
                 <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
-                Service Overdue!
+                Service Overdue
               </span>
             ) : stats.isDueSoon ? (
-              <span className="px-2 py-1 rounded-md text-[11px] font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center gap-1">
+              <span className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center gap-1.5 shadow-sm">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
                 Due in {stats.remaining.toLocaleString()} km
               </span>
             ) : null}
 
             <button
+              type="button"
               onClick={onOpenSchedule}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-zinc-300 bg-zinc-800/70 hover:bg-zinc-700 hover:text-white border border-zinc-700/60 transition-colors cursor-pointer"
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-medium text-zinc-300 bg-[#191e28] hover:bg-[#222938] hover:text-white border border-[#2b3446] transition-all cursor-pointer shadow-sm active:scale-95"
               title="View Factory Schedule Guide"
             >
               <Wrench className="w-3.5 h-3.5 text-amber-400" />
@@ -176,8 +184,9 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
 
             <button
+              type="button"
               onClick={onOpenPrint}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-zinc-300 bg-zinc-800/70 hover:bg-zinc-700 hover:text-white border border-zinc-700/60 transition-colors cursor-pointer"
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-medium text-zinc-300 bg-[#191e28] hover:bg-[#222938] hover:text-white border border-[#2b3446] transition-all cursor-pointer shadow-sm active:scale-95"
               title="Print Official Service Booklet"
             >
               <Printer className="w-3.5 h-3.5 text-zinc-300" />
@@ -186,8 +195,9 @@ export const Header: React.FC<HeaderProps> = ({
 
             {/* Backup & Export */}
             <button
+              type="button"
               onClick={onExportData}
-              className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/40 transition-colors cursor-pointer"
+              className="p-1.5 rounded-xl text-zinc-400 hover:text-zinc-200 bg-[#191e28] hover:bg-[#222938] border border-[#2b3446] transition-all cursor-pointer shadow-sm active:scale-95"
               title="Download JSON Backup"
             >
               <Download className="w-3.5 h-3.5" />
@@ -203,16 +213,18 @@ export const Header: React.FC<HeaderProps> = ({
                   className="hidden"
                 />
                 <button
+                  type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/40 transition-colors cursor-pointer"
+                  className="p-1.5 rounded-xl text-zinc-400 hover:text-zinc-200 bg-[#191e28] hover:bg-[#222938] border border-[#2b3446] transition-all cursor-pointer shadow-sm active:scale-95"
                   title="Import JSON Record"
                 >
                   <Upload className="w-3.5 h-3.5" />
                 </button>
 
                 <button
+                  type="button"
                   onClick={onResetToDefaults}
-                  className="p-1.5 rounded-lg text-zinc-400 hover:text-amber-300 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/40 transition-colors cursor-pointer"
+                  className="p-1.5 rounded-xl text-zinc-400 hover:text-amber-300 bg-[#191e28] hover:bg-[#222938] border border-[#2b3446] transition-all cursor-pointer shadow-sm active:scale-95"
                   title="Reset to Factory Defaults"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
@@ -222,8 +234,9 @@ export const Header: React.FC<HeaderProps> = ({
 
             {/* Sign Out */}
             <button
+              type="button"
               onClick={onSignOut}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-red-400 hover:text-white bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 transition-colors cursor-pointer"
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-red-400 hover:text-white bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 transition-all cursor-pointer shadow-sm active:scale-95"
               title="Sign Out"
             >
               <LogOut className="w-3.5 h-3.5" />
@@ -233,7 +246,7 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Bottom Row: 5 PRIMARY CATEGORY TABS */}
-        <nav className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full scrollbar-none border-t border-[#202530] pt-2">
+        <nav className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full scrollbar-none border-t border-[#1d222e] pt-2">
           {navItems.map((tab) => {
             const isActive = activeTab === tab.id;
             const Icon = tab.icon;
@@ -244,8 +257,8 @@ export const Header: React.FC<HeaderProps> = ({
                 onClick={() => onSelectTab(tab.id)}
                 className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-200 cursor-pointer shrink-0 ${
                   isActive
-                    ? 'bg-amber-500 text-zinc-950 shadow-lg shadow-amber-500/20 font-bold scale-[1.02]'
-                    : 'bg-[#181c24] hover:bg-[#202632] text-zinc-300 hover:text-white border border-[#272d3a]'
+                    ? 'bg-amber-500 text-zinc-950 shadow-lg shadow-amber-500/25 font-bold scale-[1.02] border border-amber-400'
+                    : 'bg-[#151922] hover:bg-[#1e2330] text-zinc-300 hover:text-white border border-[#252c3c]'
                 }`}
               >
                 <Icon className={`w-4 h-4 ${isActive ? 'text-zinc-950' : 'text-amber-400'}`} />
@@ -255,15 +268,15 @@ export const Header: React.FC<HeaderProps> = ({
 
                 {/* Optional Status Pill or Count */}
                 {tab.badge && (
-                  <span className={`text-[9px] font-mono px-1.5 py-0.2 rounded-full font-bold uppercase ${
+                  <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded-md font-bold uppercase ${
                     isActive ? 'bg-red-600 text-white' : 'bg-red-500/20 text-red-400 border border-red-500/40'
                   }`}>
                     {tab.badge}
                   </span>
                 )}
                 {tab.count !== undefined && tab.count > 0 && (
-                  <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full font-semibold ${
-                    isActive ? 'bg-zinc-950/20 text-zinc-950' : 'bg-zinc-800 text-zinc-400'
+                  <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded-md font-semibold ${
+                    isActive ? 'bg-zinc-950/25 text-zinc-950' : 'bg-zinc-800 text-zinc-400'
                   }`}>
                     {tab.count}
                   </span>

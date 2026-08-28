@@ -206,20 +206,20 @@ export const HomeTab: React.FC<HomeTabProps> = ({
       />
 
       {/* 1. HERO SHOWCASE: ABOUT THE BIKE WITH PHOTO VIEWER */}
-      <section className="bg-gradient-to-br from-[#151922] via-[#181d28] to-[#10131a] rounded-2xl border border-[#272f3e] p-5 sm:p-7 shadow-2xl relative overflow-hidden">
-        {/* Subtle decorative glow */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-1/3 w-80 h-80 bg-red-500/5 rounded-full blur-3xl pointer-events-none" />
+      <section className="bg-gradient-to-br from-[#131722] via-[#161b27] to-[#0e1118] rounded-2xl border border-[#232a3b] p-5 sm:p-7 shadow-2xl relative overflow-hidden">
+        {/* Subtle decorative telemetry glows */}
+        <div className="absolute -top-16 -right-16 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-16 left-1/4 w-72 h-72 bg-sky-500/5 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
           
-          {/* Left Column: Bike Image & Visual Branding */}
+          {/* Left Column: Bike Image & Visual Showcase */}
           <div className="lg:col-span-6 flex flex-col items-center justify-center">
             <div
               onDrop={handleDrop}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
-              className={`relative w-full max-w-md aspect-[4/3] rounded-2xl bg-gradient-to-b from-[#0e1117] to-[#08090d] border transition-all duration-300 p-2 flex items-center justify-center shadow-2xl shadow-black/80 overflow-hidden group ${
+              className={`relative w-full max-w-md aspect-[4/3] rounded-2xl bg-gradient-to-b from-[#0c0e14] to-[#07080c] border transition-all duration-300 p-2 flex items-center justify-center shadow-2xl shadow-black/90 overflow-hidden group ${
                 isDragging ? 'border-amber-400 ring-4 ring-amber-500/20 scale-[1.02]' : 'border-amber-500/30'
               }`}
             >
@@ -234,7 +234,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
               />
 
               {/* Overlay vignette */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30 pointer-events-none rounded-xl" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/30 pointer-events-none rounded-xl" />
 
               {/* Badges on Image */}
               <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/80 backdrop-blur-md border border-amber-500/40 text-[10px] font-mono font-bold text-amber-400 shadow-md">
@@ -246,44 +246,44 @@ export const HomeTab: React.FC<HomeTabProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsFullscreenModalOpen(true)}
-                  className="p-1.5 rounded-lg bg-black/80 hover:bg-black/95 text-zinc-300 hover:text-white border border-zinc-700/60 shadow-md backdrop-blur-md transition-colors cursor-pointer"
+                  className="p-1.5 rounded-lg bg-black/80 hover:bg-black/95 text-zinc-300 hover:text-white border border-zinc-700/60 shadow-md backdrop-blur-md transition-all cursor-pointer active:scale-95"
                   title="View Full Size Photo"
                 >
                   <Maximize2 className="w-3.5 h-3.5" />
                 </button>
 
-                <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-600/95 text-white text-[10px] font-bold tracking-wider font-mono shadow-md">
+                <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-gradient-to-r from-red-600 to-red-700 text-white text-[10px] font-bold tracking-wider font-mono shadow-md border border-red-500/50">
                   DUAL ABS
                 </div>
               </div>
 
               {/* Drag over indicator */}
               {isDragging && (
-                <div className="absolute inset-0 bg-black/85 backdrop-blur-sm flex flex-col items-center justify-center text-amber-400 z-30 animate-pulse">
+                <div className="absolute inset-0 bg-black/90 backdrop-blur-sm flex flex-col items-center justify-center text-amber-400 z-30 animate-pulse">
                   <Upload className="w-8 h-8 mb-2" />
                   <p className="text-xs font-bold uppercase tracking-wider">Drop Photo Here</p>
                 </div>
               )}
 
               {/* Bottom plate overlay on image */}
-              <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between px-3 py-1.5 rounded-lg bg-black/75 backdrop-blur-md border border-zinc-800/80 text-xs shadow-md">
-                <span className="font-mono text-zinc-400 text-[10px]">Registration</span>
+              <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between px-3 py-1.5 rounded-lg bg-black/80 backdrop-blur-md border border-zinc-800/90 text-xs shadow-md">
+                <span className="font-mono text-zinc-400 text-[10px]">Registration Plate</span>
                 <strong className="text-white font-mono text-xs tracking-wider">{state.vehicle.regNo}</strong>
               </div>
             </div>
 
             {/* Compact controls under photo */}
-            <div className="flex items-center justify-between w-full max-w-md mt-2 px-1 text-xs">
+            <div className="flex items-center justify-between w-full max-w-md mt-2.5 px-1 text-xs">
               <div className="flex items-center gap-1.5">
                 {isAdmin && (
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isUploading}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-amber-500/15 hover:bg-amber-500/25 active:scale-95 text-amber-400 border border-amber-500/30 text-[11px] font-semibold transition-all cursor-pointer shadow-sm"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 active:scale-95 text-amber-300 border border-amber-500/30 text-[11px] font-semibold transition-all cursor-pointer shadow-sm"
                     title="Upload or Change Bike Photo"
                   >
-                    <Camera className="w-3 h-3" />
+                    <Camera className="w-3 h-3 text-amber-400" />
                     <span>{isUploading ? 'Saving...' : isCustomPhoto ? 'Change Photo' : 'Add Photo'}</span>
                   </button>
                 )}
@@ -292,7 +292,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
                   <button
                     type="button"
                     onClick={handleResetPhoto}
-                    className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-zinc-800/80 hover:bg-zinc-700 active:scale-95 text-zinc-400 hover:text-zinc-200 border border-zinc-700/50 text-[11px] transition-all cursor-pointer"
+                    className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-zinc-800/80 hover:bg-zinc-700 active:scale-95 text-zinc-400 hover:text-zinc-200 border border-zinc-700/50 text-[11px] transition-all cursor-pointer"
                     title="Reset to Stock Factory Render"
                   >
                     <RotateCcw className="w-2.5 h-2.5" />
@@ -308,7 +308,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
 
             {/* Upload status banner */}
             {uploadSuccess && (
-              <div className="mt-2 flex items-center gap-1.5 text-xs text-emerald-400 font-medium px-3 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 w-full max-w-md">
+              <div className="mt-2 flex items-center gap-1.5 text-xs text-emerald-400 font-medium px-3 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 w-full max-w-md animate-fadeIn">
                 <Check className="w-3.5 h-3.5" />
                 <span>Bike photo updated and synced!</span>
               </div>
@@ -319,7 +319,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
               <button
                 type="button"
                 onClick={() => onNavigateToTab('vehicle')}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-[#202633] hover:bg-[#283142] border border-[#333e54] text-xs font-semibold text-zinc-200 transition-colors cursor-pointer"
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-[#1d2331] hover:bg-[#252e40] border border-[#2d374d] text-xs font-semibold text-zinc-200 transition-all cursor-pointer shadow-sm active:scale-95"
               >
                 <span>View Full Specs</span>
                 <ChevronRight className="w-3.5 h-3.5 text-amber-400" />
@@ -327,7 +327,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
               <button
                 type="button"
                 onClick={onOpenPrint}
-                className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-xs font-semibold text-amber-300 transition-colors cursor-pointer"
+                className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-xs font-semibold text-amber-300 transition-all cursor-pointer shadow-sm active:scale-95"
               >
                 <BookOpen className="w-3.5 h-3.5" />
                 <span>Print Booklet</span>
@@ -339,11 +339,11 @@ export const HomeTab: React.FC<HomeTabProps> = ({
           <div className="lg:col-span-6 flex flex-col justify-between space-y-4">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-[11px] font-mono uppercase tracking-widest text-amber-400 font-semibold px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20">
+                <span className="text-[11px] font-mono uppercase tracking-widest text-amber-400 font-bold px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/25">
                   Official Vehicle Profile
                 </span>
                 <span className="text-[11px] font-mono text-emerald-400 flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5" /> Verified
+                  <ShieldCheck className="w-3.5 h-3.5" /> Verified Digital Record
                 </span>
               </div>
 
@@ -357,42 +357,42 @@ export const HomeTab: React.FC<HomeTabProps> = ({
 
             {/* Spec Highlights Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-1">
-              <div className="p-2.5 rounded-xl bg-[#1a1f2c] border border-[#2d3548]">
+              <div className="p-3 rounded-xl bg-[#161a25] border border-[#262e3f] shadow-sm">
                 <div className="text-[10px] text-zinc-400 uppercase font-semibold flex items-center gap-1">
                   <Zap className="w-3 h-3 text-amber-400" /> Max Power
                 </div>
                 <div className="text-xs font-bold text-white font-mono mt-0.5">16 PS @ 8750 RPM</div>
               </div>
 
-              <div className="p-2.5 rounded-xl bg-[#1a1f2c] border border-[#2d3548]">
+              <div className="p-3 rounded-xl bg-[#161a25] border border-[#262e3f] shadow-sm">
                 <div className="text-[10px] text-zinc-400 uppercase font-semibold flex items-center gap-1">
                   <TrendingUp className="w-3 h-3 text-amber-400" /> Max Torque
                 </div>
                 <div className="text-xs font-bold text-white font-mono mt-0.5">14.65 Nm @ 6750</div>
               </div>
 
-              <div className="p-2.5 rounded-xl bg-[#1a1f2c] border border-[#2d3548]">
+              <div className="p-3 rounded-xl bg-[#161a25] border border-[#262e3f] shadow-sm">
                 <div className="text-[10px] text-zinc-400 uppercase font-semibold flex items-center gap-1">
                   <Gauge className="w-3 h-3 text-amber-400" /> Displacement
                 </div>
                 <div className="text-xs font-bold text-white font-mono mt-0.5">164.82 cc DTS-i</div>
               </div>
 
-              <div className="p-2.5 rounded-xl bg-[#1a1f2c] border border-[#2d3548]">
+              <div className="p-3 rounded-xl bg-[#161a25] border border-[#262e3f] shadow-sm">
                 <div className="text-[10px] text-zinc-400 uppercase font-semibold flex items-center gap-1">
                   <Fuel className="w-3 h-3 text-amber-400" /> Fuel & Tank
                 </div>
                 <div className="text-xs font-bold text-white font-mono mt-0.5">14 Litres (95 Oct)</div>
               </div>
 
-              <div className="p-2.5 rounded-xl bg-[#1a1f2c] border border-[#2d3548]">
+              <div className="p-3 rounded-xl bg-[#161a25] border border-[#262e3f] shadow-sm">
                 <div className="text-[10px] text-zinc-400 uppercase font-semibold flex items-center gap-1">
                   <Award className="w-3 h-3 text-amber-400" /> Brakes
                 </div>
                 <div className="text-xs font-bold text-white font-mono mt-0.5">Dual Disc + ABS</div>
               </div>
 
-              <div className="p-2.5 rounded-xl bg-[#1a1f2c] border border-[#2d3548]">
+              <div className="p-3 rounded-xl bg-[#161a25] border border-[#262e3f] shadow-sm">
                 <div className="text-[10px] text-zinc-400 uppercase font-semibold flex items-center gap-1">
                   <Wrench className="w-3 h-3 text-amber-400" /> Oil Spec
                 </div>
@@ -401,7 +401,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
             </div>
 
             {/* Quick Owner & Reg Strip */}
-            <div className="flex items-center justify-between p-3 rounded-xl bg-[#12151d] border border-[#272d3a] text-xs">
+            <div className="flex items-center justify-between p-3 rounded-xl bg-[#10131b] border border-[#222938] text-xs">
               <div>
                 <span className="text-[10px] text-zinc-400 block uppercase font-medium">Registered Owner</span>
                 <span className="font-semibold text-zinc-200">{state.vehicle.owner}</span>
@@ -418,11 +418,12 @@ export const HomeTab: React.FC<HomeTabProps> = ({
       {/* 2. UPCOMING SERVICE STATUS & COUNTDOWN */}
       <section className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         {/* Left: Upcoming Service Alert & Live Gauge Card */}
-        <div className="lg:col-span-7 bg-[#151820] rounded-2xl border border-[#272c38] p-5 sm:p-6 shadow-xl flex flex-col justify-between">
+        <div className="lg:col-span-7 bg-[#131722] rounded-2xl border border-[#232a3a] p-5 sm:p-6 shadow-xl flex flex-col justify-between relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-48 h-48 bg-amber-500/5 rounded-full blur-2xl pointer-events-none" />
           <div>
             <div className="flex items-center justify-between gap-2 mb-4">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shadow-sm">
                   <Calendar className="w-4 h-4" />
                 </div>
                 <div>
@@ -436,17 +437,17 @@ export const HomeTab: React.FC<HomeTabProps> = ({
               </div>
 
               {isOverdue ? (
-                <span className="px-3 py-1 rounded-full bg-red-500/20 text-red-400 border border-red-500/40 text-xs font-bold flex items-center gap-1.5 animate-pulse">
+                <span className="px-3 py-1 rounded-full bg-red-500/20 text-red-400 border border-red-500/40 text-xs font-bold flex items-center gap-1.5 animate-pulse shadow-sm">
                   <AlertTriangle className="w-3.5 h-3.5" />
                   Service Overdue
                 </span>
               ) : isDueSoon ? (
-                <span className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-bold flex items-center gap-1.5">
+                <span className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-bold flex items-center gap-1.5 shadow-sm">
                   <Clock className="w-3.5 h-3.5" />
                   Service Due Soon
                 </span>
               ) : (
-                <span className="px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-xs font-semibold flex items-center gap-1.5">
+                <span className="px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-xs font-semibold flex items-center gap-1.5 shadow-sm">
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   Within Safe Interval
                 </span>
@@ -454,23 +455,23 @@ export const HomeTab: React.FC<HomeTabProps> = ({
             </div>
 
             {/* Mileage Status Metric Box */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 rounded-xl bg-[#1a1f2a] border border-[#2b3344] mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 rounded-xl bg-[#181d29] border border-[#273042] mb-4 shadow-inner">
               <div>
-                <span className="text-[11px] text-zinc-400 uppercase font-medium">Current Odometer</span>
+                <span className="text-[10px] text-zinc-400 uppercase font-semibold tracking-wider">Current Odometer</span>
                 <div className="text-xl sm:text-2xl font-mono font-black text-white mt-0.5">
                   {state.odometer.toLocaleString()} <span className="text-xs font-normal text-zinc-400">km</span>
                 </div>
               </div>
 
               <div>
-                <span className="text-[11px] text-zinc-400 uppercase font-medium">Target Service Km</span>
+                <span className="text-[10px] text-zinc-400 uppercase font-semibold tracking-wider">Target Service Km</span>
                 <div className="text-xl sm:text-2xl font-mono font-black text-amber-400 mt-0.5">
                   {currentTarget.toLocaleString()} <span className="text-xs font-normal text-zinc-400">km</span>
                 </div>
               </div>
 
               <div>
-                <span className="text-[11px] text-zinc-400 uppercase font-medium">
+                <span className="text-[10px] text-zinc-400 uppercase font-semibold tracking-wider">
                   {isOverdue ? 'Overdue By' : 'Distance Remaining'}
                 </span>
                 <div className={`text-xl sm:text-2xl font-mono font-black mt-0.5 ${isOverdue ? 'text-red-400' : 'text-emerald-400'}`}>
@@ -483,17 +484,17 @@ export const HomeTab: React.FC<HomeTabProps> = ({
             {/* Service Interval Progress Bar */}
             <div className="space-y-1.5 mb-5">
               <div className="flex justify-between text-xs text-zinc-400 font-mono">
-                <span>Interval Progress</span>
-                <span className="text-amber-400 font-bold">{progressPercent}% elapsed</span>
+                <span>Interval Elapsed</span>
+                <span className="text-amber-400 font-bold">{progressPercent}%</span>
               </div>
-              <div className="w-full h-3 rounded-full bg-[#0d1015] p-0.5 border border-[#2c3444] overflow-hidden">
+              <div className="w-full h-3 rounded-full bg-[#0b0e14] p-0.5 border border-[#273042] overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all duration-700 ${
                     isOverdue
-                      ? 'bg-gradient-to-r from-red-600 to-red-500'
+                      ? 'bg-gradient-to-r from-red-600 to-red-500 shadow-sm shadow-red-500/50'
                       : isDueSoon
-                      ? 'bg-gradient-to-r from-amber-600 to-amber-400'
-                      : 'bg-gradient-to-r from-emerald-600 to-amber-500'
+                      ? 'bg-gradient-to-r from-amber-600 to-amber-400 shadow-sm shadow-amber-500/50'
+                      : 'bg-gradient-to-r from-emerald-600 via-teal-500 to-amber-400 shadow-sm shadow-emerald-500/50'
                   }`}
                   style={{ width: `${Math.min(progressPercent, 100)}%` }}
                 />
@@ -502,33 +503,33 @@ export const HomeTab: React.FC<HomeTabProps> = ({
           </div>
 
           {/* Quick Action Navigation Buttons */}
-          <div className="flex flex-wrap items-center gap-3 pt-3 border-t border-[#232834]">
+          <div className="flex flex-wrap items-center gap-3 pt-3 border-t border-[#202737]">
             <button
               type="button"
               onClick={() => onNavigateToTab('service')}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs tracking-wide transition-all shadow-md cursor-pointer"
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-95 text-zinc-950 font-bold text-xs tracking-wide transition-all shadow-md cursor-pointer border border-amber-400"
             >
-              <PlusCircle className="w-4 h-4" />
+              <PlusCircle className="w-4 h-4 text-zinc-950" />
               <span>Log Service Record</span>
             </button>
 
             <button
               type="button"
               onClick={() => onNavigateToTab('dealers')}
-              className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#202735] hover:bg-[#283244] text-amber-400 border border-amber-500/30 font-semibold text-xs transition-colors cursor-pointer"
+              className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#1c2230] hover:bg-[#252d40] active:scale-95 text-amber-300 border border-amber-500/30 font-semibold text-xs transition-all cursor-pointer shadow-sm"
             >
-              <MapPin className="w-4 h-4" />
+              <MapPin className="w-4 h-4 text-amber-400" />
               <span>Find Nearest Dealer</span>
             </button>
           </div>
         </div>
 
         {/* Right: Upcoming Service Checklist Guide */}
-        <div className="lg:col-span-5 bg-[#151820] rounded-2xl border border-[#272c38] p-5 sm:p-6 shadow-xl flex flex-col justify-between">
+        <div className="lg:col-span-5 bg-[#131722] rounded-2xl border border-[#232a3a] p-5 sm:p-6 shadow-xl flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shadow-sm">
                   <Wrench className="w-4 h-4" />
                 </div>
                 <div>
@@ -544,18 +545,18 @@ export const HomeTab: React.FC<HomeTabProps> = ({
               <button
                 type="button"
                 onClick={onOpenScheduleGuide}
-                className="text-[11px] text-amber-400 hover:text-amber-300 font-semibold underline underline-offset-2 cursor-pointer"
+                className="text-[11px] text-amber-400 hover:text-amber-300 font-semibold underline underline-offset-2 cursor-pointer transition-colors"
               >
                 Full Guide
               </button>
             </div>
 
             {/* Checklist Items */}
-            <div className="space-y-2.5 mt-3">
+            <div className="space-y-2 mt-3">
               {upcomingTasks.map((item, idx) => (
                 <div
                   key={idx}
-                  className="flex items-start gap-2.5 p-2.5 rounded-xl bg-[#191e28] border border-[#28303f]"
+                  className="flex items-start gap-2.5 p-2.5 rounded-xl bg-[#171c27] border border-[#252d3d] transition-colors hover:border-[#323d52]"
                 >
                   <CheckCircle2
                     className={`w-4 h-4 shrink-0 mt-0.5 ${
@@ -573,12 +574,12 @@ export const HomeTab: React.FC<HomeTabProps> = ({
             </div>
           </div>
 
-          <div className="mt-4 pt-3 border-t border-[#232834] flex items-center justify-between text-xs text-zinc-400">
+          <div className="mt-4 pt-3 border-t border-[#202737] flex items-center justify-between text-xs text-zinc-400">
             <span>David Pieris Motor Company Recommended</span>
             <button
               type="button"
               onClick={() => onNavigateToTab('notes')}
-              className="text-amber-400 hover:underline font-medium text-xs cursor-pointer"
+              className="text-amber-400 hover:underline font-medium text-xs cursor-pointer transition-colors"
             >
               View Garage Notes →
             </button>
@@ -589,7 +590,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
       {/* 3. RECENT ACTIVITY QUICK SUMMARY */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Last Recorded Service */}
-        <div className="p-4 rounded-2xl bg-[#14171f] border border-[#242935] flex items-center justify-between">
+        <div className="p-4 rounded-2xl bg-[#131722] border border-[#232a3a] flex items-center justify-between shadow-lg">
           <div>
             <span className="text-[10px] uppercase font-semibold text-zinc-400 block tracking-wider">
               Last Completed Service
@@ -604,14 +605,14 @@ export const HomeTab: React.FC<HomeTabProps> = ({
           <button
             type="button"
             onClick={() => onNavigateToTab('service')}
-            className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-semibold text-zinc-200 transition-colors cursor-pointer"
+            className="px-3.5 py-1.5 rounded-xl bg-[#1c2230] hover:bg-[#252e40] active:scale-95 text-xs font-semibold text-zinc-200 border border-[#2d374c] transition-all cursor-pointer shadow-sm"
           >
             History →
           </button>
         </div>
 
         {/* Latest Maintenance / Garage Remark */}
-        <div className="p-4 rounded-2xl bg-[#14171f] border border-[#242935] flex items-center justify-between">
+        <div className="p-4 rounded-2xl bg-[#131722] border border-[#232a3a] flex items-center justify-between shadow-lg">
           <div>
             <span className="text-[10px] uppercase font-semibold text-zinc-400 block tracking-wider">
               Latest Garage Remark
@@ -626,7 +627,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
           <button
             type="button"
             onClick={() => onNavigateToTab('notes')}
-            className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-semibold text-zinc-200 transition-colors cursor-pointer"
+            className="px-3.5 py-1.5 rounded-xl bg-[#1c2230] hover:bg-[#252e40] active:scale-95 text-xs font-semibold text-zinc-200 border border-[#2d374c] transition-all cursor-pointer shadow-sm"
           >
             Notes →
           </button>
