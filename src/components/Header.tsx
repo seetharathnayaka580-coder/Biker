@@ -106,7 +106,7 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#181d28] via-[#121620] to-[#0a0c12] border border-amber-500/40 p-0.5 flex items-center justify-center shadow-lg shadow-amber-500/10 overflow-hidden shrink-0 relative group">
               <img
-                src={state.vehicle.photoUrl || '/pulsar_n160.svg'}
+                src={state.vehicle.photoUrl || '/app_icon.svg'}
                 alt="Bajaj Pulsar N160"
                 referrerPolicy="no-referrer"
                 className={`w-full h-full ${state.vehicle.photoUrl ? 'object-cover' : 'object-contain'} rounded-lg transition-transform duration-300 group-hover:scale-105`}

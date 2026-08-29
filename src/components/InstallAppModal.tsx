@@ -92,8 +92,8 @@ export const InstallAppModal: React.FC<InstallAppModalProps> = ({
 
         {/* App Icon Header */}
         <div className="flex items-center gap-3.5 mb-5">
-          <div className="w-14 h-14 rounded-2xl bg-[#141824] border border-amber-500/40 p-1 flex items-center justify-center shadow-lg shadow-amber-500/10 shrink-0">
-            <img src="/pulsar_n160.svg" alt="Pulsar N160" className="w-full h-full object-contain" />
+          <div className="w-14 h-14 rounded-2xl bg-[#141824] border border-amber-500/40 p-1.5 flex items-center justify-center shadow-lg shadow-amber-500/10 shrink-0">
+            <img src="/favicon.svg" alt="Pulsar N160 App Icon" className="w-full h-full object-contain" />
           </div>
           <div>
             <h3 className="text-base sm:text-lg font-bold text-white font-display flex items-center gap-1.5">
