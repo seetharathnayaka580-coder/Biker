@@ -295,7 +295,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, o
         >
           {/* Header Title & Subtitle */}
           <div className="text-center mb-6">
-            <h1 className="text-2xl sm:text-3xl font-display font-black text-white tracking-wide">
+            <h1 className="text-xl sm:text-2xl font-display font-bold text-white tracking-wide">
               Welcome Back.
             </h1>
             <p className="text-xs text-zinc-400 mt-1 flex items-center justify-center gap-1.5">

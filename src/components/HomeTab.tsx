@@ -347,7 +347,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
                 </span>
               </div>
 
-              <h1 className="text-2xl sm:text-3xl font-display font-black text-white tracking-wide">
+              <h1 className="text-xl sm:text-2xl font-display font-bold text-white tracking-wide">
                 BAJAJ PULSAR <span className="text-amber-400">N160</span>
               </h1>
               <p className="text-xs sm:text-sm text-zinc-300 mt-1 leading-relaxed">
