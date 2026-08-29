@@ -2,7 +2,7 @@
 
 @layer base {
   html {
-    font-size: 13.5px;
+    font-size: 14.75px;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
@@ -10,13 +10,13 @@
 
   @media (min-width: 640px) {
     html {
-      font-size: 14px;
+      font-size: 15.25px;
     }
   }
 
   @media (min-width: 1024px) {
     html {
-      font-size: 14.5px;
+      font-size: 15.75px;
     }
   }
 
