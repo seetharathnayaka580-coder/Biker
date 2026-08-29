@@ -124,7 +124,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle })
   };
 
   return (
-    <div className="min-h-screen bg-[#07090e] text-[#eef1f4] flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-hidden select-none font-sans">
+    <div className="min-h-screen w-full bg-[#07090e] text-[#eef1f4] flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-y-auto select-none font-sans">
       {/* Dynamic Raindrop / Cyber Water droplet background */}
       <div
         className="absolute inset-0 opacity-20 pointer-events-none"
@@ -352,6 +352,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle })
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="Username"
+                  autoComplete="username"
                   className="w-full bg-[#131924] border border-[#233044] focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/50 rounded-xl px-4 py-3 text-sm text-white placeholder:text-zinc-600 transition-all font-mono outline-none shadow-inner"
                   required
                 />
@@ -370,6 +371,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle })
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Password"
+                  autoComplete="current-password"
                   className="w-full bg-[#131924] border border-[#233044] focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/50 rounded-xl px-4 py-3 text-sm text-white placeholder:text-zinc-600 transition-all font-mono tracking-wider outline-none shadow-inner"
                   required
                 />
