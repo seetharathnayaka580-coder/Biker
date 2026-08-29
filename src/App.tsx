@@ -8,6 +8,8 @@ import { GoogleMapsServiceLocator } from './components/GoogleMapsServiceLocator'
 import { PrintBookletModal } from './components/PrintBookletModal';
 import { ScheduleGuideModal } from './components/ScheduleGuideModal';
 import { LoginPage } from './components/LoginPage';
+import { AppSplashScreen } from './components/AppSplashScreen';
+import { InstallAppModal } from './components/InstallAppModal';
 import { AppState, AuthSession, MaintenanceNote, ServiceRecord, VehicleDetails } from './types';
 import { loadState, saveState, calculateServiceStats } from './utils/formatters';
 import { SEED_STATE } from './data/seed';
@@ -27,12 +29,24 @@ import {
 
 const AUTH_STORAGE_KEY = 'n160_auth_session';
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
+}
+
 export default function App() {
   const [state, setState] = useState<AppState>(() => loadState());
   const [activeTab, setActiveTab] = useState<ActiveTab>('home');
   const [syncStatus, setSyncStatus] = useState<'synced' | 'syncing' | 'offline' | 'error'>('syncing');
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
+
+  // App Opening Loading Splash Screen state
+  const [showSplash, setShowSplash] = useState(true);
+
+  // Chrome PWA Install Prompt State
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [showInstallModal, setShowInstallModal] = useState(false);
 
   // Auth Session State
   const [authSession, setAuthSession] = useState<AuthSession | null>(() => {
@@ -43,6 +57,20 @@ export default function App() {
       return null;
     }
   });
+
+  // Capture Chrome PWA Install Prompt
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
 
   const handleLoginSuccess = (session: AuthSession) => {
     setAuthSession(session);
@@ -101,9 +129,33 @@ export default function App() {
     saveState(state);
   }, [state]);
 
+  // If opening splash screen is active, show the animated motorcycle boot screen
+  if (showSplash) {
+    return (
+      <AppSplashScreen
+        onComplete={() => setShowSplash(false)}
+        regNo={state.vehicle.regNo}
+        modelName={state.vehicle.model}
+      />
+    );
+  }
+
   // If not logged in, render the Motorcycle-themed Login Page
   if (!authSession) {
-    return <LoginPage onLoginSuccess={handleLoginSuccess} vehicle={state.vehicle} />;
+    return (
+      <>
+        <LoginPage
+          onLoginSuccess={handleLoginSuccess}
+          vehicle={state.vehicle}
+          onOpenInstall={() => setShowInstallModal(true)}
+        />
+        <InstallAppModal
+          isOpen={showInstallModal}
+          onClose={() => setShowInstallModal(false)}
+          deferredPrompt={deferredPrompt}
+        />
+      </>
+    );
   }
 
   const isAdmin = authSession.role === 'admin';
@@ -288,6 +340,7 @@ export default function App() {
         onSignOut={handleSignOut}
         onOpenPrint={() => setShowPrintModal(true)}
         onOpenSchedule={() => setShowScheduleModal(true)}
+        onOpenInstall={() => setShowInstallModal(true)}
         onExportData={handleExportData}
         onImportData={handleImportData}
         onResetToDefaults={handleResetToDefaults}
@@ -377,6 +430,12 @@ export default function App() {
           onClose={() => setShowScheduleModal(false)}
         />
       )}
+
+      <InstallAppModal
+        isOpen={showInstallModal}
+        onClose={() => setShowInstallModal(false)}
+        deferredPrompt={deferredPrompt}
+      />
     </div>
   );
 }

@@ -1,11 +1,15 @@
 {
+  "id": "/?source=pwa",
   "name": "Bajaj Pulsar N160 Service Log Book",
-  "short_name": "N160 Service",
-  "description": "Official Digital Service Log Book for Bajaj Pulsar N160 (BKT-1374)",
+  "short_name": "Pulsar N160",
+  "description": "Official Digital Service Log Book & Maintenance Records for Bajaj Pulsar N160 (BKT-1374)",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#0f1116",
-  "theme_color": "#f59e0b",
+  "orientation": "portrait-primary",
+  "background_color": "#07090e",
+  "theme_color": "#07090e",
+  "categories": ["automotive", "utilities", "productivity"],
   "icons": [
     {
       "src": "/pulsar_n160.svg",
@@ -16,7 +20,24 @@
     {
       "src": "/favicon.svg",
       "sizes": "192x192",
-      "type": "image/svg+xml"
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Service Records",
+      "short_name": "Services",
+      "description": "View Bajaj Pulsar N160 service history and upcoming intervals",
+      "url": "/?tab=service",
+      "icons": [{ "src": "/favicon.svg", "sizes": "192x192" }]
+    },
+    {
+      "name": "Bajaj Dealers",
+      "short_name": "Dealers",
+      "description": "Find authorized Bajaj service centers and map hubs",
+      "url": "/?tab=dealers",
+      "icons": [{ "src": "/favicon.svg", "sizes": "192x192" }]
     }
   ]
 }

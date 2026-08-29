@@ -35,6 +35,7 @@ interface HeaderProps {
   onExportData: () => void;
   onImportData: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onResetToDefaults: () => void;
+  onOpenInstall?: () => void;
   syncStatus: 'synced' | 'syncing' | 'offline' | 'error';
   stats: {
     remaining: number;
@@ -54,6 +55,7 @@ export const Header: React.FC<HeaderProps> = ({
   onExportData,
   onImportData,
   onResetToDefaults,
+  onOpenInstall,
   syncStatus,
   stats,
 }) => {
@@ -181,6 +183,18 @@ export const Header: React.FC<HeaderProps> = ({
                 Due in {stats.remaining.toLocaleString()} km
               </span>
             ) : null}
+
+            {onOpenInstall && (
+              <button
+                type="button"
+                onClick={onOpenInstall}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-all cursor-pointer shadow-sm active:scale-95"
+                title="Install Chrome App Shortcut to Home Screen"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Install App</span>
+              </button>
+            )}
 
             <button
               type="button"

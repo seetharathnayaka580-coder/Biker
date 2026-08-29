@@ -9,6 +9,7 @@ import {
   AlertCircle,
   ArrowRight,
   Zap,
+  Download,
 } from 'lucide-react';
 import { AuthSession, VehicleDetails } from '../types';
 import { signInWithGooglePopup } from '../lib/firebase';
@@ -16,6 +17,7 @@ import { signInWithGooglePopup } from '../lib/firebase';
 interface LoginPageProps {
   onLoginSuccess: (session: AuthSession) => void;
   vehicle?: VehicleDetails;
+  onOpenInstall?: () => void;
 }
 
 // Crisp mechanical motorcycle ignition relay switch audio feedback using Web Audio API
@@ -44,7 +46,7 @@ const playClickSound = (isTurningOn: boolean) => {
   }
 };
 
-export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle }) => {
+export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, onOpenInstall }) => {
   // Lamp state (Turned on by default, can be toggled via the hanging cord)
   const [isLampOn, setIsLampOn] = useState(true);
   const [isCordPulled, setIsCordPulled] = useState(false);
@@ -447,10 +449,23 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle })
           </button>
         </div>
 
-        {/* Footer info badge */}
-        <div className="text-center mt-5 text-[11px] text-zinc-500 flex items-center justify-center gap-2 font-mono">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span>Bajaj Auto Digital Service Platform · Official N160 Log</span>
+        {/* Footer info badge & Chrome App Install Shortcut */}
+        <div className="flex flex-col items-center justify-center gap-2.5 mt-5">
+          {onOpenInstall && (
+            <button
+              type="button"
+              onClick={onOpenInstall}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-mono font-semibold transition-all cursor-pointer shadow-sm active:scale-95"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Install Chrome App Shortcut</span>
+            </button>
+          )}
+
+          <div className="text-center text-[11px] text-zinc-500 flex items-center justify-center gap-2 font-mono">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>Bajaj Auto Digital Service Platform · Official N160 Log</span>
+          </div>
         </div>
       </div>
     </div>
