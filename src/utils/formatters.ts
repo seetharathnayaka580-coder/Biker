@@ -45,11 +45,12 @@ export function loadState(bikeId: string = 'BKT-1374'): AppState {
     const parsed: AppState = JSON.parse(raw);
 
     // Merge missing attributes safely
+    if (!parsed.bikeId) parsed.bikeId = bikeId;
     if (!parsed.serviceInterval) parsed.serviceInterval = defaultState.serviceInterval || 2500;
     if (!parsed.targets || !parsed.targets.length) parsed.targets = [...(defaultState.targets || [2500])];
     if (!parsed.services) parsed.services = [];
     if (!parsed.notes) parsed.notes = [];
-    if (!parsed.vehicle) parsed.vehicle = { ...defaultState.vehicle };
+    parsed.vehicle = { ...defaultState.vehicle, ...(parsed.vehicle || {}) };
 
     // If it's Sachi's primary bike BKT-1374, preserve the verified seed services
     if (bikeId === 'BKT-1374') {
@@ -81,7 +82,8 @@ export function loadState(bikeId: string = 'BKT-1374'): AppState {
 export function saveState(state: AppState, bikeId: string = 'BKT-1374'): void {
   try {
     const key = getStorageKey(bikeId);
-    localStorage.setItem(key, JSON.stringify(state));
+    const payload = { ...state, bikeId };
+    localStorage.setItem(key, JSON.stringify(payload));
   } catch (e) {
     console.error('Error saving state to localStorage:', e);
   }

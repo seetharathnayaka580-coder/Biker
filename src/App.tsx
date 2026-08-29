@@ -78,19 +78,21 @@ export default function App() {
   }, []);
 
   const handleLoginSuccess = (session: AuthSession) => {
+    const targetBikeId = session.bikeId || 'BKT-1374';
+    const bikeState = loadState(targetBikeId);
+    setState(bikeState);
     setAuthSession(session);
     try {
       localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
     } catch (e) {
       console.warn('Could not save auth session:', e);
     }
-    // Pre-load data for the bike
-    const bikeState = loadState(session.bikeId || 'BKT-1374');
-    setState(bikeState);
   };
 
   const handleSignOut = async () => {
     await signOutFromFirebase();
+    const defaultState = loadState('BKT-1374');
+    setState(defaultState);
     setAuthSession(null);
     try {
       localStorage.removeItem(AUTH_STORAGE_KEY);
@@ -134,7 +136,9 @@ export default function App() {
 
   // Sync state to localStorage whenever it changes as offline backup
   useEffect(() => {
-    saveState(state, activeBikeId);
+    if (!state.bikeId || state.bikeId === activeBikeId) {
+      saveState(state, activeBikeId);
+    }
   }, [state, activeBikeId]);
 
   // If opening splash screen is active, show the animated motorcycle boot screen

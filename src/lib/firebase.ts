@@ -104,6 +104,22 @@ export async function signOutFromFirebase(): Promise<void> {
   }
 }
 
+// Helper to strip undefined values so Firestore does not throw "Unsupported field value: undefined"
+export function sanitizeForFirestore<T extends Record<string, any>>(obj: T): Record<string, any> {
+  const result: Record<string, any> = {};
+  for (const key of Object.keys(obj)) {
+    const val = obj[key];
+    if (val !== undefined) {
+      if (val !== null && typeof val === 'object' && !Array.isArray(val) && !(val instanceof Date)) {
+        result[key] = sanitizeForFirestore(val);
+      } else {
+        result[key] = val;
+      }
+    }
+  }
+  return result;
+}
+
 // Subscribe to real-time bike document and its services / notes subcollections
 export function subscribeToBike(
   bikeId: string = DEFAULT_BIKE_ID,
@@ -160,19 +176,25 @@ export function subscribeToBike(
       if (snapshot.exists()) {
         const data = snapshot.data();
         currentVehicle = {
-          owner: data.owner ?? SEED_STATE.vehicle.owner,
-          model: data.model ?? SEED_STATE.vehicle.model,
-          colour: data.colour ?? SEED_STATE.vehicle.colour,
-          regNo: data.regNo ?? SEED_STATE.vehicle.regNo,
-          chassisNo: data.chassisNo ?? SEED_STATE.vehicle.chassisNo,
-          engineNo: data.engineNo ?? SEED_STATE.vehicle.engineNo,
-          bookNo: data.bookNo ?? SEED_STATE.vehicle.bookNo,
-          photoUrl: data.photoUrl ?? SEED_STATE.vehicle.photoUrl,
-          ownerPhotoUrl: data.ownerPhotoUrl ?? SEED_STATE.vehicle.ownerPhotoUrl,
+          owner: data.owner ?? seedTemplate.vehicle.owner,
+          model: data.model ?? seedTemplate.vehicle.model,
+          colour: data.colour ?? seedTemplate.vehicle.colour,
+          regNo: data.regNo ?? seedTemplate.vehicle.regNo,
+          chassisNo: data.chassisNo ?? seedTemplate.vehicle.chassisNo,
+          engineNo: data.engineNo ?? seedTemplate.vehicle.engineNo,
+          bookNo: data.bookNo ?? seedTemplate.vehicle.bookNo,
+          absSystem: data.absSystem ?? seedTemplate.vehicle.absSystem,
+          oilSpec: data.oilSpec ?? seedTemplate.vehicle.oilSpec,
+          fuelType: data.fuelType ?? seedTemplate.vehicle.fuelType,
+          tyrePressures: data.tyrePressures ?? seedTemplate.vehicle.tyrePressures,
+          authority: data.authority ?? seedTemplate.vehicle.authority,
+          district: data.district ?? seedTemplate.vehicle.district,
+          photoUrl: data.photoUrl !== undefined ? data.photoUrl : seedTemplate.vehicle.photoUrl,
+          ownerPhotoUrl: data.ownerPhotoUrl !== undefined ? data.ownerPhotoUrl : seedTemplate.vehicle.ownerPhotoUrl,
         };
-        currentOdo = typeof data.odometer === 'number' ? data.odometer : SEED_STATE.odometer;
-        currentTargets = Array.isArray(data.targets) && data.targets.length ? data.targets : [...SEED_STATE.targets];
-        currentInterval = typeof data.serviceInterval === 'number' ? data.serviceInterval : SEED_STATE.serviceInterval;
+        currentOdo = typeof data.odometer === 'number' ? data.odometer : seedTemplate.odometer;
+        currentTargets = Array.isArray(data.targets) && data.targets.length ? data.targets : [...seedTemplate.targets];
+        currentInterval = typeof data.serviceInterval === 'number' ? data.serviceInterval : seedTemplate.serviceInterval;
         hasReceivedMainDoc = true;
         emit();
       } else {
@@ -201,17 +223,18 @@ export function subscribeToBike(
         const item = docSnap.data();
         list.push({
           id: docSnap.id,
-          label: item.label,
-          date: item.date,
-          km: Number(item.km),
-          dealer: item.dealer,
-          note: item.note,
-          cost: item.cost,
-          partsReplaced: item.partsReplaced,
-          locked: item.locked,
+          label: item.label || '',
+          date: item.date || '',
+          km: Number(item.km) || 0,
+          dealer: item.dealer || '',
+          note: item.note || '',
+          cost: typeof item.cost === 'number' ? item.cost : undefined,
+          partsReplaced: Array.isArray(item.partsReplaced) ? item.partsReplaced : undefined,
+          locked: Boolean(item.locked),
         });
       });
-      currentServices = list;
+      // Sort services by date desc / km desc
+      currentServices = list.sort((a, b) => b.km - a.km);
       if (hasReceivedMainDoc) emit();
     },
     (err) => {
@@ -229,8 +252,8 @@ export function subscribeToBike(
         const item = docSnap.data();
         list.push({
           id: docSnap.id,
-          text: item.text,
-          date: item.date,
+          text: item.text || '',
+          date: item.date || '',
           km: item.km !== undefined && item.km !== null ? Number(item.km) : null,
           category: item.category,
         });
@@ -259,30 +282,39 @@ export async function initializeFirestoreSeed(bikeId: string = DEFAULT_BIKE_ID):
     const bikeDocRef = doc(db, 'bikes', bikeId);
     const snap = await getDoc(bikeDocRef);
     if (!snap.exists()) {
-      await setDoc(bikeDocRef, {
-        ...seed.vehicle,
-        odometer: seed.odometer,
-        targets: seed.targets,
-        serviceInterval: seed.serviceInterval,
-        updatedAt: new Date().toISOString(),
-      });
+      await setDoc(
+        bikeDocRef,
+        sanitizeForFirestore({
+          ...seed.vehicle,
+          odometer: seed.odometer,
+          targets: seed.targets,
+          serviceInterval: seed.serviceInterval,
+          updatedAt: new Date().toISOString(),
+        })
+      );
 
       // Seed services if any
       for (const svc of seed.services) {
         const svcRef = doc(db, 'bikes', bikeId, 'services', svc.id);
-        await setDoc(svcRef, {
-          ...svc,
-          createdAt: new Date().toISOString(),
-        });
+        await setDoc(
+          svcRef,
+          sanitizeForFirestore({
+            ...svc,
+            createdAt: new Date().toISOString(),
+          })
+        );
       }
 
       // Seed notes if any
       for (const note of seed.notes) {
         const noteRef = doc(db, 'bikes', bikeId, 'notes', note.id);
-        await setDoc(noteRef, {
-          ...note,
-          createdAt: new Date().toISOString(),
-        });
+        await setDoc(
+          noteRef,
+          sanitizeForFirestore({
+            ...note,
+            createdAt: new Date().toISOString(),
+          })
+        );
       }
     }
   } catch (err) {
@@ -327,14 +359,11 @@ export async function clearAllBikeDataFromCloud(bikeId: string = DEFAULT_BIKE_ID
 export async function saveVehicleToCloud(vehicle: VehicleDetails, bikeId: string = DEFAULT_BIKE_ID): Promise<void> {
   try {
     const bikeDocRef = doc(db, 'bikes', bikeId);
-    await setDoc(
-      bikeDocRef,
-      {
-        ...vehicle,
-        updatedAt: new Date().toISOString(),
-      },
-      { merge: true }
-    );
+    const sanitized = sanitizeForFirestore({
+      ...vehicle,
+      updatedAt: new Date().toISOString(),
+    });
+    await setDoc(bikeDocRef, sanitized, { merge: true });
   } catch (err) {
     console.warn('Firestore vehicle sync notice (cached locally):', err);
   }
@@ -350,7 +379,7 @@ export async function saveOdometerToCloud(odometer: number, targets?: number[], 
     if (targets) {
       payload.targets = targets;
     }
-    await updateDoc(bikeDocRef, payload);
+    await setDoc(bikeDocRef, sanitizeForFirestore(payload), { merge: true });
   } catch (err) {
     console.warn('Firestore odometer sync notice (cached locally):', err);
   }
@@ -359,10 +388,14 @@ export async function saveOdometerToCloud(odometer: number, targets?: number[], 
 export async function saveTargetToCloud(targets: number[], bikeId: string = DEFAULT_BIKE_ID): Promise<void> {
   try {
     const bikeDocRef = doc(db, 'bikes', bikeId);
-    await updateDoc(bikeDocRef, {
-      targets,
-      updatedAt: new Date().toISOString(),
-    });
+    await setDoc(
+      bikeDocRef,
+      sanitizeForFirestore({
+        targets,
+        updatedAt: new Date().toISOString(),
+      }),
+      { merge: true }
+    );
   } catch (err) {
     console.warn('Firestore target sync notice (cached locally):', err);
   }
@@ -371,28 +404,36 @@ export async function saveTargetToCloud(targets: number[], bikeId: string = DEFA
 export async function addServiceToCloud(service: ServiceRecord, bikeId: string = DEFAULT_BIKE_ID): Promise<void> {
   try {
     const svcDocRef = doc(db, 'bikes', bikeId, 'services', service.id);
-    await setDoc(svcDocRef, {
-      ...service,
-      createdAt: new Date().toISOString(),
-    });
+    await setDoc(
+      svcDocRef,
+      sanitizeForFirestore({
+        ...service,
+        createdAt: new Date().toISOString(),
+      })
+    );
 
     // Also update bike odometer if service km is higher
+    const seedTemplate = getSeedStateForBike(bikeId);
     const bikeDocRef = doc(db, 'bikes', bikeId);
     const snap = await getDoc(bikeDocRef);
     if (snap.exists()) {
       const current = snap.data();
-      const curOdo = current.odometer || 0;
-      const curTargets = current.targets || [7688];
+      const curOdo = typeof current.odometer === 'number' ? current.odometer : seedTemplate.odometer;
+      const curTargets = Array.isArray(current.targets) && current.targets.length ? current.targets : seedTemplate.targets;
       const newOdo = Math.max(curOdo, service.km);
       const newTargets = [...curTargets];
       if (service.km >= (newTargets[0] || Infinity)) {
-        newTargets[0] = service.km + (current.serviceInterval || 2500);
+        newTargets[0] = service.km + (current.serviceInterval || seedTemplate.serviceInterval || 2500);
       }
-      await updateDoc(bikeDocRef, {
-        odometer: newOdo,
-        targets: newTargets,
-        updatedAt: new Date().toISOString(),
-      });
+      await setDoc(
+        bikeDocRef,
+        sanitizeForFirestore({
+          odometer: newOdo,
+          targets: newTargets,
+          updatedAt: new Date().toISOString(),
+        }),
+        { merge: true }
+      );
     }
   } catch (err) {
     console.warn('Firestore service log sync notice (cached locally):', err);
@@ -411,10 +452,13 @@ export async function deleteServiceFromCloud(serviceId: string, bikeId: string =
 export async function addNoteToCloud(note: MaintenanceNote, bikeId: string = DEFAULT_BIKE_ID): Promise<void> {
   try {
     const noteDocRef = doc(db, 'bikes', bikeId, 'notes', note.id);
-    await setDoc(noteDocRef, {
-      ...note,
-      createdAt: new Date().toISOString(),
-    });
+    await setDoc(
+      noteDocRef,
+      sanitizeForFirestore({
+        ...note,
+        createdAt: new Date().toISOString(),
+      })
+    );
   } catch (err) {
     console.warn('Firestore add note notice (cached locally):', err);
   }
