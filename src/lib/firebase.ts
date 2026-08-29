@@ -6,6 +6,8 @@ import {
   doc,
   setDoc,
   getDoc,
+  getDocs,
+  writeBatch,
   collection,
   onSnapshot,
   updateDoc,
@@ -24,7 +26,7 @@ import {
 } from 'firebase/auth';
 import firebaseConfigJson from '../../firebase-applet-config.json';
 import { AppState, MaintenanceNote, ServiceRecord, VehicleDetails } from '../types';
-import { SEED_STATE } from '../data/seed';
+import { SEED_STATE, getSeedStateForBike } from '../data/seed';
 
 // Suppress Firestore internal connection retry warnings
 setLogLevel('silent');
@@ -112,34 +114,41 @@ export function subscribeToBike(
   const servicesColRef = collection(db, 'bikes', bikeId, 'services');
   const notesColRef = collection(db, 'bikes', bikeId, 'notes');
 
-  let currentVehicle: VehicleDetails = { ...SEED_STATE.vehicle };
-  let currentOdo: number = SEED_STATE.odometer;
-  let currentTargets: number[] = [...SEED_STATE.targets];
-  let currentInterval: number = SEED_STATE.serviceInterval;
+  const seedTemplate = getSeedStateForBike(bikeId);
+  const isPrimarySachiBike = bikeId === 'BKT-1374';
+
+  let currentVehicle: VehicleDetails = { ...seedTemplate.vehicle };
+  let currentOdo: number = seedTemplate.odometer;
+  let currentTargets: number[] = [...seedTemplate.targets];
+  let currentInterval: number = seedTemplate.serviceInterval;
   let currentServices: ServiceRecord[] = [];
   let currentNotes: MaintenanceNote[] = [];
   let hasReceivedMainDoc = false;
 
   const emit = () => {
-    // If services list is empty on fresh database, ensure seed services are included
-    const mergedServices = currentServices.length > 0 ? currentServices : [...SEED_STATE.services];
-    
-    // Always preserve seed records
-    SEED_STATE.services.forEach((seedSvc) => {
-      const idx = mergedServices.findIndex((s) => s.id === seedSvc.id);
-      if (idx === -1) {
-        mergedServices.push({ ...seedSvc });
-      } else {
-        mergedServices[idx] = { ...mergedServices[idx], locked: true };
-      }
-    });
+    let finalServices = [...currentServices];
+
+    // Only for the primary BKT-1374 bike, ensure initial locked seed services exist if empty
+    if (isPrimarySachiBike) {
+      const mergedServices = finalServices.length > 0 ? finalServices : [...SEED_STATE.services];
+      SEED_STATE.services.forEach((seedSvc) => {
+        const idx = mergedServices.findIndex((s) => s.id === seedSvc.id);
+        if (idx === -1) {
+          mergedServices.push({ ...seedSvc });
+        } else {
+          mergedServices[idx] = { ...mergedServices[idx], locked: true };
+        }
+      });
+      finalServices = mergedServices;
+    }
 
     onData({
+      bikeId,
       vehicle: currentVehicle,
       odometer: currentOdo,
       targets: currentTargets,
       serviceInterval: currentInterval,
-      services: mergedServices,
+      services: finalServices,
       notes: currentNotes,
     });
   };
@@ -246,19 +255,20 @@ export function subscribeToBike(
 // Bootstrap Firestore database with seed data if empty
 export async function initializeFirestoreSeed(bikeId: string = DEFAULT_BIKE_ID): Promise<void> {
   try {
+    const seed = getSeedStateForBike(bikeId);
     const bikeDocRef = doc(db, 'bikes', bikeId);
     const snap = await getDoc(bikeDocRef);
     if (!snap.exists()) {
       await setDoc(bikeDocRef, {
-        ...SEED_STATE.vehicle,
-        odometer: SEED_STATE.odometer,
-        targets: SEED_STATE.targets,
-        serviceInterval: SEED_STATE.serviceInterval,
+        ...seed.vehicle,
+        odometer: seed.odometer,
+        targets: seed.targets,
+        serviceInterval: seed.serviceInterval,
         updatedAt: new Date().toISOString(),
       });
 
-      // Seed services
-      for (const svc of SEED_STATE.services) {
+      // Seed services if any
+      for (const svc of seed.services) {
         const svcRef = doc(db, 'bikes', bikeId, 'services', svc.id);
         await setDoc(svcRef, {
           ...svc,
@@ -266,8 +276,8 @@ export async function initializeFirestoreSeed(bikeId: string = DEFAULT_BIKE_ID):
         });
       }
 
-      // Seed notes
-      for (const note of SEED_STATE.notes) {
+      // Seed notes if any
+      for (const note of seed.notes) {
         const noteRef = doc(db, 'bikes', bikeId, 'notes', note.id);
         await setDoc(noteRef, {
           ...note,
@@ -277,6 +287,39 @@ export async function initializeFirestoreSeed(bikeId: string = DEFAULT_BIKE_ID):
     }
   } catch (err) {
     console.warn('Firestore seed notice (offline/transient):', err);
+  }
+}
+
+// Clear all service history and garage notes from Cloud Firestore for a given bike
+export async function clearAllBikeDataFromCloud(bikeId: string = DEFAULT_BIKE_ID): Promise<void> {
+  try {
+    const batch = writeBatch(db);
+
+    // 1. Delete all service records in subcollection
+    const servicesColRef = collection(db, 'bikes', bikeId, 'services');
+    const servicesSnap = await getDocs(servicesColRef);
+    servicesSnap.forEach((docSnap) => {
+      batch.delete(docSnap.ref);
+    });
+
+    // 2. Delete all notes in subcollection
+    const notesColRef = collection(db, 'bikes', bikeId, 'notes');
+    const notesSnap = await getDocs(notesColRef);
+    notesSnap.forEach((docSnap) => {
+      batch.delete(docSnap.ref);
+    });
+
+    // 3. Reset main bike document odometer to 0 and targets to 2500
+    const bikeDocRef = doc(db, 'bikes', bikeId);
+    batch.update(bikeDocRef, {
+      odometer: 0,
+      targets: [2500],
+      updatedAt: new Date().toISOString(),
+    });
+
+    await batch.commit();
+  } catch (err) {
+    console.warn('Firestore clear all data notice (cached locally):', err);
   }
 }
 

@@ -23,6 +23,7 @@ import {
   RotateCcw,
   Image as ImageIcon,
   Check,
+  Edit2,
 } from 'lucide-react';
 import { AppState, VehicleDetails } from '../types';
 
@@ -324,13 +325,24 @@ export const HomeTab: React.FC<HomeTabProps> = ({
                 <span>View Full Specs</span>
                 <ChevronRight className="w-3.5 h-3.5 text-amber-400" />
               </button>
+              {isAdmin && (
+                <button
+                  type="button"
+                  onClick={() => onNavigateToTab('vehicle')}
+                  className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-xs font-semibold text-amber-300 transition-all cursor-pointer shadow-sm active:scale-95"
+                  title="Edit bike specifications and registration details"
+                >
+                  <Edit2 className="w-3.5 h-3.5" />
+                  <span>Edit Details</span>
+                </button>
+              )}
               <button
                 type="button"
                 onClick={onOpenPrint}
-                className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-xs font-semibold text-amber-300 transition-all cursor-pointer shadow-sm active:scale-95"
+                className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-[#191e2b] hover:bg-[#22293b] border border-[#2c374d] text-xs font-semibold text-zinc-300 transition-all cursor-pointer shadow-sm active:scale-95"
               >
-                <BookOpen className="w-3.5 h-3.5" />
-                <span>Print Booklet</span>
+                <BookOpen className="w-3.5 h-3.5 text-amber-400" />
+                <span>Print</span>
               </button>
             </div>
           </div>
@@ -347,11 +359,11 @@ export const HomeTab: React.FC<HomeTabProps> = ({
                 </span>
               </div>
 
-              <h1 className="text-xl sm:text-2xl font-display font-bold text-white tracking-wide">
-                BAJAJ PULSAR <span className="text-amber-400">N160</span>
+              <h1 className="text-xl sm:text-2xl font-display font-bold text-white tracking-wide uppercase">
+                {state.vehicle.model || 'BAJAJ PULSAR N160'}
               </h1>
               <p className="text-xs sm:text-sm text-zinc-300 mt-1 leading-relaxed">
-                Precision streetfighter motorcycle engineered with a high-torque 164.82cc oil-cooled DTS-i engine, twin-spark ignition, underbelly exhaust, and best-in-class segment dual-channel ABS braking system.
+                Precision motorcycle engineered with a high-torque 164.82cc oil-cooled DTS-i engine, twin-spark ignition, underbelly exhaust, and best-in-class {state.vehicle.absSystem || 'dual-channel ABS'} braking system.
               </p>
             </div>
 
@@ -382,21 +394,21 @@ export const HomeTab: React.FC<HomeTabProps> = ({
                 <div className="text-[10px] text-zinc-400 uppercase font-semibold flex items-center gap-1">
                   <Fuel className="w-3 h-3 text-amber-400" /> Fuel & Tank
                 </div>
-                <div className="text-xs font-bold text-white font-mono mt-0.5">14 Litres (95 Oct)</div>
+                <div className="text-xs font-bold text-white font-mono mt-0.5 truncate">{state.vehicle.fuelType || '14 L (95 Oct)'}</div>
               </div>
 
               <div className="p-3 rounded-xl bg-[#161a25] border border-[#262e3f] shadow-sm">
                 <div className="text-[10px] text-zinc-400 uppercase font-semibold flex items-center gap-1">
                   <Award className="w-3 h-3 text-amber-400" /> Brakes
                 </div>
-                <div className="text-xs font-bold text-white font-mono mt-0.5">Dual Disc + ABS</div>
+                <div className="text-xs font-bold text-white font-mono mt-0.5 truncate">{state.vehicle.absSystem || 'Dual Disc + ABS'}</div>
               </div>
 
               <div className="p-3 rounded-xl bg-[#161a25] border border-[#262e3f] shadow-sm">
                 <div className="text-[10px] text-zinc-400 uppercase font-semibold flex items-center gap-1">
                   <Wrench className="w-3 h-3 text-amber-400" /> Oil Spec
                 </div>
-                <div className="text-xs font-bold text-white font-mono mt-0.5">20W50 (1150 ml)</div>
+                <div className="text-xs font-bold text-white font-mono mt-0.5 truncate">{state.vehicle.oilSpec || '20W50 (1150 ml)'}</div>
               </div>
             </div>
 

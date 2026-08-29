@@ -82,14 +82,28 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, o
     setTimeout(() => {
       setIsSubmitting(false);
 
-      const trimmedUser = username.trim();
+      const trimmedUser = username.trim().toLowerCase();
       const trimmedPass = password.trim();
 
-      // Check username: Sachi (case-insensitive) & password: 988800
-      if (trimmedUser.toLowerCase() === 'sachi' && trimmedPass === '988800') {
+      // Check Sachi admin (username: sachi, password: 988800)
+      if (trimmedUser === 'sachi' && trimmedPass === '988800') {
         const session: AuthSession = {
           role: 'admin',
           username: 'Sachi',
+          bikeId: 'BKT-1374',
+          signedInAt: new Date().toISOString(),
+        };
+        onLoginSuccess(session);
+      }
+      // Check Chathura admin (username: chathura, password: password-200135 or 200135)
+      else if (
+        trimmedUser === 'chathura' &&
+        (trimmedPass === 'password-200135' || trimmedPass === '200135')
+      ) {
+        const session: AuthSession = {
+          role: 'admin',
+          username: 'Chathura',
+          bikeId: 'chathura_bike',
           signedInAt: new Date().toISOString(),
         };
         onLoginSuccess(session);

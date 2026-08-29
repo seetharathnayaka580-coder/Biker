@@ -19,6 +19,8 @@ import {
   StickyNote,
   MapPin,
   FileBadge,
+  Trash2,
+  User,
 } from 'lucide-react';
 import { AppState, AuthSession } from '../types';
 
@@ -35,6 +37,7 @@ interface HeaderProps {
   onExportData: () => void;
   onImportData: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onResetToDefaults: () => void;
+  onClearAllData?: () => void;
   onOpenInstall?: () => void;
   syncStatus: 'synced' | 'syncing' | 'offline' | 'error';
   stats: {
@@ -55,6 +58,7 @@ export const Header: React.FC<HeaderProps> = ({
   onExportData,
   onImportData,
   onResetToDefaults,
+  onClearAllData,
   onOpenInstall,
   syncStatus,
   stats,
@@ -252,8 +256,25 @@ export const Header: React.FC<HeaderProps> = ({
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
                 </button>
+
+                {onClearAllData && (
+                  <button
+                    type="button"
+                    onClick={onClearAllData}
+                    className="p-1.5 rounded-xl text-red-400 hover:text-white bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 transition-all cursor-pointer shadow-sm active:scale-95"
+                    title="Clear All Data & Records for this Bike"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </>
             )}
+
+            {/* Active User Pill */}
+            <div className="hidden sm:flex items-center gap-1 px-2.5 py-1 rounded-xl bg-[#141822] border border-[#242b3b] text-xs">
+              <User className="w-3 h-3 text-amber-400" />
+              <span className="font-semibold text-zinc-200">{authSession.username}</span>
+            </div>
 
             {/* Sign Out */}
             <button

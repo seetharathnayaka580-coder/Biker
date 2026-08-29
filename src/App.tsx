@@ -10,9 +10,10 @@ import { ScheduleGuideModal } from './components/ScheduleGuideModal';
 import { LoginPage } from './components/LoginPage';
 import { AppSplashScreen } from './components/AppSplashScreen';
 import { InstallAppModal } from './components/InstallAppModal';
+import { ClearDataModal } from './components/ClearDataModal';
 import { AppState, AuthSession, MaintenanceNote, ServiceRecord, VehicleDetails } from './types';
 import { loadState, saveState, calculateServiceStats } from './utils/formatters';
-import { SEED_STATE } from './data/seed';
+import { SEED_STATE, getSeedStateForBike } from './data/seed';
 import {
   initAuth,
   subscribeToBike,
@@ -23,6 +24,7 @@ import {
   deleteServiceFromCloud,
   addNoteToCloud,
   deleteNoteFromCloud,
+  clearAllBikeDataFromCloud,
   initializeFirestoreSeed,
   signOutFromFirebase,
 } from './lib/firebase';
@@ -35,19 +37,6 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export default function App() {
-  const [state, setState] = useState<AppState>(() => loadState());
-  const [activeTab, setActiveTab] = useState<ActiveTab>('home');
-  const [syncStatus, setSyncStatus] = useState<'synced' | 'syncing' | 'offline' | 'error'>('syncing');
-  const [showPrintModal, setShowPrintModal] = useState(false);
-  const [showScheduleModal, setShowScheduleModal] = useState(false);
-
-  // App Opening Loading Splash Screen state
-  const [showSplash, setShowSplash] = useState(true);
-
-  // Chrome PWA Install Prompt State
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [showInstallModal, setShowInstallModal] = useState(false);
-
   // Auth Session State
   const [authSession, setAuthSession] = useState<AuthSession | null>(() => {
     try {
@@ -57,6 +46,22 @@ export default function App() {
       return null;
     }
   });
+
+  const activeBikeId = authSession?.bikeId || 'BKT-1374';
+
+  const [state, setState] = useState<AppState>(() => loadState(activeBikeId));
+  const [activeTab, setActiveTab] = useState<ActiveTab>('home');
+  const [syncStatus, setSyncStatus] = useState<'synced' | 'syncing' | 'offline' | 'error'>('syncing');
+  const [showPrintModal, setShowPrintModal] = useState(false);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [showClearModal, setShowClearModal] = useState(false);
+
+  // App Opening Loading Splash Screen state
+  const [showSplash, setShowSplash] = useState(true);
+
+  // Chrome PWA Install Prompt State
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [showInstallModal, setShowInstallModal] = useState(false);
 
   // Capture Chrome PWA Install Prompt
   useEffect(() => {
@@ -79,6 +84,9 @@ export default function App() {
     } catch (e) {
       console.warn('Could not save auth session:', e);
     }
+    // Pre-load data for the bike
+    const bikeState = loadState(session.bikeId || 'BKT-1374');
+    setState(bikeState);
   };
 
   const handleSignOut = async () => {
@@ -91,7 +99,7 @@ export default function App() {
     }
   };
 
-  // Initialize Firebase and Subscribe to Firestore in real-time
+  // Initialize Firebase and Subscribe to Firestore in real-time for active bike
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
 
@@ -100,10 +108,10 @@ export default function App() {
         setSyncStatus('syncing');
         await initAuth();
         unsubscribe = subscribeToBike(
-          'BKT-1374',
+          activeBikeId,
           (cloudState) => {
             setState(cloudState);
-            saveState(cloudState);
+            saveState(cloudState, activeBikeId);
             setSyncStatus('synced');
           },
           (error) => {
@@ -122,12 +130,12 @@ export default function App() {
     return () => {
       if (unsubscribe) unsubscribe();
     };
-  }, []);
+  }, [activeBikeId]);
 
   // Sync state to localStorage whenever it changes as offline backup
   useEffect(() => {
-    saveState(state);
-  }, [state]);
+    saveState(state, activeBikeId);
+  }, [state, activeBikeId]);
 
   // If opening splash screen is active, show the animated motorcycle boot screen
   if (showSplash) {
@@ -168,7 +176,7 @@ export default function App() {
     try {
       setState((prev) => ({ ...prev, vehicle }));
       setSyncStatus('syncing');
-      await saveVehicleToCloud(vehicle);
+      await saveVehicleToCloud(vehicle, activeBikeId);
       setSyncStatus('synced');
     } catch (e) {
       console.warn('Could not persist vehicle to Firestore:', e);
@@ -181,7 +189,7 @@ export default function App() {
     try {
       setState((prev) => ({ ...prev, odometer: newOdo }));
       setSyncStatus('syncing');
-      await saveOdometerToCloud(newOdo);
+      await saveOdometerToCloud(newOdo, undefined, activeBikeId);
       setSyncStatus('synced');
     } catch (e) {
       console.warn('Could not persist odometer to Firestore:', e);
@@ -195,7 +203,7 @@ export default function App() {
     try {
       setState((prev) => ({ ...prev, targets: newTargets }));
       setSyncStatus('syncing');
-      await saveTargetToCloud(newTargets);
+      await saveTargetToCloud(newTargets, activeBikeId);
       setSyncStatus('synced');
     } catch (e) {
       console.warn('Could not persist target to Firestore:', e);
@@ -212,7 +220,7 @@ export default function App() {
         services: [newService, ...prev.services],
       }));
       setSyncStatus('syncing');
-      await addServiceToCloud(newService);
+      await addServiceToCloud(newService, activeBikeId);
       setSyncStatus('synced');
     } catch (e) {
       console.warn('Could not persist service to Firestore:', e);
@@ -228,7 +236,7 @@ export default function App() {
         services: prev.services.filter((s) => s.id !== id),
       }));
       setSyncStatus('syncing');
-      await deleteServiceFromCloud(id);
+      await deleteServiceFromCloud(id, activeBikeId);
       setSyncStatus('synced');
     } catch (e) {
       console.warn('Could not delete service from Firestore:', e);
@@ -244,7 +252,7 @@ export default function App() {
         notes: [newNote, ...prev.notes],
       }));
       setSyncStatus('syncing');
-      await addNoteToCloud(newNote);
+      await addNoteToCloud(newNote, activeBikeId);
       setSyncStatus('synced');
     } catch (e) {
       console.warn('Could not persist note to Firestore:', e);
@@ -260,10 +268,35 @@ export default function App() {
         notes: prev.notes.filter((n) => n.id !== id),
       }));
       setSyncStatus('syncing');
-      await deleteNoteFromCloud(id);
+      await deleteNoteFromCloud(id, activeBikeId);
       setSyncStatus('synced');
     } catch (e) {
       console.warn('Could not delete note from Firestore:', e);
+      setSyncStatus('offline');
+    }
+  };
+
+  // Clear all data for current bike (reset to 0 km, empty services and notes)
+  const handleExecuteClear = async () => {
+    if (!isAdmin) return;
+    try {
+      setSyncStatus('syncing');
+      await clearAllBikeDataFromCloud(activeBikeId);
+      const cleared: AppState = {
+        vehicle: {
+          ...state.vehicle,
+        },
+        odometer: 0,
+        services: [],
+        notes: [],
+        targets: [2500],
+        serviceInterval: 2500,
+      };
+      setState(cleared);
+      saveState(cleared, activeBikeId);
+      setSyncStatus('synced');
+    } catch (err) {
+      console.error('Clear all data error:', err);
       setSyncStatus('offline');
     }
   };
@@ -272,7 +305,7 @@ export default function App() {
     const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(JSON.stringify(state, null, 2))}`;
     const downloadAnchor = document.createElement('a');
     downloadAnchor.setAttribute('href', jsonString);
-    downloadAnchor.setAttribute('download', `N160_ServiceLog_${state.vehicle.regNo}_${new Date().toISOString().slice(0, 10)}.json`);
+    downloadAnchor.setAttribute('download', `ServiceLog_${state.vehicle.regNo}_${new Date().toISOString().slice(0, 10)}.json`);
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
@@ -288,19 +321,19 @@ export default function App() {
           const parsed = JSON.parse(event.target?.result as string);
           if (parsed.vehicle && parsed.services) {
             setState(parsed);
-            saveState(parsed);
+            saveState(parsed, activeBikeId);
             // Sync imported records to Firestore
             setSyncStatus('syncing');
-            await saveVehicleToCloud(parsed.vehicle);
-            await saveOdometerToCloud(parsed.odometer, parsed.targets);
+            await saveVehicleToCloud(parsed.vehicle, activeBikeId);
+            await saveOdometerToCloud(parsed.odometer, parsed.targets, activeBikeId);
             if (Array.isArray(parsed.services)) {
               for (const s of parsed.services) {
-                await addServiceToCloud(s);
+                await addServiceToCloud(s, activeBikeId);
               }
             }
             if (Array.isArray(parsed.notes)) {
               for (const n of parsed.notes) {
-                await addNoteToCloud(n);
+                await addNoteToCloud(n, activeBikeId);
               }
             }
             setSyncStatus('synced');
@@ -315,13 +348,14 @@ export default function App() {
 
   const handleResetToDefaults = async () => {
     if (!isAdmin) return;
-    if (globalThis.confirm('Reset service log book to verified factory initial state and resync with Firebase?')) {
-      const reset = JSON.parse(JSON.stringify(SEED_STATE));
+    if (globalThis.confirm('Reset service log book to verified initial state and resync with Firebase?')) {
+      const template = getSeedStateForBike(activeBikeId);
+      const reset = JSON.parse(JSON.stringify(template));
       setState(reset);
-      saveState(reset);
+      saveState(reset, activeBikeId);
       try {
         setSyncStatus('syncing');
-        await initializeFirestoreSeed('BKT-1374');
+        await initializeFirestoreSeed(activeBikeId);
         setSyncStatus('synced');
       } catch (e) {
         console.warn('Reset sync warning:', e);
@@ -344,6 +378,7 @@ export default function App() {
         onExportData={handleExportData}
         onImportData={handleImportData}
         onResetToDefaults={handleResetToDefaults}
+        onClearAllData={() => setShowClearModal(true)}
         syncStatus={syncStatus}
         stats={stats}
       />
@@ -369,6 +404,7 @@ export default function App() {
             isAdmin={isAdmin}
             onUpdateVehicle={handleUpdateVehicle}
             onOpenPrintBooklet={() => setShowPrintModal(true)}
+            onClearAllData={() => setShowClearModal(true)}
           />
         )}
 
@@ -408,7 +444,7 @@ export default function App() {
         {/* Footer */}
         <footer className="text-center py-6 text-xs text-zinc-500 border-t border-[#1d212a] mt-8 flex flex-col sm:flex-row items-center justify-between gap-2">
           <p>
-            Bajaj Pulsar N160 (BKT-1374) Service Log Book · Official Digital Record.
+            {state.vehicle.model || 'Motorcycle'} ({state.vehicle.regNo || 'Log Book'}) · Official Maintenance Manager.
           </p>
           <span className="font-mono text-[11px] text-zinc-400">
             Database: {syncStatus === 'synced' ? '● Connected (Firestore)' : syncStatus === 'syncing' ? '◐ Syncing...' : '○ Local Mode'}
@@ -428,6 +464,16 @@ export default function App() {
         <ScheduleGuideModal
           currentOdo={state.odometer}
           onClose={() => setShowScheduleModal(false)}
+        />
+      )}
+
+      {showClearModal && (
+        <ClearDataModal
+          isOpen={showClearModal}
+          onClose={() => setShowClearModal(false)}
+          onConfirmClear={handleExecuteClear}
+          bikeName={state.vehicle.model || 'Motorcycle'}
+          regNo={state.vehicle.regNo || 'Log'}
         />
       )}
 

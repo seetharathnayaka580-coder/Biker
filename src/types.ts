@@ -6,6 +6,7 @@ export interface AuthSession {
   email?: string;
   photoURL?: string;
   signedInAt: string;
+  bikeId?: string;
 }
 
 export interface VehicleDetails {
@@ -16,6 +17,12 @@ export interface VehicleDetails {
   chassisNo: string;
   engineNo: string;
   bookNo: string;
+  absSystem?: string;
+  oilSpec?: string;
+  fuelType?: string;
+  tyrePressures?: string;
+  authority?: string;
+  district?: string;
   photoUrl?: string;
   ownerPhotoUrl?: string;
 }
@@ -43,6 +50,7 @@ export interface MaintenanceNote {
 }
 
 export interface AppState {
+  bikeId?: string;
   vehicle: VehicleDetails;
   odometer: number;
   services: ServiceRecord[];

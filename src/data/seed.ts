@@ -1,6 +1,7 @@
 import { AppState } from '../types';
 
 export const SEED_STATE: AppState = {
+  bikeId: "BKT-1374",
   vehicle: {
     owner: "Pathum Sachintha",
     model: "Pulsar N160 USD DC ABS",
@@ -9,6 +10,12 @@ export const SEED_STATE: AppState = {
     chassisNo: "MD2B54DX8SCH14904",
     engineNo: "PDXCSH51772",
     bookNo: "POR002202510033-021",
+    absSystem: "Dual-Channel ABS",
+    oilSpec: "20W50 (1150 ml)",
+    fuelType: "Octane 95 Euro-4",
+    tyrePressures: "F: 25 PSI / R: 28-32",
+    authority: "Dept. of Motor Traffic (Sri Lanka)",
+    district: "Kurunegala, North Western Province",
   },
   odometer: 6063,
   services: [
@@ -62,3 +69,35 @@ export const SEED_STATE: AppState = {
   targets: [7688],
   serviceInterval: 2500,
 };
+
+// Clean default template for Friend's Bike managed by Chathura
+export const CHATHURA_SEED_STATE: AppState = {
+  bikeId: "chathura_bike",
+  vehicle: {
+    owner: "Chathura",
+    model: "Bajaj Pulsar N160 Dual Channel ABS",
+    colour: "Ebony Black",
+    regNo: "WP Bxx-xxxx",
+    chassisNo: "MD2B54DX-CHATHURA-01",
+    engineNo: "PDXCSH-CHATHURA-01",
+    bookNo: "POR0022026-CHATHURA",
+    absSystem: "Dual-Channel ABS",
+    oilSpec: "20W50 (1150 ml)",
+    fuelType: "Octane 95 Euro-4",
+    tyrePressures: "F: 25 PSI / R: 28-32",
+    authority: "Dept. of Motor Traffic (Sri Lanka)",
+    district: "Western Province",
+  },
+  odometer: 0,
+  services: [],
+  notes: [],
+  targets: [2500],
+  serviceInterval: 2500,
+};
+
+export function getSeedStateForBike(bikeId: string = 'BKT-1374'): AppState {
+  if (bikeId && (bikeId.toLowerCase().includes('chathura') || bikeId === 'chathura_bike')) {
+    return JSON.parse(JSON.stringify(CHATHURA_SEED_STATE));
+  }
+  return JSON.parse(JSON.stringify(SEED_STATE));
+}

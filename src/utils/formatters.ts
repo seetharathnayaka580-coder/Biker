@@ -1,7 +1,7 @@
 import { AppState, ServiceRecord } from '../types';
-import { SEED_STATE } from '../data/seed';
+import { SEED_STATE, getSeedStateForBike } from '../data/seed';
 
-export const STORAGE_KEY = 'n160-service-log-bkt1374-v2';
+export const getStorageKey = (bikeId: string = 'BKT-1374') => `n160-service-log-${bikeId.toLowerCase().replace(/[^a-z0-9_-]/g, '-')}-v2`;
 
 export function uid(prefix: string = 'id'): string {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
@@ -36,48 +36,52 @@ export function fmtKm(n?: number | null): string {
   return `${Number(n).toLocaleString('en-US')} km`;
 }
 
-export function loadState(): AppState {
+export function loadState(bikeId: string = 'BKT-1374'): AppState {
+  const defaultState = getSeedStateForBike(bikeId);
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return JSON.parse(JSON.stringify(SEED_STATE));
+    const key = getStorageKey(bikeId);
+    const raw = localStorage.getItem(key);
+    if (!raw) return JSON.parse(JSON.stringify(defaultState));
     const parsed: AppState = JSON.parse(raw);
 
     // Merge missing attributes safely
-    if (!parsed.serviceInterval) parsed.serviceInterval = SEED_STATE.serviceInterval;
-    if (!parsed.targets || !parsed.targets.length) parsed.targets = [...SEED_STATE.targets];
+    if (!parsed.serviceInterval) parsed.serviceInterval = defaultState.serviceInterval || 2500;
+    if (!parsed.targets || !parsed.targets.length) parsed.targets = [...(defaultState.targets || [2500])];
     if (!parsed.services) parsed.services = [];
     if (!parsed.notes) parsed.notes = [];
-    if (!parsed.vehicle) parsed.vehicle = { ...SEED_STATE.vehicle };
+    if (!parsed.vehicle) parsed.vehicle = { ...defaultState.vehicle };
 
-    // Ensure locked seed services are always safely preserved
-    SEED_STATE.services.forEach((seedSvc) => {
-      const existingIndex = parsed.services.findIndex((s) => s.id === seedSvc.id);
-      if (existingIndex === -1) {
-        parsed.services.push({ ...seedSvc });
-      } else {
-        // Keep seed's core locked properties consistent
-        parsed.services[existingIndex] = {
-          ...parsed.services[existingIndex],
-          label: seedSvc.label,
-          date: seedSvc.date,
-          km: seedSvc.km,
-          dealer: seedSvc.dealer,
-          note: seedSvc.note,
-          locked: true,
-        };
-      }
-    });
+    // If it's Sachi's primary bike BKT-1374, preserve the verified seed services
+    if (bikeId === 'BKT-1374') {
+      SEED_STATE.services.forEach((seedSvc) => {
+        const existingIndex = parsed.services.findIndex((s) => s.id === seedSvc.id);
+        if (existingIndex === -1) {
+          parsed.services.push({ ...seedSvc });
+        } else {
+          parsed.services[existingIndex] = {
+            ...parsed.services[existingIndex],
+            label: seedSvc.label,
+            date: seedSvc.date,
+            km: seedSvc.km,
+            dealer: seedSvc.dealer,
+            note: seedSvc.note,
+            locked: true,
+          };
+        }
+      });
+    }
 
     return parsed;
   } catch (e) {
     console.error('Error loading state from localStorage:', e);
-    return JSON.parse(JSON.stringify(SEED_STATE));
+    return JSON.parse(JSON.stringify(defaultState));
   }
 }
 
-export function saveState(state: AppState): void {
+export function saveState(state: AppState, bikeId: string = 'BKT-1374'): void {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    const key = getStorageKey(bikeId);
+    localStorage.setItem(key, JSON.stringify(state));
   } catch (e) {
     console.error('Error saving state to localStorage:', e);
   }
