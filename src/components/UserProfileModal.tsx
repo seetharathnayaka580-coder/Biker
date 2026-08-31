@@ -14,6 +14,8 @@ import {
   AlertCircle,
   KeyRound,
   FileBadge,
+  Crown,
+  BadgeCheck,
 } from 'lucide-react';
 import { AuthSession, UserAccount, VehicleDetails } from '../types';
 import { updateUserAccount, getLocalAccounts } from '../lib/firebase';
@@ -45,6 +47,13 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+  const isSachi =
+    authSession.username?.toLowerCase().includes('sachi') ||
+    authSession.username?.toLowerCase().includes('pathum') ||
+    authSession.bikeId === 'BKT-1374' ||
+    vehicle.owner?.toLowerCase().includes('sachintha') ||
+    vehicle.regNo === 'BKT-1374';
 
   // Sync state when modal opens
   useEffect(() => {
@@ -190,6 +199,30 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Creator / Master Admin Premium Banner */}
+        {isSachi && (
+          <div className="mt-4 p-3 rounded-xl bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-500/15 border border-amber-500/35 flex items-center justify-between gap-2 shadow-inner">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-300 shrink-0">
+                <Crown className="w-4 h-4 text-amber-300 fill-amber-400/25" />
+              </div>
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-bold text-amber-200">Web Page Creator</span>
+                  <span className="px-2 py-0.5 rounded text-[9px] font-black bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 text-zinc-950 border border-yellow-200 uppercase tracking-widest shadow-sm">
+                    PREMIUM
+                  </span>
+                </div>
+                <p className="text-[11px] text-zinc-400">Master Administrator · Full Access Privileges</p>
+              </div>
+            </div>
+            <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/25 px-2 py-0.5 rounded-full flex items-center gap-1">
+              <BadgeCheck className="w-3 h-3 text-emerald-400" />
+              Verified
+            </span>
+          </div>
+        )}
 
         {/* Form */}
         <form onSubmit={handleSave} className="mt-4 space-y-4">

@@ -24,6 +24,7 @@ import {
   Image as ImageIcon,
   Check,
   Edit2,
+  Crown,
 } from 'lucide-react';
 import { AppState, VehicleDetails } from '../types';
 
@@ -416,7 +417,15 @@ export const HomeTab: React.FC<HomeTabProps> = ({
             <div className="flex items-center justify-between p-3 rounded-xl bg-[#10131b] border border-[#222938] text-xs">
               <div>
                 <span className="text-[10px] text-zinc-400 block uppercase font-medium">Registered Owner</span>
-                <span className="font-semibold text-zinc-200">{state.vehicle.owner}</span>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className="font-semibold text-zinc-200">{state.vehicle.owner}</span>
+                  {(state.vehicle.owner?.toLowerCase().includes('sachintha') || state.vehicle.owner?.toLowerCase().includes('sachi') || state.vehicle.regNo === 'BKT-1374') && (
+                    <span className="inline-flex items-center gap-1 text-[9px] font-black px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 text-zinc-950 border border-yellow-200 shadow-sm uppercase tracking-wider">
+                      <Crown className="w-2.5 h-2.5 text-zinc-950 fill-zinc-950" />
+                      PREMIUM
+                    </span>
+                  )}
+                </div>
               </div>
               <div className="text-right">
                 <span className="text-[10px] text-zinc-400 block uppercase font-medium">Service Book ID</span>

@@ -21,6 +21,9 @@ import {
   FileBadge,
   Trash2,
   User,
+  Crown,
+  Sparkles,
+  BadgeCheck,
 } from 'lucide-react';
 import { AppState, AuthSession } from '../types';
 
@@ -67,6 +70,12 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const isAdmin = authSession.role === 'admin';
+  const isSachi =
+    authSession.username?.toLowerCase().includes('sachi') ||
+    authSession.username?.toLowerCase().includes('pathum') ||
+    authSession.bikeId === 'BKT-1374' ||
+    state.vehicle.owner?.toLowerCase().includes('sachintha') ||
+    state.vehicle.regNo === 'BKT-1374';
 
   const navItems = [
     {
@@ -128,12 +137,29 @@ export const Header: React.FC<HeaderProps> = ({
                   {state.vehicle.regNo}
                 </span>
 
-                {/* Role Indicator */}
-                {isAdmin ? (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 shadow-sm">
-                    <Flame className="w-3 h-3 text-amber-400" />
-                    Admin
-                  </span>
+                {/* Premium & Role Indicator */}
+                {isSachi ? (
+                  <>
+                    <span className="inline-flex items-center gap-1 text-[11px] font-black px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 text-zinc-950 border border-yellow-200/90 shadow-[0_0_14px_rgba(251,191,36,0.6)] tracking-wide">
+                      <Crown className="w-3.5 h-3.5 text-zinc-950 fill-zinc-950" />
+                      PREMIUM
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-200 border border-amber-500/30 shadow-sm" title="Web Page Creator & Full Access Master Admin">
+                      <Sparkles className="w-3 h-3 text-amber-400" />
+                      Creator & Admin
+                    </span>
+                  </>
+                ) : isAdmin ? (
+                  <>
+                    <span className="inline-flex items-center gap-1 text-[11px] font-black px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 text-zinc-950 border border-yellow-200 shadow-sm">
+                      <Crown className="w-3 h-3 text-zinc-950 fill-zinc-950" />
+                      PREMIUM
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 shadow-sm">
+                      <Flame className="w-3 h-3 text-amber-400" />
+                      Admin
+                    </span>
+                  </>
                 ) : (
                   <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-red-500/15 text-red-300 border border-red-500/30 shadow-sm">
                     <ShieldAlert className="w-3 h-3 text-red-400" />
@@ -161,7 +187,7 @@ export const Header: React.FC<HeaderProps> = ({
                   </span>
                 )}
               </div>
-              <div className="flex items-center gap-1.5 mt-0.5">
+              <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                 {state.vehicle.ownerPhotoUrl && (
                   <img
                     src={state.vehicle.ownerPhotoUrl}
@@ -170,7 +196,13 @@ export const Header: React.FC<HeaderProps> = ({
                   />
                 )}
                 <p className="text-[11px] text-zinc-400 font-medium">
-                  {state.vehicle.owner} · Odometer: <strong className="text-zinc-100 font-mono">{state.odometer.toLocaleString()} km</strong>
+                  <span className="text-zinc-200 font-semibold">{state.vehicle.owner}</span>
+                  {isSachi && (
+                    <span className="ml-1 text-[10px] text-amber-400 font-mono font-semibold hidden sm:inline">
+                      (Web Page Creator · Full Access Admin)
+                    </span>
+                  )}
+                  {' · '}Odometer: <strong className="text-zinc-100 font-mono">{state.odometer.toLocaleString()} km</strong>
                 </p>
               </div>
             </div>
@@ -278,10 +310,17 @@ export const Header: React.FC<HeaderProps> = ({
                 type="button"
                 onClick={onOpenProfile}
                 className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-[#141822] hover:bg-[#1c2230] border border-[#242b3b] hover:border-amber-500/40 text-xs transition-all cursor-pointer shadow-sm active:scale-95 group"
-                title="Click to edit user profile, bike number, and location"
+                title={isSachi ? "Web Page Creator & Full Access Master Admin Profile" : "Click to edit user profile, bike number, and location"}
               >
-                <User className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform" />
+                {isSachi ? (
+                  <Crown className="w-3.5 h-3.5 text-amber-400 fill-amber-400/25 group-hover:scale-110 transition-transform" />
+                ) : (
+                  <User className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform" />
+                )}
                 <span className="font-semibold text-zinc-200">{authSession.username}</span>
+                <span className="px-1.5 py-0.5 rounded text-[9px] font-black bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 text-zinc-950 border border-yellow-200 shadow-sm uppercase tracking-wider">
+                  PREMIUM
+                </span>
                 <span className="text-[10px] text-amber-400/80 font-mono hidden md:inline">✎ Edit</span>
               </button>
             ) : (

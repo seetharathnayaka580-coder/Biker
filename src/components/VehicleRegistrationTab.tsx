@@ -29,6 +29,8 @@ import {
   Sliders,
   RotateCcw,
   Bike,
+  Crown,
+  BadgeCheck,
 } from 'lucide-react';
 import { VehicleDetails } from '../types';
 import { ALL_DISTRICTS, ALL_PROVINCES, SRI_LANKA_REGIONS } from '../data/sriLankaRegions';
@@ -61,6 +63,11 @@ export const VehicleRegistrationTab: React.FC<VehicleRegistrationTabProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const editFileInputRef = useRef<HTMLInputElement>(null);
   const editBikeFileInputRef = useRef<HTMLInputElement>(null);
+
+  const isSachi =
+    vehicle.owner?.toLowerCase().includes('sachintha') ||
+    vehicle.owner?.toLowerCase().includes('sachi') ||
+    vehicle.regNo === 'BKT-1374';
 
   // Sync editData if vehicle changes externally
   useEffect(() => {
@@ -897,15 +904,23 @@ export const VehicleRegistrationTab: React.FC<VehicleRegistrationTabProps> = ({
                   </div>
 
                   <div>
-                    <div className="text-base font-bold text-white flex items-center gap-2">
+                    <div className="text-base font-bold text-white flex items-center gap-2 flex-wrap">
                       <span>{vehicle.owner}</span>
+                      {isSachi && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-black px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 text-zinc-950 border border-yellow-200 shadow-[0_0_12px_rgba(251,191,36,0.5)] uppercase tracking-wider">
+                          <Crown className="w-3 h-3 text-zinc-950 fill-zinc-950" />
+                          PREMIUM
+                        </span>
+                      )}
                       {uploadSuccess && (
                         <span className="text-[10px] text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 rounded-full flex items-center gap-1 font-sans">
                           <Check className="w-3 h-3" /> Photo Saved
                         </span>
                       )}
                     </div>
-                    <span className="text-xs text-amber-400 font-mono">Authorized Registered Owner</span>
+                    <span className="text-xs text-amber-400 font-mono flex items-center gap-1">
+                      {isSachi ? 'Web Page Creator & Full Access Master Admin' : 'Authorized Registered Owner'}
+                    </span>
                   </div>
                 </div>
 
@@ -949,9 +964,9 @@ export const VehicleRegistrationTab: React.FC<VehicleRegistrationTabProps> = ({
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-zinc-400">App Role Status:</span>
+                  <span className="text-zinc-400">App Role & Access Level:</span>
                   <span className="text-emerald-400 font-medium flex items-center gap-1">
-                    <ShieldCheck className="w-3.5 h-3.5" /> Full Administrative Access
+                    <ShieldCheck className="w-3.5 h-3.5" /> {isSachi ? 'Creator · Full Master Administrative Access' : 'Full Administrative Access'}
                   </span>
                 </div>
               </div>
