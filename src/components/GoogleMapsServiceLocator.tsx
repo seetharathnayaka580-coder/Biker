@@ -480,21 +480,41 @@ export const GoogleMapsServiceLocator: React.FC<GoogleMapsServiceLocatorProps> =
               />
             </div>
 
-            {/* Category Filter Chips */}
+            {/* Category Filter Chips with Distinct Colors */}
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
               {[
-                { id: 'all', label: 'All Centers' },
-                { id: 'dealer', label: 'Bajaj Dealers' },
-                { id: 'fuel', label: 'Octane 95 Fuel' },
-                { id: 'emergency', label: '24/7 Breakdown' },
+                {
+                  id: 'all',
+                  label: 'All Centers',
+                  active: 'bg-amber-400 text-zinc-950 font-black border-amber-300 shadow-md shadow-amber-500/30',
+                  inactive: 'bg-[#181d26] text-amber-200/90 hover:text-white border-[#2c3444] hover:border-amber-400/50',
+                },
+                {
+                  id: 'dealer',
+                  label: 'Bajaj Dealers',
+                  active: 'bg-gradient-to-r from-rose-500 to-pink-600 text-white font-black border-rose-300 shadow-md shadow-rose-500/30',
+                  inactive: 'bg-rose-950/30 text-rose-300 border-rose-500/30 hover:border-rose-400 hover:text-rose-100',
+                },
+                {
+                  id: 'fuel',
+                  label: 'Octane 95 Fuel',
+                  active: 'bg-gradient-to-r from-cyan-400 to-blue-500 text-zinc-950 font-black border-cyan-300 shadow-md shadow-cyan-500/30',
+                  inactive: 'bg-cyan-950/30 text-cyan-300 border-cyan-500/30 hover:border-cyan-400 hover:text-cyan-100',
+                },
+                {
+                  id: 'emergency',
+                  label: '24/7 Breakdown',
+                  active: 'bg-gradient-to-r from-red-600 to-amber-600 text-white font-black border-red-300 shadow-md shadow-red-500/30 animate-pulse',
+                  inactive: 'bg-red-950/30 text-red-300 border-red-500/30 hover:border-red-400 hover:text-red-100',
+                },
               ].map((cat) => (
                 <button
                   key={cat.id}
                   onClick={() => setActiveCategory(cat.id)}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer border ${
                     activeCategory === cat.id
-                      ? 'bg-amber-500 text-zinc-950 font-bold'
-                      : 'bg-zinc-800/60 text-zinc-400 hover:text-white border border-zinc-700/50'
+                      ? `${cat.active} scale-[1.02]`
+                      : `${cat.inactive}`
                   }`}
                 >
                   {cat.label}

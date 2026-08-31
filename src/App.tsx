@@ -370,9 +370,20 @@ export default function App() {
   };
 
   return (
-    <div className={`min-h-screen bg-[#0d0f14] text-[#eef1f4] flex flex-col selection:bg-amber-500/30 selection:text-amber-200 ${!isAdmin ? 'select-none' : ''}`}>
+    <div className={`min-h-screen bg-[#07090e] text-[#eef1f4] flex flex-col selection:bg-cyan-500/30 selection:text-cyan-200 relative overflow-x-hidden ${!isAdmin ? 'select-none' : ''}`}>
+      {/* Dynamic Ambient Glow & Mesh from Login Pattern */}
+      <div
+        className="fixed inset-0 opacity-20 pointer-events-none z-0"
+        style={{
+          backgroundImage: `radial-gradient(circle at 50% 50%, rgba(30, 41, 59, 0.4) 0%, transparent 80%), radial-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 1px)`,
+          backgroundSize: '100% 100%, 28px 28px',
+        }}
+      />
+      <div className="fixed -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-gradient-to-b from-cyan-500/10 via-blue-600/5 to-transparent rounded-full blur-3xl pointer-events-none z-0" />
+
       {/* Top Bar Navigation with 5 Category Tabs */}
-      <Header
+      <div className="relative z-10">
+        <Header
         state={state}
         authSession={authSession}
         activeTab={activeTab}
@@ -389,9 +400,10 @@ export default function App() {
         syncStatus={syncStatus}
         stats={stats}
       />
+      </div>
 
       {/* Main Tabbed Views Container */}
-      <main className="flex-1 max-w-6xl w-full mx-auto px-3 sm:px-6 py-5">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-3 sm:px-6 py-5 relative z-10">
         {/* TAB 1: HOME (Bike About & Upcoming Service) */}
         {activeTab === 'home' && (
           <HomeTab

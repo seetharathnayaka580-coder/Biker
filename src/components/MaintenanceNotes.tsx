@@ -11,14 +11,62 @@ interface MaintenanceNotesProps {
   onDeleteNote: (id: string) => void;
 }
 
-const CATEGORIES: { key: NoteCategory; label: string; icon: React.FC<{ className?: string }> }[] = [
-  { key: 'chain', label: 'Drive Chain', icon: Disc },
-  { key: 'oil', label: 'Oil & Fluids', icon: Droplets },
-  { key: 'tyre', label: 'Tyres & Air', icon: Gauge },
-  { key: 'wash', label: 'Wash & Polish', icon: Sparkles },
-  { key: 'brake', label: 'Brakes', icon: ShieldAlert },
-  { key: 'electrical', label: 'Battery / Elec', icon: Zap },
-  { key: 'general', label: 'General', icon: StickyNote },
+const CATEGORIES: {
+  key: NoteCategory;
+  label: string;
+  icon: React.FC<{ className?: string }>;
+  activeClass: string;
+  inactiveClass: string;
+}[] = [
+  {
+    key: 'chain',
+    label: 'Drive Chain',
+    icon: Disc,
+    activeClass: 'bg-cyan-400 text-zinc-950 font-black shadow-md shadow-cyan-500/40 border-cyan-300',
+    inactiveClass: 'bg-cyan-950/30 text-cyan-300 border-cyan-500/30 hover:border-cyan-400 hover:text-cyan-100',
+  },
+  {
+    key: 'oil',
+    label: 'Oil & Fluids',
+    icon: Droplets,
+    activeClass: 'bg-amber-400 text-zinc-950 font-black shadow-md shadow-amber-500/40 border-amber-300',
+    inactiveClass: 'bg-amber-950/30 text-amber-300 border-amber-500/30 hover:border-amber-400 hover:text-amber-100',
+  },
+  {
+    key: 'tyre',
+    label: 'Tyres & Air',
+    icon: Gauge,
+    activeClass: 'bg-emerald-400 text-zinc-950 font-black shadow-md shadow-emerald-500/40 border-emerald-300',
+    inactiveClass: 'bg-emerald-950/30 text-emerald-300 border-emerald-500/30 hover:border-emerald-400 hover:text-emerald-100',
+  },
+  {
+    key: 'wash',
+    label: 'Wash & Polish',
+    icon: Sparkles,
+    activeClass: 'bg-blue-400 text-zinc-950 font-black shadow-md shadow-blue-500/40 border-blue-300',
+    inactiveClass: 'bg-blue-950/30 text-blue-300 border-blue-500/30 hover:border-blue-400 hover:text-blue-100',
+  },
+  {
+    key: 'brake',
+    label: 'Brakes',
+    icon: ShieldAlert,
+    activeClass: 'bg-rose-500 text-white font-black shadow-md shadow-rose-500/40 border-rose-300',
+    inactiveClass: 'bg-rose-950/30 text-rose-300 border-rose-500/30 hover:border-rose-400 hover:text-rose-100',
+  },
+  {
+    key: 'electrical',
+    label: 'Battery / Elec',
+    icon: Zap,
+    activeClass: 'bg-yellow-400 text-zinc-950 font-black shadow-md shadow-yellow-500/40 border-yellow-300',
+    inactiveClass: 'bg-yellow-950/30 text-yellow-300 border-yellow-500/30 hover:border-yellow-400 hover:text-yellow-100',
+  },
+  {
+    key: 'general',
+    label: 'General',
+    icon: StickyNote,
+    activeClass: 'bg-purple-500 text-white font-black shadow-md shadow-purple-500/40 border-purple-300',
+    inactiveClass: 'bg-purple-950/30 text-purple-300 border-purple-500/30 hover:border-purple-400 hover:text-purple-100',
+  },
 ];
 
 export const MaintenanceNotes: React.FC<MaintenanceNotesProps> = ({
@@ -74,29 +122,29 @@ export const MaintenanceNotes: React.FC<MaintenanceNotesProps> = ({
         </div>
 
         {/* Category Filters */}
-        <div className="flex items-center gap-1 overflow-x-auto pb-1 max-w-full text-xs">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full text-xs">
           <button
             onClick={() => setActiveFilter('all')}
-            className={`px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
+            className={`px-3 py-1.5 rounded-xl transition-all whitespace-nowrap cursor-pointer border text-xs ${
               activeFilter === 'all'
-                ? 'bg-amber-500 text-zinc-950 font-bold'
-                : 'bg-[#212631] text-zinc-400 hover:text-white'
+                ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-zinc-950 font-black border-amber-300 shadow-md shadow-amber-500/30 scale-[1.02]'
+                : 'bg-[#181d26] text-zinc-300 hover:text-white border-[#2b3342] hover:border-amber-400/50'
             }`}
           >
-            All
+            All Categories
           </button>
           {CATEGORIES.map((c) => (
             <button
               key={c.key}
               onClick={() => setActiveFilter(c.key)}
-              className={`px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap cursor-pointer flex items-center gap-1 ${
+              className={`px-3 py-1.5 rounded-xl transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 border text-xs ${
                 activeFilter === c.key
-                  ? 'bg-amber-500 text-zinc-950 font-bold'
-                  : 'bg-[#212631] text-zinc-400 hover:text-white'
+                  ? `${c.activeClass} scale-[1.02]`
+                  : `${c.inactiveClass}`
               }`}
             >
-              <c.icon className="w-3 h-3" />
-              {c.label}
+              <c.icon className="w-3.5 h-3.5" />
+              <span>{c.label}</span>
             </button>
           ))}
         </div>

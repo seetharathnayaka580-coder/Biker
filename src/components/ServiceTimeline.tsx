@@ -28,11 +28,11 @@ export const ServiceTimeline: React.FC<ServiceTimelineProps> = ({
     .sort((a, b) => (sortAsc ? a.km - b.km : b.km - a.km));
 
   return (
-    <div className="bg-[#131722] border border-[#232a3a] rounded-2xl p-5 sm:p-6 shadow-xl mb-6">
+    <div className="bg-[#0d1117] border border-[#1a2333] rounded-2xl p-5 sm:p-6 shadow-xl mb-6">
       {/* Header & Search */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-5">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shadow-sm">
+          <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-sm">
             <History className="w-5 h-5" />
           </div>
           <div>
@@ -51,14 +51,14 @@ export const ServiceTimeline: React.FC<ServiceTimelineProps> = ({
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search services..."
-              className="w-full bg-[#0d1017] border border-[#262c3b] rounded-xl pl-8 pr-3 py-1.5 text-xs text-white focus:border-amber-400 focus:outline-none transition-colors"
+              className="w-full bg-[#101520] border border-[#1a2333] rounded-xl pl-8 pr-3 py-1.5 text-xs text-white focus:border-cyan-400 focus:outline-none transition-colors"
             />
           </div>
 
           <button
             type="button"
             onClick={() => setSortAsc(!sortAsc)}
-            className="px-3 py-1.5 rounded-xl text-xs font-semibold text-zinc-300 bg-[#1a202d] hover:bg-[#232b3d] border border-[#2c374d] transition-colors cursor-pointer whitespace-nowrap"
+            className="px-3 py-1.5 rounded-xl text-xs font-semibold text-zinc-300 bg-[#101520] hover:bg-[#161e2e] border border-[#1a2333] hover:border-cyan-500/30 transition-colors cursor-pointer whitespace-nowrap"
           >
             {sortAsc ? 'Oldest first' : 'Newest first'}
           </button>
@@ -67,29 +67,34 @@ export const ServiceTimeline: React.FC<ServiceTimelineProps> = ({
 
       {/* Timeline List */}
       {filtered.length === 0 ? (
-        <div className="text-center py-8 text-zinc-500 text-xs bg-[#0e111a] rounded-xl border border-[#1f2533]">
+        <div className="text-center py-8 text-zinc-500 text-xs bg-[#101520] rounded-xl border border-[#1a2333]">
           No service records found.
         </div>
       ) : (
-        <div className="relative pl-4 sm:pl-6 space-y-4 before:content-[''] before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-[#232938]">
+        <div className="relative pl-4 sm:pl-6 space-y-4 before:content-[''] before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-gradient-to-b before:from-emerald-500/40 before:via-emerald-500/20 before:to-emerald-500/5">
           {filtered.map((service) => (
             <div
               key={service.id}
-              className="relative bg-[#151924] hover:bg-[#181d2b] border border-[#252c3c] hover:border-amber-500/30 rounded-xl p-4 sm:p-5 transition-all duration-200 shadow-md group"
+              className="relative bg-[#101520] hover:bg-[#131b2a] border border-[#1a2333] hover:border-emerald-500/40 rounded-xl p-4 sm:p-5 transition-all duration-200 shadow-md group"
             >
-              {/* Timeline node */}
-              <div className="absolute -left-[23px] sm:-left-[31px] top-5 w-4 h-4 rounded-full bg-[#0d1017] border-2 border-emerald-400 flex items-center justify-center shadow-md">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              {/* Timeline node - Green Dot */}
+              <div className="absolute -left-[23px] sm:-left-[31px] top-5 w-4 h-4 rounded-full bg-[#0d1117] border-2 border-emerald-400 flex items-center justify-center shadow-lg shadow-emerald-500/50">
+                <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]" />
               </div>
 
               {/* Card Header */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-[#212735] mb-3">
-                <div className="flex items-center gap-2">
-                  <span className="font-display font-black text-base text-white tracking-wide">
-                    {service.label}
-                  </span>
-                  <span className="font-mono text-xs px-2.5 py-0.5 rounded-md bg-amber-500/10 text-amber-300 border border-amber-500/25 font-bold">
-                    {fmtKm(service.km)}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-[#1a2333] mb-3">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block shadow-[0_0_6px_#34d399]" />
+                    <span className="font-display font-black text-base text-white tracking-wide">
+                      {service.label}
+                    </span>
+                  </div>
+                  {/* Used KM Badge - Yellow */}
+                  <span className="font-mono text-xs px-2.5 py-0.5 rounded-lg bg-yellow-400/15 text-yellow-300 border border-yellow-400/50 font-black shadow-sm flex items-center gap-1">
+                    <span className="text-[10px] text-yellow-400/70 uppercase font-semibold">Used:</span>
+                    <span>{fmtKm(service.km)}</span>
                   </span>
                 </div>
 
@@ -110,13 +115,13 @@ export const ServiceTimeline: React.FC<ServiceTimelineProps> = ({
 
               {/* Dealer location */}
               <div className="flex items-center gap-1.5 text-xs text-zinc-300 mb-2 font-medium">
-                <MapPin className="w-3.5 h-3.5 text-red-400 shrink-0" />
+                <MapPin className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
                 <span>{service.dealer || 'M.V. Electronic & D.S. Motors'}</span>
               </div>
 
               {/* Notes */}
               {service.note && (
-                <p className="text-xs text-zinc-300 leading-relaxed bg-[#0e111a] p-3 rounded-xl border border-[#202636] mb-3">
+                <p className="text-xs text-zinc-300 leading-relaxed bg-[#0a0d13] p-3 rounded-xl border border-[#161d2b] mb-3">
                   {service.note}
                 </p>
               )}
@@ -124,17 +129,17 @@ export const ServiceTimeline: React.FC<ServiceTimelineProps> = ({
               {/* Parts replaced chips */}
               {service.partsReplaced && service.partsReplaced.length > 0 && (
                 <div className="mb-3">
-                  <div className="text-[10px] uppercase font-semibold text-zinc-500 mb-1 flex items-center gap-1">
-                    <Tag className="w-3 h-3 text-amber-400" />
+                  <div className="text-[10px] uppercase font-semibold text-zinc-400 mb-1 flex items-center gap-1">
+                    <Tag className="w-3 h-3 text-cyan-400" />
                     Parts Replaced & Tasks
                   </div>
                   <div className="flex flex-wrap gap-1.5">
                     {service.partsReplaced.map((part, idx) => (
                       <span
                         key={idx}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium bg-[#1a202d] text-zinc-200 border border-[#2a3449]"
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium bg-[#161d2b] text-zinc-200 border border-[#222e42]"
                       >
-                        <CheckCircle className="w-2.5 h-2.5 text-amber-400" />
+                        <CheckCircle className="w-2.5 h-2.5 text-cyan-400" />
                         {part}
                       </span>
                     ))}
@@ -143,10 +148,10 @@ export const ServiceTimeline: React.FC<ServiceTimelineProps> = ({
               )}
 
               {/* Footer */}
-              <div className="flex items-center justify-between text-[11px] pt-2 border-t border-[#1f2533]">
+              <div className="flex items-center justify-between text-[11px] pt-2 border-t border-[#1a2333]">
                 {service.locked ? (
                   <span className="inline-flex items-center gap-1 text-zinc-400 font-mono">
-                    <Lock className="w-3 h-3 text-amber-400" />
+                    <Lock className="w-3 h-3 text-cyan-400" />
                     Verified Official Record (BKT-1374)
                   </span>
                 ) : (

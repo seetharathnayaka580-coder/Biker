@@ -69,6 +69,59 @@
   50% { opacity: 1; transform: scale(1.02); }
 }
 
+@keyframes rainbowGlow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes rainbowBorder {
+  0% { filter: hue-rotate(0deg); }
+  50% { filter: hue-rotate(180deg); }
+  100% { filter: hue-rotate(360deg); }
+}
+
+.animate-rainbow {
+  background-size: 300% 300%;
+  animation: rainbowGlow 6s ease infinite;
+}
+
+.animate-rainbow-fast {
+  background-size: 250% 250%;
+  animation: rainbowGlow 3.5s ease infinite;
+}
+
+.rainbow-text {
+  background: linear-gradient(90deg, #ff3366, #ff9900, #ffea00, #00e676, #00e5ff, #7000ff, #ff007a);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: rainbowGlow 5s ease infinite;
+}
+
+.rainbow-border-glow {
+  position: relative;
+}
+
+.rainbow-border-glow::before {
+  content: '';
+  position: absolute;
+  inset: -1.5px;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: linear-gradient(90deg, #ff0055, #ff7700, #ffdd00, #00e676, #00f0ff, #7000ff, #ff007a);
+  background-size: 300% 300%;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: rainbowGlow 5s ease infinite;
+  pointer-events: none;
+}
+
+.rainbow-subtle-glow {
+  box-shadow: 0 0 25px -5px rgba(0, 229, 255, 0.25), 0 0 35px -10px rgba(255, 0, 128, 0.2);
+}
+
 .animate-glow {
   animation: pulseGlow 3s ease-in-out infinite;
 }

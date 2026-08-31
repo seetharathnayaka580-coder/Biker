@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import {
   ShieldCheck,
+  Shield,
   Calendar,
   AlertTriangle,
   Clock,
@@ -14,6 +15,7 @@ import {
   Zap,
   Gauge,
   BookOpen,
+  StickyNote,
   Award,
   ChevronRight,
   Camera,
@@ -27,6 +29,7 @@ import {
   Crown,
 } from 'lucide-react';
 import { AppState, VehicleDetails } from '../types';
+import { fmtKm } from '../utils/formatters';
 
 interface HomeTabProps {
   state: AppState;
@@ -208,10 +211,10 @@ export const HomeTab: React.FC<HomeTabProps> = ({
       />
 
       {/* 1. HERO SHOWCASE: ABOUT THE BIKE WITH PHOTO VIEWER */}
-      <section className="bg-gradient-to-br from-[#131722] via-[#161b27] to-[#0e1118] rounded-2xl border border-[#232a3b] p-5 sm:p-7 shadow-2xl relative overflow-hidden">
-        {/* Subtle decorative telemetry glows */}
-        <div className="absolute -top-16 -right-16 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-16 left-1/4 w-72 h-72 bg-sky-500/5 rounded-full blur-3xl pointer-events-none" />
+      <section className="bg-gradient-to-br from-[#0d1117] via-[#101520] to-[#07090e] rounded-2xl border border-[#1a2333] p-5 sm:p-7 shadow-2xl relative overflow-hidden group">
+        {/* Vibrant rainbow decorative ambient glows */}
+        <div className="absolute -top-16 -right-16 w-80 h-80 bg-gradient-to-tr from-rose-500/10 via-amber-500/10 via-cyan-400/15 to-purple-600/15 rounded-full blur-3xl pointer-events-none animate-rainbow" />
+        <div className="absolute -bottom-16 left-1/4 w-72 h-72 bg-gradient-to-tr from-cyan-400/10 via-emerald-400/10 to-rose-500/10 rounded-full blur-3xl pointer-events-none animate-rainbow" />
 
         <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
           
@@ -221,8 +224,8 @@ export const HomeTab: React.FC<HomeTabProps> = ({
               onDrop={handleDrop}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
-              className={`relative w-full max-w-md aspect-[4/3] rounded-2xl bg-gradient-to-b from-[#0c0e14] to-[#07080c] border transition-all duration-300 p-2 flex items-center justify-center shadow-2xl shadow-black/90 overflow-hidden group ${
-                isDragging ? 'border-amber-400 ring-4 ring-amber-500/20 scale-[1.02]' : 'border-amber-500/30'
+              className={`relative w-full max-w-md aspect-[4/3] rounded-2xl bg-gradient-to-b from-[#0a0d14] to-[#05070a] border transition-all duration-300 p-2 flex items-center justify-center shadow-2xl shadow-black/90 overflow-hidden group ${
+                isDragging ? 'border-cyan-400 ring-4 ring-cyan-500/20 scale-[1.02]' : 'border-cyan-500/30 hover:border-purple-400/50'
               }`}
             >
               {/* Bike Image View */}
@@ -239,8 +242,8 @@ export const HomeTab: React.FC<HomeTabProps> = ({
               <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/30 pointer-events-none rounded-xl" />
 
               {/* Badges on Image */}
-              <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/80 backdrop-blur-md border border-amber-500/40 text-[10px] font-mono font-bold text-amber-400 shadow-md">
-                <Sparkles className="w-3 h-3 text-amber-400" />
+              <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/80 backdrop-blur-md border border-cyan-500/40 text-[10px] font-mono font-bold text-cyan-300 shadow-md">
+                <Sparkles className="w-3 h-3 text-cyan-400" />
                 {state.vehicle.colour || 'BROOKLYN BLACK'}
               </div>
 
@@ -254,21 +257,21 @@ export const HomeTab: React.FC<HomeTabProps> = ({
                   <Maximize2 className="w-3.5 h-3.5" />
                 </button>
 
-                <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-gradient-to-r from-red-600 to-red-700 text-white text-[10px] font-bold tracking-wider font-mono shadow-md border border-red-500/50">
+                <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-gradient-to-r from-rose-600 via-red-600 to-amber-600 text-white text-[10px] font-bold tracking-wider font-mono shadow-md border border-rose-500/50">
                   DUAL ABS
                 </div>
               </div>
 
               {/* Drag over indicator */}
               {isDragging && (
-                <div className="absolute inset-0 bg-black/90 backdrop-blur-sm flex flex-col items-center justify-center text-amber-400 z-30 animate-pulse">
+                <div className="absolute inset-0 bg-black/90 backdrop-blur-sm flex flex-col items-center justify-center text-cyan-400 z-30 animate-pulse">
                   <Upload className="w-8 h-8 mb-2" />
                   <p className="text-xs font-bold uppercase tracking-wider">Drop Photo Here</p>
                 </div>
               )}
 
               {/* Bottom plate overlay on image */}
-              <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between px-3 py-1.5 rounded-lg bg-black/80 backdrop-blur-md border border-zinc-800/90 text-xs shadow-md">
+              <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between px-3 py-1.5 rounded-lg bg-black/80 backdrop-blur-md border border-[#1a2333] text-xs shadow-md">
                 <span className="font-mono text-zinc-400 text-[10px]">Registration Plate</span>
                 <strong className="text-white font-mono text-xs tracking-wider">{state.vehicle.regNo}</strong>
               </div>
@@ -282,10 +285,10 @@ export const HomeTab: React.FC<HomeTabProps> = ({
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isUploading}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 active:scale-95 text-amber-300 border border-amber-500/30 text-[11px] font-semibold transition-all cursor-pointer shadow-sm"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-gradient-to-r from-cyan-500/20 to-purple-500/20 hover:from-cyan-500/30 hover:to-purple-500/30 active:scale-95 text-cyan-300 border border-cyan-400/40 text-[11px] font-semibold transition-all cursor-pointer shadow-sm"
                     title="Upload or Change Bike Photo"
                   >
-                    <Camera className="w-3 h-3 text-amber-400" />
+                    <Camera className="w-3 h-3 text-cyan-400" />
                     <span>{isUploading ? 'Saving...' : isCustomPhoto ? 'Change Photo' : 'Add Photo'}</span>
                   </button>
                 )}
@@ -321,16 +324,16 @@ export const HomeTab: React.FC<HomeTabProps> = ({
               <button
                 type="button"
                 onClick={() => onNavigateToTab('vehicle')}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-[#1d2331] hover:bg-[#252e40] border border-[#2d374d] text-xs font-semibold text-zinc-200 transition-all cursor-pointer shadow-sm active:scale-95"
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-[#131924] hover:bg-[#1a2333] border border-cyan-500/30 hover:border-cyan-400 text-xs font-semibold text-zinc-200 transition-all cursor-pointer shadow-sm active:scale-95"
               >
                 <span>View Full Specs</span>
-                <ChevronRight className="w-3.5 h-3.5 text-amber-400" />
+                <ChevronRight className="w-3.5 h-3.5 text-cyan-400" />
               </button>
               {isAdmin && (
                 <button
                   type="button"
                   onClick={() => onNavigateToTab('vehicle')}
-                  className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-xs font-semibold text-amber-300 transition-all cursor-pointer shadow-sm active:scale-95"
+                  className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/30 text-xs font-semibold text-cyan-300 transition-all cursor-pointer shadow-sm active:scale-95"
                   title="Edit bike specifications and registration details"
                 >
                   <Edit2 className="w-3.5 h-3.5" />
@@ -340,19 +343,19 @@ export const HomeTab: React.FC<HomeTabProps> = ({
               <button
                 type="button"
                 onClick={onOpenPrint}
-                className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-[#191e2b] hover:bg-[#22293b] border border-[#2c374d] text-xs font-semibold text-zinc-300 transition-all cursor-pointer shadow-sm active:scale-95"
+                className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-[#131924] hover:bg-[#1a2333] border border-[#233044] text-xs font-semibold text-zinc-300 transition-all cursor-pointer shadow-sm active:scale-95"
               >
-                <BookOpen className="w-3.5 h-3.5 text-amber-400" />
+                <BookOpen className="w-3.5 h-3.5 text-purple-400" />
                 <span>Print</span>
               </button>
             </div>
           </div>
 
-          {/* Right Column: About the Machine & Technical Highlights */}
+          {/* Right Column: About the Machine & Technical Highlights with Rainbow Spectrum */}
           <div className="lg:col-span-6 flex flex-col justify-between space-y-4">
             <div>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-[11px] font-mono uppercase tracking-widest text-amber-400 font-bold px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/25">
+              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                <span className="text-[11px] font-mono uppercase tracking-widest text-cyan-300 font-bold px-2 py-0.5 rounded-md bg-gradient-to-r from-cyan-500/15 to-purple-500/15 border border-cyan-400/30 shadow-sm">
                   Official Vehicle Profile
                 </span>
                 <span className="text-[11px] font-mono text-emerald-400 flex items-center gap-1">
@@ -360,61 +363,67 @@ export const HomeTab: React.FC<HomeTabProps> = ({
                 </span>
               </div>
 
-              <h1 className="text-xl sm:text-2xl font-display font-bold text-white tracking-wide uppercase">
-                {state.vehicle.model || 'BAJAJ PULSAR N160'}
+              <h1 className="text-xl sm:text-2xl font-display font-black text-white tracking-wide uppercase">
+                BAJAJ PULSAR <span className="rainbow-text">N160</span>
               </h1>
               <p className="text-xs sm:text-sm text-zinc-300 mt-1 leading-relaxed">
                 Precision motorcycle engineered with a high-torque 164.82cc oil-cooled DTS-i engine, twin-spark ignition, underbelly exhaust, and best-in-class {state.vehicle.absSystem || 'dual-channel ABS'} braking system.
               </p>
             </div>
 
-            {/* Spec Highlights Grid */}
+            {/* Rainbow Spectrum Spec Highlights Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-1">
-              <div className="p-3 rounded-xl bg-[#161a25] border border-[#262e3f] shadow-sm">
-                <div className="text-[10px] text-zinc-400 uppercase font-semibold flex items-center gap-1">
-                  <Zap className="w-3 h-3 text-amber-400" /> Max Power
+              {/* 1. Max Power - Rose / Pink */}
+              <div className="p-3 rounded-xl bg-gradient-to-br from-[#141018] to-[#101520] border border-rose-500/35 shadow-sm hover:border-rose-400 transition-colors">
+                <div className="text-[10px] text-rose-300 uppercase font-semibold flex items-center gap-1">
+                  <Zap className="w-3 h-3 text-rose-400" /> Max Power
                 </div>
                 <div className="text-xs font-bold text-white font-mono mt-0.5">16 PS @ 8750 RPM</div>
               </div>
 
-              <div className="p-3 rounded-xl bg-[#161a25] border border-[#262e3f] shadow-sm">
-                <div className="text-[10px] text-zinc-400 uppercase font-semibold flex items-center gap-1">
+              {/* 2. Max Torque - Amber / Orange */}
+              <div className="p-3 rounded-xl bg-gradient-to-br from-[#17130d] to-[#101520] border border-amber-500/35 shadow-sm hover:border-amber-400 transition-colors">
+                <div className="text-[10px] text-amber-300 uppercase font-semibold flex items-center gap-1">
                   <TrendingUp className="w-3 h-3 text-amber-400" /> Max Torque
                 </div>
                 <div className="text-xs font-bold text-white font-mono mt-0.5">14.65 Nm @ 6750</div>
               </div>
 
-              <div className="p-3 rounded-xl bg-[#161a25] border border-[#262e3f] shadow-sm">
-                <div className="text-[10px] text-zinc-400 uppercase font-semibold flex items-center gap-1">
-                  <Gauge className="w-3 h-3 text-amber-400" /> Displacement
+              {/* 3. Displacement - Emerald / Green */}
+              <div className="p-3 rounded-xl bg-gradient-to-br from-[#0d1713] to-[#101520] border border-emerald-500/35 shadow-sm hover:border-emerald-400 transition-colors">
+                <div className="text-[10px] text-emerald-300 uppercase font-semibold flex items-center gap-1">
+                  <Gauge className="w-3 h-3 text-emerald-400" /> Displacement
                 </div>
                 <div className="text-xs font-bold text-white font-mono mt-0.5">164.82 cc DTS-i</div>
               </div>
 
-              <div className="p-3 rounded-xl bg-[#161a25] border border-[#262e3f] shadow-sm">
-                <div className="text-[10px] text-zinc-400 uppercase font-semibold flex items-center gap-1">
-                  <Fuel className="w-3 h-3 text-amber-400" /> Fuel & Tank
+              {/* 4. Fuel & Tank - Cyan / Sky */}
+              <div className="p-3 rounded-xl bg-gradient-to-br from-[#0d1620] to-[#101520] border border-cyan-500/35 shadow-sm hover:border-cyan-400 transition-colors">
+                <div className="text-[10px] text-cyan-300 uppercase font-semibold flex items-center gap-1">
+                  <Fuel className="w-3 h-3 text-cyan-400" /> Fuel & Tank
                 </div>
                 <div className="text-xs font-bold text-white font-mono mt-0.5 truncate">{state.vehicle.fuelType || '14 L (95 Oct)'}</div>
               </div>
 
-              <div className="p-3 rounded-xl bg-[#161a25] border border-[#262e3f] shadow-sm">
-                <div className="text-[10px] text-zinc-400 uppercase font-semibold flex items-center gap-1">
-                  <Award className="w-3 h-3 text-amber-400" /> Brakes
+              {/* 5. Brakes - Blue / Indigo */}
+              <div className="p-3 rounded-xl bg-gradient-to-br from-[#0f1422] to-[#101520] border border-blue-500/35 shadow-sm hover:border-blue-400 transition-colors">
+                <div className="text-[10px] text-blue-300 uppercase font-semibold flex items-center gap-1">
+                  <Award className="w-3 h-3 text-blue-400" /> Brakes
                 </div>
                 <div className="text-xs font-bold text-white font-mono mt-0.5 truncate">{state.vehicle.absSystem || 'Dual Disc + ABS'}</div>
               </div>
 
-              <div className="p-3 rounded-xl bg-[#161a25] border border-[#262e3f] shadow-sm">
-                <div className="text-[10px] text-zinc-400 uppercase font-semibold flex items-center gap-1">
-                  <Wrench className="w-3 h-3 text-amber-400" /> Oil Spec
+              {/* 6. Oil Spec - Purple / Violet */}
+              <div className="p-3 rounded-xl bg-gradient-to-br from-[#150f22] to-[#101520] border border-purple-500/35 shadow-sm hover:border-purple-400 transition-colors">
+                <div className="text-[10px] text-purple-300 uppercase font-semibold flex items-center gap-1">
+                  <Wrench className="w-3 h-3 text-purple-400" /> Oil Spec
                 </div>
                 <div className="text-xs font-bold text-white font-mono mt-0.5 truncate">{state.vehicle.oilSpec || '20W50 (1150 ml)'}</div>
               </div>
             </div>
 
             {/* Quick Owner & Reg Strip */}
-            <div className="flex items-center justify-between p-3 rounded-xl bg-[#10131b] border border-[#222938] text-xs">
+            <div className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-[#0a0d14] via-[#0e121a] to-[#0a0d14] border border-cyan-500/20 text-xs">
               <div>
                 <span className="text-[10px] text-zinc-400 block uppercase font-medium">Registered Owner</span>
                 <div className="flex items-center gap-1.5 mt-0.5">
@@ -429,22 +438,158 @@ export const HomeTab: React.FC<HomeTabProps> = ({
               </div>
               <div className="text-right">
                 <span className="text-[10px] text-zinc-400 block uppercase font-medium">Service Book ID</span>
-                <span className="font-mono font-bold text-amber-400">{state.vehicle.bookNo}</span>
+                <span className="font-mono font-bold text-cyan-300">{state.vehicle.bookNo}</span>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 2. UPCOMING SERVICE STATUS & COUNTDOWN */}
+      {/* 2. DASHBOARD CATEGORY HUB & MODULE SELECTORS */}
+      <section className="space-y-2.5">
+        <div className="flex items-center justify-between px-1">
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-mono font-bold uppercase tracking-widest text-zinc-400">
+              Dashboard Categories & Portals
+            </span>
+          </div>
+          <span className="text-[10px] text-zinc-500 font-mono">Tap to Jump to Module</span>
+        </div>
+
+        {/* 5 Distinct Category Action Buttons */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          {/* Category 1: Vehicle Details - Golden Amber */}
+          <button
+            type="button"
+            onClick={() => onNavigateToTab('vehicle')}
+            className="flex flex-col items-start justify-between p-3.5 rounded-2xl bg-gradient-to-br from-[#181207] to-[#0f0b04] border border-amber-500/40 hover:border-amber-400 hover:shadow-[0_0_20px_rgba(245,158,11,0.25)] transition-all cursor-pointer text-left group active:scale-95"
+          >
+            <div className="flex items-center justify-between w-full mb-3">
+              <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-400/50 flex items-center justify-center text-amber-400 group-hover:scale-110 group-hover:bg-amber-500 group-hover:text-zinc-950 transition-all">
+                <Shield className="w-4 h-4" />
+              </div>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-300 font-bold border border-amber-500/30">
+                {state.vehicle.regNo}
+              </span>
+            </div>
+            <div>
+              <span className="text-xs font-bold text-white block group-hover:text-amber-300 transition-colors">
+                Vehicle ID & Reg
+              </span>
+              <span className="text-[10px] text-zinc-400 block mt-0.5">
+                Chassis, engine & specs
+              </span>
+            </div>
+          </button>
+
+          {/* Category 2: Service History - Emerald Green */}
+          <button
+            type="button"
+            onClick={() => onNavigateToTab('service')}
+            className="flex flex-col items-start justify-between p-3.5 rounded-2xl bg-gradient-to-br from-[#071710] to-[#040e0a] border border-emerald-500/40 hover:border-emerald-400 hover:shadow-[0_0_20px_rgba(16,185,129,0.25)] transition-all cursor-pointer text-left group active:scale-95"
+          >
+            <div className="flex items-center justify-between w-full mb-3">
+              <div className="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-400/50 flex items-center justify-center text-emerald-400 group-hover:scale-110 group-hover:bg-emerald-500 group-hover:text-zinc-950 transition-all">
+                <Wrench className="w-4 h-4" />
+              </div>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-300 font-bold border border-emerald-500/30">
+                {state.services.length} Records
+              </span>
+            </div>
+            <div>
+              <span className="text-xs font-bold text-white block group-hover:text-emerald-300 transition-colors">
+                Service Records
+              </span>
+              <span className="text-[10px] text-zinc-400 block mt-0.5">
+                Distance & oil logs
+              </span>
+            </div>
+          </button>
+
+          {/* Category 3: Maintenance Notes - Royal Purple */}
+          <button
+            type="button"
+            onClick={() => onNavigateToTab('notes')}
+            className="flex flex-col items-start justify-between p-3.5 rounded-2xl bg-gradient-to-br from-[#14081c] to-[#0c0512] border border-purple-500/40 hover:border-purple-400 hover:shadow-[0_0_20px_rgba(168,85,247,0.25)] transition-all cursor-pointer text-left group active:scale-95"
+          >
+            <div className="flex items-center justify-between w-full mb-3">
+              <div className="w-8 h-8 rounded-xl bg-purple-500/20 border border-purple-400/50 flex items-center justify-center text-purple-400 group-hover:scale-110 group-hover:bg-purple-500 group-hover:text-white transition-all">
+                <StickyNote className="w-4 h-4" />
+              </div>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-purple-500/15 text-purple-300 font-bold border border-purple-500/30">
+                {state.notes.length} Notes
+              </span>
+            </div>
+            <div>
+              <span className="text-xs font-bold text-white block group-hover:text-purple-300 transition-colors">
+                Maintenance Notes
+              </span>
+              <span className="text-[10px] text-zinc-400 block mt-0.5">
+                Garage remarks & chain
+              </span>
+            </div>
+          </button>
+
+          {/* Category 4: Bajaj Dealers - Electric Rose */}
+          <button
+            type="button"
+            onClick={() => onNavigateToTab('dealers')}
+            className="flex flex-col items-start justify-between p-3.5 rounded-2xl bg-gradient-to-br from-[#1a0711] to-[#10040a] border border-rose-500/40 hover:border-rose-400 hover:shadow-[0_0_20px_rgba(244,63,94,0.25)] transition-all cursor-pointer text-left group active:scale-95"
+          >
+            <div className="flex items-center justify-between w-full mb-3">
+              <div className="w-8 h-8 rounded-xl bg-rose-500/20 border border-rose-400/50 flex items-center justify-center text-rose-400 group-hover:scale-110 group-hover:bg-rose-500 group-hover:text-white transition-all">
+                <MapPin className="w-4 h-4" />
+              </div>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-rose-500/15 text-rose-300 font-bold border border-rose-500/30">
+                DPMC Map
+              </span>
+            </div>
+            <div>
+              <span className="text-xs font-bold text-white block group-hover:text-rose-300 transition-colors">
+                Bajaj Dealers
+              </span>
+              <span className="text-[10px] text-zinc-400 block mt-0.5">
+                Authorized workshops
+              </span>
+            </div>
+          </button>
+
+          {/* Category 5: Schedule Guide - Electric Cyan */}
+          <button
+            type="button"
+            onClick={onOpenScheduleGuide}
+            className="flex flex-col items-start justify-between p-3.5 rounded-2xl bg-gradient-to-br from-[#09111c] to-[#040910] border border-cyan-500/40 hover:border-cyan-400 hover:shadow-[0_0_20px_rgba(6,182,212,0.25)] transition-all cursor-pointer text-left group active:scale-95 col-span-2 sm:col-span-1"
+          >
+            <div className="flex items-center justify-between w-full mb-3">
+              <div className="w-8 h-8 rounded-xl bg-cyan-500/20 border border-cyan-400/50 flex items-center justify-center text-cyan-400 group-hover:scale-110 group-hover:bg-cyan-500 group-hover:text-zinc-950 transition-all">
+                <BookOpen className="w-4 h-4" />
+              </div>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-cyan-500/15 text-cyan-300 font-bold border border-cyan-500/30">
+                OEM Specs
+              </span>
+            </div>
+            <div>
+              <span className="text-xs font-bold text-white block group-hover:text-cyan-300 transition-colors">
+                Schedule Guide
+              </span>
+              <span className="text-[10px] text-zinc-400 block mt-0.5">
+                Factory service steps
+              </span>
+            </div>
+          </button>
+        </div>
+      </section>
+
+      {/* 3. UPCOMING SERVICE STATUS & COUNTDOWN */}
       <section className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         {/* Left: Upcoming Service Alert & Live Gauge Card */}
-        <div className="lg:col-span-7 bg-[#131722] rounded-2xl border border-[#232a3a] p-5 sm:p-6 shadow-xl flex flex-col justify-between relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-48 h-48 bg-amber-500/5 rounded-full blur-2xl pointer-events-none" />
+        <div className="lg:col-span-7 bg-[#0d1117] rounded-2xl border border-[#1a2333] p-5 sm:p-6 shadow-xl flex flex-col justify-between relative overflow-hidden group">
+          {/* Ambient rainbow background halo */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-cyan-500/10 via-purple-500/10 to-rose-500/10 rounded-full blur-3xl pointer-events-none animate-rainbow" />
           <div>
-            <div className="flex items-center justify-between gap-2 mb-4">
+            <div className="flex items-center justify-between gap-2 mb-4 relative z-10">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shadow-sm">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-rose-500/20 via-cyan-500/20 to-purple-500/20 border border-cyan-400/30 flex items-center justify-center text-cyan-400 shadow-sm">
                   <Calendar className="w-4 h-4" />
                 </div>
                 <div>
@@ -475,24 +620,24 @@ export const HomeTab: React.FC<HomeTabProps> = ({
               )}
             </div>
 
-            {/* Mileage Status Metric Box */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 rounded-xl bg-[#181d29] border border-[#273042] mb-4 shadow-inner">
-              <div>
-                <span className="text-[10px] text-zinc-400 uppercase font-semibold tracking-wider">Current Odometer</span>
+            {/* Mileage Status Metric Box with Rainbow Spectrum Borders */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 rounded-xl bg-[#101520] border border-[#1a2333] mb-4 shadow-inner relative z-10">
+              <div className="p-2.5 rounded-lg bg-[#0d1117] border border-cyan-500/25">
+                <span className="text-[10px] text-cyan-300 uppercase font-semibold tracking-wider">Current Odometer</span>
                 <div className="text-xl sm:text-2xl font-mono font-black text-white mt-0.5">
                   {state.odometer.toLocaleString()} <span className="text-xs font-normal text-zinc-400">km</span>
                 </div>
               </div>
 
-              <div>
-                <span className="text-[10px] text-zinc-400 uppercase font-semibold tracking-wider">Target Service Km</span>
-                <div className="text-xl sm:text-2xl font-mono font-black text-amber-400 mt-0.5">
+              <div className="p-2.5 rounded-lg bg-[#0d1117] border border-purple-500/25">
+                <span className="text-[10px] text-purple-300 uppercase font-semibold tracking-wider">Target Service Km</span>
+                <div className="text-xl sm:text-2xl font-mono font-black text-cyan-300 mt-0.5">
                   {currentTarget.toLocaleString()} <span className="text-xs font-normal text-zinc-400">km</span>
                 </div>
               </div>
 
-              <div>
-                <span className="text-[10px] text-zinc-400 uppercase font-semibold tracking-wider">
+              <div className="p-2.5 rounded-lg bg-[#0d1117] border border-emerald-500/25">
+                <span className="text-[10px] text-emerald-300 uppercase font-semibold tracking-wider">
                   {isOverdue ? 'Overdue By' : 'Distance Remaining'}
                 </span>
                 <div className={`text-xl sm:text-2xl font-mono font-black mt-0.5 ${isOverdue ? 'text-red-400' : 'text-emerald-400'}`}>
@@ -502,20 +647,20 @@ export const HomeTab: React.FC<HomeTabProps> = ({
               </div>
             </div>
 
-            {/* Service Interval Progress Bar */}
-            <div className="space-y-1.5 mb-5">
+            {/* Service Interval Progress Bar with Rainbow Gradient */}
+            <div className="space-y-1.5 mb-5 relative z-10">
               <div className="flex justify-between text-xs text-zinc-400 font-mono">
                 <span>Interval Elapsed</span>
-                <span className="text-amber-400 font-bold">{progressPercent}%</span>
+                <span className="rainbow-text font-black">{progressPercent}%</span>
               </div>
-              <div className="w-full h-3 rounded-full bg-[#0b0e14] p-0.5 border border-[#273042] overflow-hidden">
+              <div className="w-full h-3 rounded-full bg-[#07090e] p-0.5 border border-[#1a2333] overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all duration-700 ${
                     isOverdue
                       ? 'bg-gradient-to-r from-red-600 to-red-500 shadow-sm shadow-red-500/50'
                       : isDueSoon
-                      ? 'bg-gradient-to-r from-amber-600 to-amber-400 shadow-sm shadow-amber-500/50'
-                      : 'bg-gradient-to-r from-emerald-600 via-teal-500 to-amber-400 shadow-sm shadow-emerald-500/50'
+                      ? 'bg-gradient-to-r from-amber-600 via-orange-500 to-amber-400 shadow-sm shadow-amber-500/50'
+                      : 'bg-gradient-to-r from-rose-500 via-amber-400 via-emerald-400 via-cyan-400 to-purple-600 animate-rainbow shadow-[0_0_12px_rgba(0,229,255,0.5)]'
                   }`}
                   style={{ width: `${Math.min(progressPercent, 100)}%` }}
                 />
@@ -523,34 +668,34 @@ export const HomeTab: React.FC<HomeTabProps> = ({
             </div>
           </div>
 
-          {/* Quick Action Navigation Buttons */}
-          <div className="flex flex-wrap items-center gap-3 pt-3 border-t border-[#202737]">
+          {/* Quick Action Navigation Buttons with Rainbow Highlights */}
+          <div className="flex flex-wrap items-center gap-3 pt-3 border-t border-[#1a2333] relative z-10">
             <button
               type="button"
               onClick={() => onNavigateToTab('service')}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-95 text-zinc-950 font-bold text-xs tracking-wide transition-all shadow-md cursor-pointer border border-amber-400"
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-rose-500 via-amber-500 via-emerald-500 via-cyan-500 to-violet-600 animate-rainbow-fast hover:opacity-95 active:scale-95 text-white font-bold text-xs tracking-wide transition-all shadow-[0_0_20px_rgba(0,229,255,0.4)] cursor-pointer border border-white/30 uppercase font-display"
             >
-              <PlusCircle className="w-4 h-4 text-zinc-950" />
+              <PlusCircle className="w-4 h-4 text-white" />
               <span>Log Service Record</span>
             </button>
 
             <button
               type="button"
               onClick={() => onNavigateToTab('dealers')}
-              className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#1c2230] hover:bg-[#252d40] active:scale-95 text-amber-300 border border-amber-500/30 font-semibold text-xs transition-all cursor-pointer shadow-sm"
+              className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#101520] hover:bg-[#161e2e] active:scale-95 text-cyan-300 border border-cyan-500/30 font-semibold text-xs transition-all cursor-pointer shadow-sm"
             >
-              <MapPin className="w-4 h-4 text-amber-400" />
+              <MapPin className="w-4 h-4 text-cyan-400" />
               <span>Find Nearest Dealer</span>
             </button>
           </div>
         </div>
 
         {/* Right: Upcoming Service Checklist Guide */}
-        <div className="lg:col-span-5 bg-[#131722] rounded-2xl border border-[#232a3a] p-5 sm:p-6 shadow-xl flex flex-col justify-between">
+        <div className="lg:col-span-5 bg-[#0d1117] rounded-2xl border border-[#1a2333] p-5 sm:p-6 shadow-xl flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shadow-sm">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500/20 via-cyan-500/20 to-purple-500/20 border border-cyan-400/30 flex items-center justify-center text-cyan-400 shadow-sm">
                   <Wrench className="w-4 h-4" />
                 </div>
                 <div>
@@ -566,7 +711,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
               <button
                 type="button"
                 onClick={onOpenScheduleGuide}
-                className="text-[11px] text-amber-400 hover:text-amber-300 font-semibold underline underline-offset-2 cursor-pointer transition-colors"
+                className="text-[11px] text-cyan-400 hover:text-cyan-300 font-semibold underline underline-offset-2 cursor-pointer transition-colors"
               >
                 Full Guide
               </button>
@@ -577,11 +722,11 @@ export const HomeTab: React.FC<HomeTabProps> = ({
               {upcomingTasks.map((item, idx) => (
                 <div
                   key={idx}
-                  className="flex items-start gap-2.5 p-2.5 rounded-xl bg-[#171c27] border border-[#252d3d] transition-colors hover:border-[#323d52]"
+                  className="flex items-start gap-2.5 p-2.5 rounded-xl bg-[#101520] border border-[#1a2333] transition-colors hover:border-cyan-500/40"
                 >
                   <CheckCircle2
                     className={`w-4 h-4 shrink-0 mt-0.5 ${
-                      item.mandatory ? 'text-amber-400' : 'text-zinc-500'
+                      item.mandatory ? 'text-cyan-400' : 'text-zinc-500'
                     }`}
                   />
                   <div className="flex-1 min-w-0">
@@ -595,12 +740,12 @@ export const HomeTab: React.FC<HomeTabProps> = ({
             </div>
           </div>
 
-          <div className="mt-4 pt-3 border-t border-[#202737] flex items-center justify-between text-xs text-zinc-400">
+          <div className="mt-4 pt-3 border-t border-[#1a2333] flex items-center justify-between text-xs text-zinc-400">
             <span>David Pieris Motor Company Recommended</span>
             <button
               type="button"
               onClick={() => onNavigateToTab('notes')}
-              className="text-amber-400 hover:underline font-medium text-xs cursor-pointer transition-colors"
+              className="text-cyan-400 hover:underline font-medium text-xs cursor-pointer transition-colors"
             >
               View Garage Notes →
             </button>
@@ -608,34 +753,44 @@ export const HomeTab: React.FC<HomeTabProps> = ({
         </div>
       </section>
 
-      {/* 3. RECENT ACTIVITY QUICK SUMMARY */}
+      {/* 3. RECENT ACTIVITY QUICK SUMMARY with Rainbow Accents */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Last Recorded Service */}
-        <div className="p-4 rounded-2xl bg-[#131722] border border-[#232a3a] flex items-center justify-between shadow-lg">
+        <div className="p-4 rounded-2xl bg-[#0d1117] border border-cyan-500/30 flex items-center justify-between shadow-lg relative overflow-hidden group hover:border-cyan-400 transition-colors">
+          <div className="absolute top-0 left-0 h-[2px] w-full bg-gradient-to-r from-rose-500 via-amber-400 to-cyan-400 animate-rainbow" />
           <div>
-            <span className="text-[10px] uppercase font-semibold text-zinc-400 block tracking-wider">
+            <span className="text-[10px] uppercase font-semibold text-emerald-400 block tracking-wider flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block shadow-[0_0_6px_#34d399]" />
               Last Completed Service
             </span>
-            <div className="text-sm font-bold text-white mt-0.5">
-              {state.services[0]?.label || 'No previous service logged'}
+            <div className="flex items-center gap-2 mt-1 flex-wrap">
+              <span className="text-sm font-bold text-white">
+                {state.services[0]?.label || 'No previous service logged'}
+              </span>
+              {state.services[0] && (
+                <span className="font-mono text-xs px-2 py-0.5 rounded-md bg-yellow-400/15 text-yellow-300 border border-yellow-400/40 font-bold">
+                  {fmtKm(state.services[0].km)}
+                </span>
+              )}
             </div>
             <div className="text-xs text-zinc-400 font-mono mt-0.5">
-              {state.services[0] ? `${state.services[0].km.toLocaleString()} km · ${state.services[0].date} · ${state.services[0].dealer}` : 'Fresh factory delivery record'}
+              {state.services[0] ? `${state.services[0].date} · ${state.services[0].dealer}` : 'Fresh factory delivery record'}
             </div>
           </div>
           <button
             type="button"
             onClick={() => onNavigateToTab('service')}
-            className="px-3.5 py-1.5 rounded-xl bg-[#1c2230] hover:bg-[#252e40] active:scale-95 text-xs font-semibold text-zinc-200 border border-[#2d374c] transition-all cursor-pointer shadow-sm"
+            className="px-3.5 py-1.5 rounded-xl bg-[#101520] hover:bg-[#161e2e] active:scale-95 text-xs font-semibold text-cyan-300 border border-cyan-500/30 hover:border-cyan-400 transition-all cursor-pointer shadow-sm"
           >
             History →
           </button>
         </div>
 
         {/* Latest Maintenance / Garage Remark */}
-        <div className="p-4 rounded-2xl bg-[#131722] border border-[#232a3a] flex items-center justify-between shadow-lg">
+        <div className="p-4 rounded-2xl bg-[#0d1117] border border-purple-500/30 flex items-center justify-between shadow-lg relative overflow-hidden group hover:border-purple-400 transition-colors">
+          <div className="absolute top-0 left-0 h-[2px] w-full bg-gradient-to-r from-cyan-400 via-purple-500 to-rose-500 animate-rainbow" />
           <div>
-            <span className="text-[10px] uppercase font-semibold text-zinc-400 block tracking-wider">
+            <span className="text-[10px] uppercase font-semibold text-purple-300 block tracking-wider">
               Latest Garage Remark
             </span>
             <div className="text-sm font-bold text-white mt-0.5 truncate max-w-xs sm:max-w-sm">
@@ -648,7 +803,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
           <button
             type="button"
             onClick={() => onNavigateToTab('notes')}
-            className="px-3.5 py-1.5 rounded-xl bg-[#1c2230] hover:bg-[#252e40] active:scale-95 text-xs font-semibold text-zinc-200 border border-[#2d374c] transition-all cursor-pointer shadow-sm"
+            className="px-3.5 py-1.5 rounded-xl bg-[#101520] hover:bg-[#161e2e] active:scale-95 text-xs font-semibold text-purple-300 border border-purple-500/30 hover:border-purple-400 transition-all cursor-pointer shadow-sm"
           >
             Notes →
           </button>
@@ -658,11 +813,11 @@ export const HomeTab: React.FC<HomeTabProps> = ({
       {/* FULLSCREEN PHOTO LIGHTBOX MODAL */}
       {isFullscreenModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-xl flex items-center justify-center p-4">
-          <div className="relative max-w-4xl w-full bg-[#12151c] border border-zinc-700/60 rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+          <div className="relative max-w-4xl w-full bg-[#0d1117] border border-[#1a2333] rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
             {/* Modal Header */}
-            <div className="flex items-center justify-between px-5 py-3.5 border-b border-zinc-800 bg-[#161a22]">
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#1a2333] bg-[#101520]">
               <div className="flex items-center gap-2.5">
-                <ImageIcon className="w-5 h-5 text-amber-400" />
+                <ImageIcon className="w-5 h-5 text-cyan-400" />
                 <div>
                   <h3 className="text-sm font-bold text-white">
                     Bajaj Pulsar N160 · {state.vehicle.regNo}
@@ -678,7 +833,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs transition-colors cursor-pointer"
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#00e5ff] via-[#00a2ff] to-[#0066ff] hover:from-[#33ecff] hover:to-[#1a75ff] text-white font-bold text-xs transition-colors cursor-pointer shadow-md"
                   >
                     <Camera className="w-3.5 h-3.5" />
                     <span>Upload New Photo</span>
@@ -687,7 +842,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsFullscreenModalOpen(false)}
-                  className="p-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white transition-colors cursor-pointer"
+                  className="p-1.5 rounded-xl bg-[#131924] hover:bg-[#1a2333] text-zinc-300 hover:text-white transition-colors cursor-pointer border border-[#233044]"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -705,12 +860,12 @@ export const HomeTab: React.FC<HomeTabProps> = ({
             </div>
 
             {/* Modal Footer Info */}
-            <div className="px-5 py-3 border-t border-zinc-800 bg-[#141720] flex items-center justify-between text-xs text-zinc-400">
+            <div className="px-5 py-3 border-t border-[#1a2333] bg-[#0a0d14] flex items-center justify-between text-xs text-zinc-400">
               <div className="flex items-center gap-3">
                 <span>Chassis: <strong className="text-white font-mono">{state.vehicle.chassisNo}</strong></span>
                 <span>Engine: <strong className="text-white font-mono">{state.vehicle.engineNo}</strong></span>
               </div>
-              <span className="font-mono text-amber-400">
+              <span className="font-mono text-cyan-400">
                 Odometer: {state.odometer.toLocaleString()} km
               </span>
             </div>
