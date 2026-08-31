@@ -31,6 +31,7 @@ import {
   Bike,
 } from 'lucide-react';
 import { VehicleDetails } from '../types';
+import { ALL_DISTRICTS, ALL_PROVINCES, SRI_LANKA_REGIONS } from '../data/sriLankaRegions';
 
 interface VehicleRegistrationTabProps {
   vehicle: VehicleDetails;
@@ -588,7 +589,7 @@ export const VehicleRegistrationTab: React.FC<VehicleRegistrationTabProps> = ({
               <User className="w-3.5 h-3.5" />
               3. Owner & Official Registry Profile
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3.5">
               <div>
                 <label className="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1">
                   Owner Full Name *
@@ -605,6 +606,48 @@ export const VehicleRegistrationTab: React.FC<VehicleRegistrationTabProps> = ({
 
               <div>
                 <label className="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1">
+                  Province
+                </label>
+                <select
+                  value={editData.province || 'Western Province'}
+                  onChange={(e) => {
+                    const newProv = e.target.value;
+                    const reg = SRI_LANKA_REGIONS.find((r) => r.province === newProv);
+                    const newDist = reg && reg.districts.length > 0 ? reg.districts[0] : editData.district;
+                    setEditData({ ...editData, province: newProv, district: newDist });
+                  }}
+                  className="w-full bg-[#202530] border border-[#333b4d] rounded-xl px-3 py-2 text-xs text-white focus:border-amber-400 focus:outline-none cursor-pointer"
+                >
+                  {ALL_PROVINCES.map((prov) => (
+                    <option key={prov} value={prov} className="bg-[#141822] text-white">
+                      {prov}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1">
+                  District
+                </label>
+                <select
+                  value={editData.district || 'Colombo'}
+                  onChange={(e) => setEditData({ ...editData, district: e.target.value })}
+                  className="w-full bg-[#202530] border border-[#333b4d] rounded-xl px-3 py-2 text-xs text-white focus:border-amber-400 focus:outline-none cursor-pointer"
+                >
+                  {(
+                    SRI_LANKA_REGIONS.find((r) => r.province === (editData.province || 'Western Province'))?.districts ||
+                    ALL_DISTRICTS
+                  ).map((dist) => (
+                    <option key={dist} value={dist} className="bg-[#141822] text-white">
+                      {dist}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1">
                   Registration Authority
                 </label>
                 <input
@@ -612,19 +655,6 @@ export const VehicleRegistrationTab: React.FC<VehicleRegistrationTabProps> = ({
                   value={editData.authority || 'Dept. of Motor Traffic (Sri Lanka)'}
                   onChange={(e) => setEditData({ ...editData, authority: e.target.value })}
                   placeholder="e.g. Dept. of Motor Traffic (Sri Lanka)"
-                  className="w-full bg-[#202530] border border-[#333b4d] rounded-xl px-3 py-2 text-xs text-white focus:border-amber-400 focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1">
-                  District / Region
-                </label>
-                <input
-                  type="text"
-                  value={editData.district || 'Western Province'}
-                  onChange={(e) => setEditData({ ...editData, district: e.target.value })}
-                  placeholder="e.g. Western Province / Kurunegala"
                   className="w-full bg-[#202530] border border-[#333b4d] rounded-xl px-3 py-2 text-xs text-white focus:border-amber-400 focus:outline-none"
                 />
               </div>
@@ -913,8 +943,10 @@ export const VehicleRegistrationTab: React.FC<VehicleRegistrationTabProps> = ({
                   <span className="text-zinc-200 font-medium">{vehicle.authority || 'Dept. of Motor Traffic (Sri Lanka)'}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-zinc-400">District / Region:</span>
-                  <span className="text-zinc-200 font-medium">{vehicle.district || 'Kurunegala, North Western Province'}</span>
+                  <span className="text-zinc-400">District & Province:</span>
+                  <span className="text-zinc-200 font-medium">
+                    {vehicle.district ? `${vehicle.district}${vehicle.province ? `, ${vehicle.province}` : ''}` : (vehicle.province || 'Sri Lanka')}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-zinc-400">App Role Status:</span>

@@ -11,6 +11,7 @@ import { LoginPage } from './components/LoginPage';
 import { AppSplashScreen } from './components/AppSplashScreen';
 import { InstallAppModal } from './components/InstallAppModal';
 import { ClearDataModal } from './components/ClearDataModal';
+import { UserProfileModal } from './components/UserProfileModal';
 import { AppState, AuthSession, MaintenanceNote, ServiceRecord, VehicleDetails } from './types';
 import { loadState, saveState, calculateServiceStats } from './utils/formatters';
 import { SEED_STATE, getSeedStateForBike } from './data/seed';
@@ -55,6 +56,7 @@ export default function App() {
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [showClearModal, setShowClearModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   // App Opening Loading Splash Screen state
   const [showSplash, setShowSplash] = useState(true);
@@ -379,6 +381,7 @@ export default function App() {
         onOpenPrint={() => setShowPrintModal(true)}
         onOpenSchedule={() => setShowScheduleModal(true)}
         onOpenInstall={() => setShowInstallModal(true)}
+        onOpenProfile={() => setShowProfileModal(true)}
         onExportData={handleExportData}
         onImportData={handleImportData}
         onResetToDefaults={handleResetToDefaults}
@@ -486,6 +489,24 @@ export default function App() {
         onClose={() => setShowInstallModal(false)}
         deferredPrompt={deferredPrompt}
       />
+
+      {showProfileModal && authSession && (
+        <UserProfileModal
+          isOpen={showProfileModal}
+          onClose={() => setShowProfileModal(false)}
+          authSession={authSession}
+          vehicle={state.vehicle}
+          onUpdateVehicle={handleUpdateVehicle}
+          onUpdateAuthSession={(updated) => {
+            setAuthSession(updated);
+            try {
+              localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updated));
+            } catch (e) {
+              console.warn('Could not update cached session:', e);
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

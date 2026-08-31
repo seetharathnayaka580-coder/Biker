@@ -96,8 +96,35 @@ export const CHATHURA_SEED_STATE: AppState = {
 };
 
 export function getSeedStateForBike(bikeId: string = 'BKT-1374'): AppState {
+  if (bikeId === 'BKT-1374') {
+    return JSON.parse(JSON.stringify(SEED_STATE));
+  }
   if (bikeId && (bikeId.toLowerCase().includes('chathura') || bikeId === 'chathura_bike')) {
     return JSON.parse(JSON.stringify(CHATHURA_SEED_STATE));
   }
-  return JSON.parse(JSON.stringify(SEED_STATE));
+  // Generic template for newly registered admin bikes
+  return {
+    bikeId: bikeId,
+    vehicle: {
+      owner: "Bike Owner",
+      model: "Bajaj Pulsar N160 Dual Channel ABS",
+      colour: "Brooklyn Black",
+      regNo: "WP Bxx-xxxx",
+      chassisNo: "MD2B54DX-REG-01",
+      engineNo: "PDXCSH-REG-01",
+      bookNo: "POR0022026-REG",
+      absSystem: "Dual-Channel ABS",
+      oilSpec: "20W50 (1150 ml)",
+      fuelType: "Octane 95 Euro-4",
+      tyrePressures: "F: 25 PSI / R: 28-32",
+      authority: "Dept. of Motor Traffic (Sri Lanka)",
+      district: "Sri Lanka",
+      province: "Western Province",
+    },
+    odometer: 0,
+    services: [],
+    notes: [],
+    targets: [2500],
+    serviceInterval: 2500,
+  };
 }

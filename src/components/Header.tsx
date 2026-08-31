@@ -39,6 +39,7 @@ interface HeaderProps {
   onResetToDefaults: () => void;
   onClearAllData?: () => void;
   onOpenInstall?: () => void;
+  onOpenProfile?: () => void;
   syncStatus: 'synced' | 'syncing' | 'offline' | 'error';
   stats: {
     remaining: number;
@@ -60,6 +61,7 @@ export const Header: React.FC<HeaderProps> = ({
   onResetToDefaults,
   onClearAllData,
   onOpenInstall,
+  onOpenProfile,
   syncStatus,
   stats,
 }) => {
@@ -270,11 +272,24 @@ export const Header: React.FC<HeaderProps> = ({
               </>
             )}
 
-            {/* Active User Pill */}
-            <div className="hidden sm:flex items-center gap-1 px-2.5 py-1 rounded-xl bg-[#141822] border border-[#242b3b] text-xs">
-              <User className="w-3 h-3 text-amber-400" />
-              <span className="font-semibold text-zinc-200">{authSession.username}</span>
-            </div>
+            {/* Active User / Profile Button */}
+            {onOpenProfile && isAdmin ? (
+              <button
+                type="button"
+                onClick={onOpenProfile}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-[#141822] hover:bg-[#1c2230] border border-[#242b3b] hover:border-amber-500/40 text-xs transition-all cursor-pointer shadow-sm active:scale-95 group"
+                title="Click to edit user profile, bike number, and location"
+              >
+                <User className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform" />
+                <span className="font-semibold text-zinc-200">{authSession.username}</span>
+                <span className="text-[10px] text-amber-400/80 font-mono hidden md:inline">✎ Edit</span>
+              </button>
+            ) : (
+              <div className="hidden sm:flex items-center gap-1 px-2.5 py-1 rounded-xl bg-[#141822] border border-[#242b3b] text-xs">
+                <User className="w-3 h-3 text-amber-400" />
+                <span className="font-semibold text-zinc-200">{authSession.username}</span>
+              </div>
+            )}
 
             {/* Sign Out */}
             <button

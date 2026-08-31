@@ -7,6 +7,24 @@ export interface AuthSession {
   photoURL?: string;
   signedInAt: string;
   bikeId?: string;
+  district?: string;
+  province?: string;
+  bikeNumber?: string;
+}
+
+export interface UserAccount {
+  username: string;
+  password?: string;
+  ownerName: string;
+  bikeNumber: string;
+  district: string;
+  province: string;
+  role: UserRole;
+  bikeId: string;
+  createdAt: string;
+  updatedAt?: string;
+  email?: string;
+  photoUrl?: string;
 }
 
 export interface VehicleDetails {
@@ -23,6 +41,7 @@ export interface VehicleDetails {
   tyrePressures?: string;
   authority?: string;
   district?: string;
+  province?: string;
   photoUrl?: string;
   ownerPhotoUrl?: string;
 }

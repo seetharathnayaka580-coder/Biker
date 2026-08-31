@@ -25,7 +25,7 @@ import {
   User,
 } from 'firebase/auth';
 import firebaseConfigJson from '../../firebase-applet-config.json';
-import { AppState, MaintenanceNote, ServiceRecord, VehicleDetails } from '../types';
+import { AppState, AuthSession, MaintenanceNote, ServiceRecord, UserAccount, VehicleDetails } from '../types';
 import { SEED_STATE, getSeedStateForBike } from '../data/seed';
 
 // Suppress Firestore internal connection retry warnings
@@ -189,6 +189,7 @@ export function subscribeToBike(
           tyrePressures: data.tyrePressures ?? seedTemplate.vehicle.tyrePressures,
           authority: data.authority ?? seedTemplate.vehicle.authority,
           district: data.district ?? seedTemplate.vehicle.district,
+          province: data.province ?? seedTemplate.vehicle.province,
           photoUrl: data.photoUrl !== undefined ? data.photoUrl : seedTemplate.vehicle.photoUrl,
           ownerPhotoUrl: data.ownerPhotoUrl !== undefined ? data.ownerPhotoUrl : seedTemplate.vehicle.ownerPhotoUrl,
         };
@@ -472,3 +473,286 @@ export async function deleteNoteFromCloud(noteId: string, bikeId: string = DEFAU
     console.warn('Firestore delete note notice (cached locally):', err);
   }
 }
+
+// ==========================================
+// USER ACCOUNTS & SIGN UP / AUTHENTICATION
+// ==========================================
+
+const USERS_STORAGE_KEY = 'bajaj_user_accounts_v1';
+
+export function getLocalAccounts(): Record<string, UserAccount> {
+  try {
+    const raw = localStorage.getItem(USERS_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+export function saveLocalAccount(account: UserAccount): void {
+  try {
+    const current = getLocalAccounts();
+    current[account.username.toLowerCase()] = account;
+    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(current));
+  } catch (e) {
+    console.warn('Could not save local account:', e);
+  }
+}
+
+export async function registerAdminUser(data: {
+  username: string;
+  password: string;
+  ownerName: string;
+  bikeNumber: string;
+  district: string;
+  province: string;
+  email?: string;
+}): Promise<{ session: AuthSession; userAccount: UserAccount }> {
+  const normUser = data.username.trim().toLowerCase();
+  if (!normUser) throw new Error('Username is required.');
+  if (normUser === 'sachi' || normUser === 'chathura') {
+    throw new Error('This username is reserved. Please choose another username.');
+  }
+
+  // Generate clean bike ID
+  const cleanPlate = data.bikeNumber.trim().toUpperCase().replace(/[^A-Z0-9]/g, '_');
+  const bikeId = `bike_${normUser}_${cleanPlate || 'REG'}`;
+
+  const userAccount: UserAccount = {
+    username: normUser,
+    password: data.password.trim(),
+    ownerName: data.ownerName.trim(),
+    bikeNumber: data.bikeNumber.trim().toUpperCase(),
+    district: data.district.trim(),
+    province: data.province.trim(),
+    role: 'admin',
+    bikeId: bikeId,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    email: data.email?.trim(),
+  };
+
+  // 1. Check if user already exists in Firestore
+  try {
+    const userDocRef = doc(db, 'users', normUser);
+    const snap = await getDoc(userDocRef);
+    if (snap.exists()) {
+      throw new Error('Username already exists. Please choose a different username.');
+    }
+
+    // Save user to Firestore
+    await setDoc(userDocRef, sanitizeForFirestore(userAccount));
+  } catch (err: any) {
+    if (err.message && err.message.includes('already exists')) {
+      throw err;
+    }
+    console.warn('Firestore user registration notice:', err);
+  }
+
+  // 2. Initialize bike document in Firestore
+  try {
+    const bikeDocRef = doc(db, 'bikes', bikeId);
+    const bikeVehicle: VehicleDetails = {
+      owner: userAccount.ownerName,
+      regNo: userAccount.bikeNumber,
+      district: userAccount.district,
+      province: userAccount.province,
+      model: 'Bajaj Pulsar N160 Dual Channel ABS',
+      colour: 'Brooklyn Black',
+      chassisNo: `MD2B54DX-${normUser.toUpperCase()}-01`,
+      engineNo: `PDXCSH-${normUser.toUpperCase()}-01`,
+      bookNo: `POR0022026-${normUser.toUpperCase()}`,
+      absSystem: 'Dual-Channel ABS',
+      oilSpec: '20W50 (1150 ml)',
+      fuelType: 'Octane 95 Euro-4',
+      tyrePressures: 'F: 25 PSI / R: 28-32',
+      authority: 'Dept. of Motor Traffic (Sri Lanka)',
+    };
+
+    await setDoc(
+      bikeDocRef,
+      sanitizeForFirestore({
+        ...bikeVehicle,
+        odometer: 0,
+        targets: [2500],
+        serviceInterval: 2500,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      })
+    );
+  } catch (err) {
+    console.warn('Firestore bike init notice:', err);
+  }
+
+  // 3. Save to localStorage
+  saveLocalAccount(userAccount);
+
+  const session: AuthSession = {
+    role: 'admin',
+    username: userAccount.ownerName || userAccount.username,
+    bikeId: bikeId,
+    district: userAccount.district,
+    province: userAccount.province,
+    bikeNumber: userAccount.bikeNumber,
+    signedInAt: new Date().toISOString(),
+  };
+
+  return { session, userAccount };
+}
+
+export async function loginUser(username: string, password: string): Promise<{ session: AuthSession; userAccount?: UserAccount }> {
+  const trimmedUser = username.trim().toLowerCase();
+  const trimmedPass = password.trim();
+
+  // 1. Sachi Master Admin
+  if (trimmedUser === 'sachi' && trimmedPass === '988800') {
+    return {
+      session: {
+        role: 'admin',
+        username: 'Pathum Sachintha',
+        bikeId: 'BKT-1374',
+        district: 'Kurunegala',
+        province: 'North Western Province',
+        bikeNumber: 'BKT-1374',
+        signedInAt: new Date().toISOString(),
+      },
+    };
+  }
+
+  // 2. Chathura Admin
+  if (
+    trimmedUser === 'chathura' &&
+    (trimmedPass === 'password-200135' || trimmedPass === '200135')
+  ) {
+    return {
+      session: {
+        role: 'admin',
+        username: 'Chathura',
+        bikeId: 'chathura_bike',
+        district: 'Western Province',
+        province: 'Western Province',
+        bikeNumber: 'WP Bxx-xxxx',
+        signedInAt: new Date().toISOString(),
+      },
+    };
+  }
+
+  // 3. Check Firestore users collection
+  try {
+    const userDocRef = doc(db, 'users', trimmedUser);
+    const snap = await getDoc(userDocRef);
+    if (snap.exists()) {
+      const data = snap.data() as UserAccount;
+      if (data.password === trimmedPass) {
+        // Save/update in local storage cache
+        saveLocalAccount(data);
+        return {
+          session: {
+            role: data.role || 'admin',
+            username: data.ownerName || data.username,
+            bikeId: data.bikeId || `bike_${trimmedUser}`,
+            district: data.district,
+            province: data.province,
+            bikeNumber: data.bikeNumber,
+            signedInAt: new Date().toISOString(),
+          },
+          userAccount: data,
+        };
+      } else {
+        throw new Error('Incorrect password. Please verify and try again.');
+      }
+    }
+  } catch (err: any) {
+    if (err.message && err.message.includes('Incorrect password')) {
+      throw err;
+    }
+    console.warn('Firestore user lookup notice, checking local cache:', err);
+  }
+
+  // 4. Check LocalStorage registered accounts
+  const localAccounts = getLocalAccounts();
+  const localAcc = localAccounts[trimmedUser];
+  if (localAcc) {
+    if (localAcc.password === trimmedPass) {
+      return {
+        session: {
+          role: localAcc.role || 'admin',
+          username: localAcc.ownerName || localAcc.username,
+          bikeId: localAcc.bikeId || `bike_${trimmedUser}`,
+          district: localAcc.district,
+          province: localAcc.province,
+          bikeNumber: localAcc.bikeNumber,
+          signedInAt: new Date().toISOString(),
+        },
+        userAccount: localAcc,
+      };
+    } else {
+      throw new Error('Incorrect password. Please verify and try again.');
+    }
+  }
+
+  throw new Error('User not found. Please check your username or create a new account.');
+}
+
+export async function updateUserAccount(
+  username: string,
+  bikeId: string,
+  details: {
+    ownerName?: string;
+    bikeNumber?: string;
+    district?: string;
+    province?: string;
+    password?: string;
+    email?: string;
+  }
+): Promise<void> {
+  const normUser = username.trim().toLowerCase();
+  const cleanUpdates = sanitizeForFirestore({
+    ...details,
+    updatedAt: new Date().toISOString(),
+  });
+
+  // Update local accounts
+  const localAccounts = getLocalAccounts();
+  if (localAccounts[normUser]) {
+    localAccounts[normUser] = {
+      ...localAccounts[normUser],
+      ...cleanUpdates,
+      ...(details.ownerName ? { ownerName: details.ownerName } : {}),
+      ...(details.bikeNumber ? { bikeNumber: details.bikeNumber } : {}),
+      ...(details.district ? { district: details.district } : {}),
+      ...(details.province ? { province: details.province } : {}),
+    };
+    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(localAccounts));
+  }
+
+  // Update in Firestore
+  try {
+    const userDocRef = doc(db, 'users', normUser);
+    await setDoc(userDocRef, cleanUpdates, { merge: true });
+  } catch (err) {
+    console.warn('Firestore update user account notice:', err);
+  }
+
+  // Update vehicle in Firestore
+  try {
+    const bikeDocRef = doc(db, 'bikes', bikeId);
+    const vehicleUpdates: Partial<VehicleDetails> = {};
+    if (details.ownerName) vehicleUpdates.owner = details.ownerName;
+    if (details.bikeNumber) vehicleUpdates.regNo = details.bikeNumber;
+    if (details.district) vehicleUpdates.district = details.district;
+    if (details.province) vehicleUpdates.province = details.province;
+
+    await setDoc(
+      bikeDocRef,
+      sanitizeForFirestore({
+        ...vehicleUpdates,
+        updatedAt: new Date().toISOString(),
+      }),
+      { merge: true }
+    );
+  } catch (err) {
+    console.warn('Firestore update bike from user account notice:', err);
+  }
+}
+

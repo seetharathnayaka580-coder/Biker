@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Bike,
@@ -10,9 +10,16 @@ import {
   ArrowRight,
   Zap,
   Download,
+  Shield,
+  UserPlus,
+  LogIn,
+  MapPin,
+  Compass,
+  CheckCircle2,
 } from 'lucide-react';
 import { AuthSession, VehicleDetails } from '../types';
-import { signInWithGooglePopup } from '../lib/firebase';
+import { signInWithGooglePopup, loginUser, registerAdminUser } from '../lib/firebase';
+import { ALL_DISTRICTS, ALL_PROVINCES, SRI_LANKA_REGIONS } from '../data/sriLankaRegions';
 
 interface LoginPageProps {
   onLoginSuccess: (session: AuthSession) => void;
@@ -23,7 +30,9 @@ interface LoginPageProps {
 // Crisp mechanical motorcycle ignition relay switch audio feedback using Web Audio API
 const playClickSound = (isTurningOn: boolean) => {
   try {
-    const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    const AudioCtx =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     if (!AudioCtx) return;
     const ctx = new AudioCtx();
     const osc = ctx.createOscillator();
@@ -47,20 +56,48 @@ const playClickSound = (isTurningOn: boolean) => {
 };
 
 export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, onOpenInstall }) => {
+  // Mode: Sign In or Sign Up
+  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
+
   // Lamp state (Turned on by default, can be toggled via the hanging cord)
   const [isLampOn, setIsLampOn] = useState(true);
   const [isCordPulled, setIsCordPulled] = useState(false);
 
-  // Login form state
+  // Sign In form state
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  // Sign Up form state
+  const [signUpOwnerName, setSignUpOwnerName] = useState('');
+  const [signUpUsername, setSignUpUsername] = useState('');
+  const [signUpPassword, setSignUpPassword] = useState('');
+  const [signUpBikeNumber, setSignUpBikeNumber] = useState('');
+  const [signUpProvince, setSignUpProvince] = useState('Western Province');
+  const [signUpDistrict, setSignUpDistrict] = useState('Colombo');
+  const [showSignUpPassword, setShowSignUpPassword] = useState(false);
+
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Google sign in state
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [googleError, setGoogleError] = useState<string | null>(null);
+
+  // Filter districts dynamically based on selected province in Sign Up
+  const currentDistricts = useMemo(() => {
+    const region = SRI_LANKA_REGIONS.find((r) => r.province === signUpProvince);
+    return region ? region.districts : ALL_DISTRICTS;
+  }, [signUpProvince]);
+
+  const handleProvinceChange = (newProv: string) => {
+    setSignUpProvince(newProv);
+    const region = SRI_LANKA_REGIONS.find((r) => r.province === newProv);
+    if (region && region.districts.length > 0) {
+      setSignUpDistrict(region.districts[0]);
+    }
+  };
 
   // Handle pull cord toggle
   const handlePullCord = () => {
@@ -74,43 +111,65 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, o
     }, 300);
   };
 
-  const handleAdminSubmit = (e: React.FormEvent) => {
+  // Sign In Handler
+  const handleSignInSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
+    setSuccessMsg(null);
     setIsSubmitting(true);
 
-    setTimeout(() => {
+    try {
+      const result = await loginUser(username, password);
+      onLoginSuccess(result.session);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Invalid username or password.');
+    } finally {
       setIsSubmitting(false);
+    }
+  };
 
-      const trimmedUser = username.trim().toLowerCase();
-      const trimmedPass = password.trim();
+  // Sign Up Handler (Creates new Admin User & Bike)
+  const handleSignUpSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg(null);
+    setSuccessMsg(null);
 
-      // Check Sachi admin (username: sachi, password: 988800)
-      if (trimmedUser === 'sachi' && trimmedPass === '988800') {
-        const session: AuthSession = {
-          role: 'admin',
-          username: 'Sachi',
-          bikeId: 'BKT-1374',
-          signedInAt: new Date().toISOString(),
-        };
-        onLoginSuccess(session);
-      }
-      // Check Chathura admin (username: chathura, password: password-200135 or 200135)
-      else if (
-        trimmedUser === 'chathura' &&
-        (trimmedPass === 'password-200135' || trimmedPass === '200135')
-      ) {
-        const session: AuthSession = {
-          role: 'admin',
-          username: 'Chathura',
-          bikeId: 'chathura_bike',
-          signedInAt: new Date().toISOString(),
-        };
-        onLoginSuccess(session);
-      } else {
-        setErrorMsg('Invalid username or password.');
-      }
-    }, 550);
+    if (!signUpOwnerName.trim()) {
+      setErrorMsg('Please enter your full name.');
+      return;
+    }
+    if (!signUpUsername.trim()) {
+      setErrorMsg('Please choose a username.');
+      return;
+    }
+    if (!signUpPassword.trim() || signUpPassword.length < 4) {
+      setErrorMsg('Password must be at least 4 characters long.');
+      return;
+    }
+    if (!signUpBikeNumber.trim()) {
+      setErrorMsg('Please enter your bike registration plate number.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const result = await registerAdminUser({
+        ownerName: signUpOwnerName.trim(),
+        username: signUpUsername.trim(),
+        password: signUpPassword.trim(),
+        bikeNumber: signUpBikeNumber.trim().toUpperCase(),
+        province: signUpProvince,
+        district: signUpDistrict,
+      });
+
+      setSuccessMsg('Admin account created! Launching your log book...');
+      setTimeout(() => {
+        onLoginSuccess(result.session);
+      }, 700);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Failed to create account. Please try again.');
+      setIsSubmitting(false);
+    }
   };
 
   const handleGoogleSignIn = async () => {
@@ -161,11 +220,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, o
       </div>
 
       {/* Main Interactive Stage */}
-      <div className="w-full max-w-[440px] relative z-10 flex flex-col items-center pt-2">
+      <div className="w-full max-w-[460px] relative z-10 flex flex-col items-center pt-2">
         {/* ============================================================== */}
         {/* MOTORCYCLE PROJECTOR HEADLIGHT & IGNITION PULL CORD SECTION     */}
         {/* ============================================================== */}
-        <div className="relative w-full flex flex-col items-center mb-6 z-30">
+        <div className="relative w-full flex flex-col items-center mb-5 z-30">
           {/* Motorcycle Handlebar Mount & Suspension Fork Tubes */}
           <div className="flex items-center gap-9 -mb-1">
             <div className="w-2 h-9 bg-gradient-to-b from-zinc-700 via-zinc-400 to-zinc-600 rounded-t-sm shadow-sm" />
@@ -189,7 +248,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, o
                 <div className="w-6 h-0.5 bg-cyan-400/60 mx-auto mt-1 rounded-full" />
               </div>
 
-              {/* Main Angular Headlight Housing (Pulsar N160 Sharp Fairing) */}
+              {/* Main Angular Headlight Housing */}
               <div
                 className={`w-32 sm:w-36 h-16 transition-all duration-300 relative rounded-2xl flex flex-col items-center justify-center p-2 shadow-2xl border ${
                   isLampOn
@@ -197,29 +256,23 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, o
                     : 'bg-[#0e121a] border-zinc-700 shadow-black/90'
                 }`}
               >
-                {/* Dual Wolf-Eye LED DRL Brows (Left & Right) */}
+                {/* Dual Wolf-Eye LED DRL Brows */}
                 <div className="w-full flex items-center justify-between px-3.5 -mt-1 mb-1">
-                  {/* Left DRL Brow */}
                   <div
                     className={`h-1.5 w-7 rounded-full transition-all duration-300 ${
-                      isLampOn
-                        ? 'bg-cyan-300 shadow-[0_0_12px_#00f2fe]'
-                        : 'bg-zinc-700'
+                      isLampOn ? 'bg-cyan-300 shadow-[0_0_12px_#00f2fe]' : 'bg-zinc-700'
                     }`}
                     style={{ transform: 'rotate(14deg)' }}
                   />
-                  {/* Right DRL Brow */}
                   <div
                     className={`h-1.5 w-7 rounded-full transition-all duration-300 ${
-                      isLampOn
-                        ? 'bg-cyan-300 shadow-[0_0_12px_#00f2fe]'
-                        : 'bg-zinc-700'
+                      isLampOn ? 'bg-cyan-300 shadow-[0_0_12px_#00f2fe]' : 'bg-zinc-700'
                     }`}
                     style={{ transform: 'rotate(-14deg)' }}
                   />
                 </div>
 
-                {/* Central Bi-Functional LED Projector Lens */}
+                {/* Central Projector Lens */}
                 <div
                   className={`relative w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 border-2 ${
                     isLampOn
@@ -227,7 +280,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, o
                       : 'border-zinc-600 bg-zinc-800/90 shadow-inner'
                   }`}
                 >
-                  {/* Inner Optical Lens Reflection */}
                   <div
                     className={`w-4.5 h-4.5 rounded-full transition-all duration-300 ${
                       isLampOn ? 'bg-white shadow-[0_0_18px_#fff] animate-pulse' : 'bg-zinc-900'
@@ -235,7 +287,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, o
                   />
                 </div>
 
-                {/* Aerodynamic Lower Chin Vents */}
+                {/* Lower Chin Vents */}
                 <div className="flex items-center gap-1.5 mt-1">
                   <div className="w-2.5 h-0.5 bg-zinc-700 rounded-full" />
                   <div className="w-4 h-0.5 bg-zinc-600 rounded-full" />
@@ -243,7 +295,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, o
                 </div>
               </div>
 
-              {/* Pulsar High-Beam Projector Light Cone Projection */}
+              {/* Pulsar High-Beam Projector Light Cone */}
               {isLampOn && (
                 <div
                   className="absolute left-1/2 -translate-x-1/2 top-14 w-[360px] h-[380px] pointer-events-none transition-opacity duration-500 z-10"
@@ -256,20 +308,18 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, o
               )}
             </div>
 
-            {/* Interactive Motorcycle Ignition Key Lanyard / Pull Cord */}
+            {/* Interactive Ignition Key Pull Cord */}
             <div
               onClick={handlePullCord}
               className="absolute left-[calc(50%+44px)] top-10 cursor-pointer group flex flex-col items-center z-40"
               title="Pull ignition key cord to toggle headlight"
             >
-              {/* Metallic Ignition Wire */}
               <motion.div
                 animate={{ height: isCordPulled ? 48 : 34 }}
                 transition={{ type: 'spring', stiffness: 450, damping: 15 }}
                 className="w-[2px] bg-gradient-to-b from-zinc-500 via-amber-400 to-red-500 group-hover:bg-cyan-300"
               />
 
-              {/* Ignition Key Fob / Kill-Switch Tag */}
               <motion.div
                 animate={{
                   y: isCordPulled ? 14 : 0,
@@ -289,7 +339,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, o
                 </span>
               </motion.div>
 
-              {/* Pulsing Pull Tag Label */}
               <span className="text-[9px] font-mono font-bold tracking-wider text-cyan-300 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap bg-[#0a0d14] px-1.5 py-0.5 rounded border border-cyan-500/40 mt-1 shadow-md">
                 PULL KEY
               </span>
@@ -298,38 +347,63 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, o
         </div>
 
         {/* ============================================================== */}
-        {/* LOGIN CARD CONTAINER (Glassmorphic dark design from video)     */}
+        {/* LOGIN / SIGN UP CARD CONTAINER                                */}
         {/* ============================================================== */}
         <div
-          className={`w-full rounded-3xl pt-8 pb-7 px-6 sm:px-8 transition-all duration-500 relative border shadow-2xl ${
+          className={`w-full rounded-3xl pt-6 pb-7 px-5 sm:px-7 transition-all duration-500 relative border shadow-2xl ${
             isLampOn
               ? 'bg-[#0d1117]/95 border-[#1f2d3d] shadow-[0_20px_50px_rgba(0,0,0,0.8),0_0_40px_rgba(6,182,212,0.15)] backdrop-blur-xl'
               : 'bg-[#0a0d13]/90 border-zinc-800/60 shadow-2xl backdrop-blur-md'
           }`}
         >
           {/* Header Title & Subtitle */}
-          <div className="text-center mb-6">
+          <div className="text-center mb-5">
             <h1 className="text-xl sm:text-2xl font-display font-bold text-white tracking-wide">
-              Welcome Back.
+              {authMode === 'signin' ? 'Welcome Back.' : 'Create Bike Admin Account'}
             </h1>
             <p className="text-xs text-zinc-400 mt-1 flex items-center justify-center gap-1.5">
-              <span>Pull the cord to illuminate your path</span>
+              <span>{authMode === 'signin' ? 'Sign in to access your digital service record' : 'Register your bike, province, and district'}</span>
               {isLampOn && <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />}
             </p>
-
-            {/* Vehicle & Owner Badge */}
-            <div className="flex items-center justify-center gap-2 mt-2.5">
-              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-cyan-400 bg-cyan-500/10 border border-cyan-500/25 px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                <Bike className="w-3 h-3 text-cyan-400" />
-                {vehicle?.model || 'Bajaj Pulsar N160'}
-              </span>
-              <span className="text-[11px] font-mono uppercase text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">
-                {vehicle?.regNo || 'BKT-1374'}
-              </span>
-            </div>
           </div>
 
-          {/* Error Message */}
+          {/* Mode Switch Tabs (Sign In / Sign Up) */}
+          <div className="grid grid-cols-2 p-1 rounded-xl bg-[#141924] border border-[#222c3d] mb-5">
+            <button
+              type="button"
+              onClick={() => {
+                setAuthMode('signin');
+                setErrorMsg(null);
+                setSuccessMsg(null);
+              }}
+              className={`flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                authMode === 'signin'
+                  ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md'
+                  : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              <span>Sign In</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setAuthMode('signup');
+                setErrorMsg(null);
+                setSuccessMsg(null);
+              }}
+              className={`flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                authMode === 'signup'
+                  ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md'
+                  : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+            >
+              <UserPlus className="w-3.5 h-3.5" />
+              <span>Sign Up Admin</span>
+            </button>
+          </div>
+
+          {/* Error / Success Feedback */}
           <AnimatePresence>
             {errorMsg && (
               <motion.div
@@ -340,6 +414,17 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, o
               >
                 <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
                 <span>{errorMsg}</span>
+              </motion.div>
+            )}
+            {successMsg && (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                className="mb-4 p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs flex items-center gap-2"
+              >
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span>{successMsg}</span>
               </motion.div>
             )}
             {googleError && (
@@ -355,77 +440,230 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, o
             )}
           </AnimatePresence>
 
-          {/* Login Form (Matching video inputs & style) */}
-          <form onSubmit={handleAdminSubmit} className="space-y-4">
-            {/* USERNAME INPUT */}
-            <div>
-              <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1.5">
-                Username
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Username"
-                  autoComplete="username"
-                  className="w-full bg-[#131924] border border-[#233044] focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/50 rounded-xl px-4 py-3 text-sm text-white placeholder:text-zinc-600 transition-all font-mono outline-none shadow-inner"
-                  required
-                />
-                <User className="w-4 h-4 text-zinc-500 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          {/* ============================================================== */}
+          {/* TAB 1: SIGN IN FORM                                            */}
+          {/* ============================================================== */}
+          {authMode === 'signin' && (
+            <form onSubmit={handleSignInSubmit} className="space-y-4">
+              {/* USERNAME INPUT */}
+              <div>
+                <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1.5">
+                  Username
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="e.g. sachi, chathura, or your username"
+                    autoComplete="username"
+                    className="w-full bg-[#131924] border border-[#233044] focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/50 rounded-xl px-4 py-3 text-sm text-white placeholder:text-zinc-600 transition-all font-mono outline-none shadow-inner"
+                    required
+                  />
+                  <User className="w-4 h-4 text-zinc-500 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
               </div>
-            </div>
 
-            {/* PASSWORD INPUT */}
-            <div>
-              <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1.5">
-                Password
-              </label>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Password"
-                  autoComplete="current-password"
-                  className="w-full bg-[#131924] border border-[#233044] focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/50 rounded-xl px-4 py-3 text-sm text-white placeholder:text-zinc-600 transition-all font-mono tracking-wider outline-none shadow-inner"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-cyan-300 transition-colors p-1 cursor-pointer"
-                  title={showPassword ? 'Hide password' : 'Show password'}
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
+              {/* PASSWORD INPUT */}
+              <div>
+                <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1.5">
+                  Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter password"
+                    autoComplete="current-password"
+                    className="w-full bg-[#131924] border border-[#233044] focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/50 rounded-xl px-4 py-3 text-sm text-white placeholder:text-zinc-600 transition-all font-mono tracking-wider outline-none shadow-inner"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-cyan-300 transition-colors p-1 cursor-pointer"
+                    title={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
-            </div>
 
-            {/* SIGN IN BUTTON (Luminous gradient as in video) */}
-            <motion.button
-              whileHover={{ scale: 1.015, filter: 'brightness(1.1)' }}
-              whileTap={{ scale: 0.985 }}
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full mt-2 py-3.5 px-5 rounded-xl font-display font-black text-sm tracking-wider text-white uppercase bg-gradient-to-r from-[#00e5ff] via-[#00a2ff] to-[#0066ff] hover:from-[#33ecff] hover:to-[#1a75ff] shadow-[0_4px_20px_rgba(0,162,255,0.4)] border border-cyan-300/30 transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
-            >
-              {isSubmitting ? (
-                <>
-                  <Sparkles className="w-4 h-4 animate-spin text-white" />
-                  <span>Authenticating...</span>
-                </>
-              ) : (
-                <>
-                  <span>Sign In</span>
-                  <ArrowRight className="w-4 h-4 text-white" />
-                </>
-              )}
-            </motion.button>
-          </form>
+              {/* SIGN IN BUTTON */}
+              <motion.button
+                whileHover={{ scale: 1.015, filter: 'brightness(1.1)' }}
+                whileTap={{ scale: 0.985 }}
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full mt-2 py-3.5 px-5 rounded-xl font-display font-black text-sm tracking-wider text-white uppercase bg-gradient-to-r from-[#00e5ff] via-[#00a2ff] to-[#0066ff] hover:from-[#33ecff] hover:to-[#1a75ff] shadow-[0_4px_20px_rgba(0,162,255,0.4)] border border-cyan-300/30 transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Sparkles className="w-4 h-4 animate-spin text-white" />
+                    <span>Signing In...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Sign In</span>
+                    <ArrowRight className="w-4 h-4 text-white" />
+                  </>
+                )}
+              </motion.button>
+            </form>
+          )}
+
+          {/* ============================================================== */}
+          {/* TAB 2: SIGN UP FORM (Full details: user, pass, bike, district, prov) */}
+          {/* ============================================================== */}
+          {authMode === 'signup' && (
+            <form onSubmit={handleSignUpSubmit} className="space-y-3.5">
+              {/* Full Name / Bike Owner */}
+              <div>
+                <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1">
+                  Full Name / Owner *
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={signUpOwnerName}
+                    onChange={(e) => setSignUpOwnerName(e.target.value)}
+                    placeholder="e.g. Kasun Sandaruwan"
+                    className="w-full bg-[#131924] border border-[#233044] focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/50 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder:text-zinc-600 transition-all outline-none"
+                    required
+                  />
+                  <User className="w-3.5 h-3.5 text-zinc-500 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
+              </div>
+
+              {/* Username & Password Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1">
+                    Username *
+                  </label>
+                  <input
+                    type="text"
+                    value={signUpUsername}
+                    onChange={(e) => setSignUpUsername(e.target.value.toLowerCase().replace(/\s+/g, ''))}
+                    placeholder="e.g. kasun99"
+                    className="w-full bg-[#131924] border border-[#233044] focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/50 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono placeholder:text-zinc-600 transition-all outline-none"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1">
+                    Password *
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showSignUpPassword ? 'text' : 'password'}
+                      value={signUpPassword}
+                      onChange={(e) => setSignUpPassword(e.target.value)}
+                      placeholder="Password (4+ chars)"
+                      className="w-full bg-[#131924] border border-[#233044] focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/50 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono placeholder:text-zinc-600 transition-all outline-none"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowSignUpPassword(!showSignUpPassword)}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-cyan-300 p-1 cursor-pointer"
+                    >
+                      {showSignUpPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bike Number / Plate */}
+              <div>
+                <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1">
+                  Bike Number / Plate Number *
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={signUpBikeNumber}
+                    onChange={(e) => setSignUpBikeNumber(e.target.value.toUpperCase())}
+                    placeholder="e.g. WP BGH-4592 or BKT-1374"
+                    className="w-full bg-[#131924] border border-[#233044] focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/50 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono uppercase tracking-wider placeholder:text-zinc-600 transition-all outline-none"
+                    required
+                  />
+                  <Bike className="w-3.5 h-3.5 text-zinc-500 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
+              </div>
+
+              {/* Province & District Row */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Province Dropdown */}
+                <div>
+                  <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1">
+                    Province *
+                  </label>
+                  <select
+                    value={signUpProvince}
+                    onChange={(e) => handleProvinceChange(e.target.value)}
+                    className="w-full bg-[#131924] border border-[#233044] focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/50 rounded-xl px-3 py-2 text-xs text-white outline-none cursor-pointer"
+                  >
+                    {ALL_PROVINCES.map((prov) => (
+                      <option key={prov} value={prov} className="bg-[#111620] text-white">
+                        {prov}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* District Dropdown */}
+                <div>
+                  <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1">
+                    District *
+                  </label>
+                  <select
+                    value={signUpDistrict}
+                    onChange={(e) => setSignUpDistrict(e.target.value)}
+                    className="w-full bg-[#131924] border border-[#233044] focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/50 rounded-xl px-3 py-2 text-xs text-white outline-none cursor-pointer"
+                  >
+                    {currentDistricts.map((dist) => (
+                      <option key={dist} value={dist} className="bg-[#111620] text-white">
+                        {dist}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Admin Privileges Note */}
+              <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-center gap-2 text-[11px] text-amber-300">
+                <Shield className="w-3.5 h-3.5 shrink-0 text-amber-400" />
+                <span>You will be registered as an <strong>Admin</strong> with full logging and editing permissions.</span>
+              </div>
+
+              {/* SIGN UP BUTTON */}
+              <motion.button
+                whileHover={{ scale: 1.015, filter: 'brightness(1.1)' }}
+                whileTap={{ scale: 0.985 }}
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full mt-2 py-3.5 px-5 rounded-xl font-display font-black text-sm tracking-wider text-white uppercase bg-gradient-to-r from-[#00e5ff] via-[#00a2ff] to-[#0066ff] hover:from-[#33ecff] hover:to-[#1a75ff] shadow-[0_4px_20px_rgba(0,162,255,0.4)] border border-cyan-300/30 transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Sparkles className="w-4 h-4 animate-spin text-white" />
+                    <span>Creating Account...</span>
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="w-4 h-4 text-white" />
+                    <span>Register Admin & Open Logbook</span>
+                  </>
+                )}
+              </motion.button>
+            </form>
+          )}
 
           {/* Social / Alternate Logins Divider */}
-          <div className="relative my-5 text-center">
+          <div className="relative my-4 text-center">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-[#1e2738]" />
             </div>
@@ -439,7 +677,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, o
             type="button"
             onClick={handleGoogleSignIn}
             disabled={isGoogleLoading}
-            className="w-full py-3 px-4 rounded-xl bg-[#141b27] hover:bg-[#1b2536] border border-[#243147] hover:border-zinc-500 text-xs font-semibold text-zinc-200 transition-all cursor-pointer flex items-center justify-center gap-2.5 shadow-sm disabled:opacity-50 group"
+            className="w-full py-2.5 px-4 rounded-xl bg-[#141b27] hover:bg-[#1b2536] border border-[#243147] hover:border-zinc-500 text-xs font-semibold text-zinc-200 transition-all cursor-pointer flex items-center justify-center gap-2.5 shadow-sm disabled:opacity-50 group"
           >
             <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
               <path
@@ -459,12 +697,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, o
                 d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
               />
             </svg>
-            <span>Sign in with Google</span>
+            <span>Sign in with Google (Client Mode)</span>
           </button>
         </div>
 
         {/* Footer info badge & Chrome App Install Shortcut */}
-        <div className="flex flex-col items-center justify-center gap-2.5 mt-5">
+        <div className="flex flex-col items-center justify-center gap-2.5 mt-4">
           {onOpenInstall && (
             <button
               type="button"
@@ -478,7 +716,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, o
 
           <div className="text-center text-[11px] text-zinc-500 flex items-center justify-center gap-2 font-mono">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Bajaj Auto Digital Service Platform · Official N160 Log</span>
+            <span>Bajaj Auto Digital Service Platform · Multi-Admin Log</span>
           </div>
         </div>
       </div>
