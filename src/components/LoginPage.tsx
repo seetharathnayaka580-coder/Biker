@@ -18,7 +18,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import { AuthSession, VehicleDetails } from '../types';
-import { signInWithGooglePopup, loginUser, registerAdminUser } from '../lib/firebase';
+import { loginUser, registerAdminUser } from '../lib/firebase';
 import { ALL_DISTRICTS, ALL_PROVINCES, SRI_LANKA_REGIONS } from '../data/sriLankaRegions';
 
 interface LoginPageProps {
@@ -80,10 +80,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, o
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Google sign in state
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [googleError, setGoogleError] = useState<string | null>(null);
 
   // Filter districts dynamically based on selected province in Sign Up
   const currentDistricts = useMemo(() => {
@@ -169,32 +165,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, o
     } catch (err: any) {
       setErrorMsg(err.message || 'Failed to create account. Please try again.');
       setIsSubmitting(false);
-    }
-  };
-
-  const handleGoogleSignIn = async () => {
-    setGoogleError(null);
-    setIsGoogleLoading(true);
-    try {
-      const user = await signInWithGooglePopup();
-      const session: AuthSession = {
-        role: 'client',
-        username: user.displayName || user.email || 'Client User',
-        email: user.email || undefined,
-        photoURL: user.photoURL || undefined,
-        signedInAt: new Date().toISOString(),
-      };
-      onLoginSuccess(session);
-    } catch (err: unknown) {
-      console.warn('Google sign-in notice:', err);
-      const errMsg = err instanceof Error ? err.message : String(err);
-      if (errMsg.includes('popup-closed-by-user') || errMsg.includes('cancelled-popup-request')) {
-        setGoogleError('Sign-in was cancelled.');
-      } else {
-        setGoogleError('Google Sign-In failed. Please try again.');
-      }
-    } finally {
-      setIsGoogleLoading(false);
     }
   };
 
@@ -399,7 +369,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, o
               }`}
             >
               <UserPlus className="w-3.5 h-3.5" />
-              <span>Sign Up Admin</span>
+              <span>Sign Up</span>
             </button>
           </div>
 
@@ -425,17 +395,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, o
               >
                 <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
                 <span>{successMsg}</span>
-              </motion.div>
-            )}
-            {googleError && (
-              <motion.div
-                initial={{ opacity: 0, y: -8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                className="mb-4 p-3 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs flex items-center gap-2"
-              >
-                <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
-                <span>{googleError}</span>
               </motion.div>
             )}
           </AnimatePresence>
@@ -655,50 +614,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, o
                 ) : (
                   <>
                     <UserPlus className="w-4 h-4 text-white" />
-                    <span>Register Admin & Open Logbook</span>
+                    <span>Sign Up & Open Logbook</span>
                   </>
                 )}
               </motion.button>
             </form>
           )}
-
-          {/* Social / Alternate Logins Divider */}
-          <div className="relative my-4 text-center">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-[#1e2738]" />
-            </div>
-            <span className="relative px-3 bg-[#0d1117] text-[11px] font-mono text-zinc-500 uppercase">
-              Or continue with
-            </span>
-          </div>
-
-          {/* Google Sign In */}
-          <button
-            type="button"
-            onClick={handleGoogleSignIn}
-            disabled={isGoogleLoading}
-            className="w-full py-2.5 px-4 rounded-xl bg-[#141b27] hover:bg-[#1b2536] border border-[#243147] hover:border-zinc-500 text-xs font-semibold text-zinc-200 transition-all cursor-pointer flex items-center justify-center gap-2.5 shadow-sm disabled:opacity-50 group"
-          >
-            <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-              <path
-                fill="#4285F4"
-                d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"
-              />
-              <path
-                fill="#34A853"
-                d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"
-              />
-              <path
-                fill="#FBBC05"
-                d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
-              />
-              <path
-                fill="#EA4335"
-                d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
-              />
-            </svg>
-            <span>Sign in with Google (Client Mode)</span>
-          </button>
         </div>
 
         {/* Footer info badge & Chrome App Install Shortcut */}
