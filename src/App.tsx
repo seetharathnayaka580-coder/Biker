@@ -29,7 +29,9 @@ import {
   clearAllBikeDataFromCloud,
   initializeFirestoreSeed,
   signOutFromFirebase,
+  syncLiveUserSessionToCloud,
 } from './lib/firebase';
+import { fetchClientNetworkInfo } from './utils/ipTracker';
 
 const AUTH_STORAGE_KEY = 'n160_auth_session';
 
@@ -90,7 +92,27 @@ export default function App() {
     } catch (e) {
       console.warn('Could not save auth session:', e);
     }
+    // Immediately sync live IP & location to Cloud Firestore
+    syncLiveUserSessionToCloud(session);
   };
+
+  // Sync real-time live network info (IP, location) on session load/refresh
+  useEffect(() => {
+    if (authSession) {
+      syncLiveUserSessionToCloud(authSession).then((netInfo) => {
+        if (netInfo && netInfo.ip && (!authSession.loginIp || authSession.loginIp !== netInfo.ip)) {
+          const updated: AuthSession = {
+            ...authSession,
+            loginIp: netInfo.ip,
+          };
+          setAuthSession(updated);
+          try {
+            localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updated));
+          } catch {}
+        }
+      });
+    }
+  }, [authSession?.username]);
 
   const handleSignOut = async () => {
     await signOutFromFirebase();

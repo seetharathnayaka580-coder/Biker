@@ -38,18 +38,22 @@ import {
   Layers,
   ArrowUpDown,
   Navigation,
+  LocateFixed,
+  Crosshair,
 } from 'lucide-react';
 import { AuthSession, LoginLog, UserAccount, UserRole, VehicleDetails } from '../types';
 import {
   createUserByOwnerOrManager,
   deleteUserAccountFromCloud,
   changeUserPasswordByOwner,
+  updateUserBikeDetailsByOwner,
   toggleUserStatus,
   subscribeToUsers,
   subscribeToLoginLogs,
   clearAllLoginLogsFromCloud,
+  syncLiveUserSessionToCloud,
 } from '../lib/firebase';
-import { fetchClientNetworkInfo, ClientNetworkInfo } from '../utils/ipTracker';
+import { fetchClientNetworkInfo, getExactGpsLocation, ClientNetworkInfo } from '../utils/ipTracker';
 import { ALL_DISTRICTS, ALL_PROVINCES, SRI_LANKA_REGIONS } from '../data/sriLankaRegions';
 
 interface OwnerManagerControlTabProps {
@@ -72,6 +76,8 @@ export const OwnerManagerControlTab: React.FC<OwnerManagerControlTabProps> = ({
   // Live Sync Engine Tracking
   const [lastSyncTime, setLastSyncTime] = useState<Date>(new Date());
   const [isManualSyncing, setIsManualSyncing] = useState(false);
+  const [isDetectingGps, setIsDetectingGps] = useState(false);
+  const [gpsNotification, setGpsNotification] = useState<string | null>(null);
   const [syncPulse, setSyncPulse] = useState(false);
   const [currentOwnerNetInfo, setCurrentOwnerNetInfo] = useState<ClientNetworkInfo | null>(null);
 
@@ -107,16 +113,29 @@ export const OwnerManagerControlTab: React.FC<OwnerManagerControlTabProps> = ({
   const [editNewPassword, setEditNewPassword] = useState('');
   const [editStatusMsg, setEditStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
+  // Bike Number & Assigned Details Edit Modal State
+  const [editingBikeUser, setEditingBikeUser] = useState<UserAccount | null>(null);
+  const [editBikePlate, setEditBikePlate] = useState('');
+  const [editOwnerFullName, setEditOwnerFullName] = useState('');
+  const [editBikeProvince, setEditBikeProvince] = useState('Western Province');
+  const [editBikeDistrict, setEditBikeDistrict] = useState('Colombo');
+  const [editBikeModel, setEditBikeModel] = useState('');
+  const [editBikeStatusMsg, setEditBikeStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [isSavingBikeDetails, setIsSavingBikeDetails] = useState(false);
+
   // Delete User Confirmation Modal
   const [userToDelete, setUserToDelete] = useState<UserAccount | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Fetch current owner's live network & IP
+  // Fetch current owner's live network & IP on mount and sync to cloud
   useEffect(() => {
     fetchClientNetworkInfo().then((info) => {
       setCurrentOwnerNetInfo(info);
+      if (authSession) {
+        syncLiveUserSessionToCloud(authSession, info);
+      }
     });
-  }, []);
+  }, [authSession]);
 
   // Subscribe to Users & Login Logs Real-Time
   useEffect(() => {
@@ -159,14 +178,53 @@ export const OwnerManagerControlTab: React.FC<OwnerManagerControlTabProps> = ({
     try {
       const netInfo = await fetchClientNetworkInfo(true);
       setCurrentOwnerNetInfo(netInfo);
+      if (authSession) {
+        await syncLiveUserSessionToCloud(authSession, netInfo);
+      }
       setLastSyncTime(new Date());
       triggerSyncPulse();
-      // Brief pause to give visual feedback
-      await new Promise((resolve) => setTimeout(resolve, 600));
+      await new Promise((resolve) => setTimeout(resolve, 500));
     } catch {
       // ignore
     } finally {
       setIsManualSyncing(false);
+    }
+  };
+
+  // High Precision Real Device GPS Detection
+  const handleDetectExactGpsLocation = async () => {
+    setIsDetectingGps(true);
+    setGpsNotification(null);
+
+    try {
+      const gpsResult = await getExactGpsLocation();
+      if (gpsResult) {
+        const updatedNet: ClientNetworkInfo = {
+          ...(currentOwnerNetInfo || {
+            ip: 'Connected (Online)',
+            device: 'Mobile Device',
+            userAgent: navigator.userAgent,
+          }),
+          city: gpsResult.city || currentOwnerNetInfo?.city,
+          region: gpsResult.district || currentOwnerNetInfo?.region,
+          latitude: gpsResult.latitude,
+          longitude: gpsResult.longitude,
+          isGpsPrecise: true,
+        };
+        setCurrentOwnerNetInfo(updatedNet);
+        if (authSession) {
+          await syncLiveUserSessionToCloud(authSession, updatedNet);
+        }
+        setGpsNotification(`📍 Exact GPS verified: ${gpsResult.formattedLocation}`);
+        triggerSyncPulse();
+      } else {
+        setGpsNotification('GPS permission was denied or unavailable. IP-based location is active.');
+      }
+    } catch (err) {
+      setGpsNotification('Unable to acquire device GPS. Using network location.');
+    } finally {
+      setIsDetectingGps(false);
+      setTimeout(() => setGpsNotification(null), 5000);
     }
   };
 
@@ -284,6 +342,68 @@ export const OwnerManagerControlTab: React.FC<OwnerManagerControlTabProps> = ({
       }, 1500);
     } catch (err: any) {
       setEditStatusMsg({ type: 'error', text: err.message || 'Failed to update password.' });
+    }
+  };
+
+  // Dynamic districts for Edit Bike Modal
+  const editDistricts = useMemo(() => {
+    const region = SRI_LANKA_REGIONS.find((r) => r.province === editBikeProvince);
+    return region ? region.districts : ALL_DISTRICTS;
+  }, [editBikeProvince]);
+
+  const handleEditProvinceChange = (prov: string) => {
+    setEditBikeProvince(prov);
+    const region = SRI_LANKA_REGIONS.find((r) => r.province === prov);
+    if (region && region.districts.length > 0) {
+      setEditBikeDistrict(region.districts[0]);
+    }
+  };
+
+  // Open Bike Edit Modal Helper
+  const handleOpenBikeEdit = (user: UserAccount) => {
+    setEditingBikeUser(user);
+    setEditBikePlate(user.bikeNumber || '');
+    setEditOwnerFullName(user.ownerName || '');
+    setEditBikeProvince(user.province || 'Western Province');
+    setEditBikeDistrict(user.district || 'Colombo');
+    setEditBikeModel('');
+    setEditBikeStatusMsg(null);
+  };
+
+  // Handle Update Bike Plate & Vehicle Details Submit
+  const handleUpdateBikeDetails = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingBikeUser) return;
+    if (!editBikePlate.trim()) {
+      setEditBikeStatusMsg({ type: 'error', text: 'Please enter a valid bike registration number.' });
+      return;
+    }
+
+    setIsSavingBikeDetails(true);
+    setEditBikeStatusMsg(null);
+    try {
+      const cleanPlate = editBikePlate.trim().toUpperCase();
+      await updateUserBikeDetailsByOwner(editingBikeUser.username, {
+        bikeNumber: cleanPlate,
+        ownerName: editOwnerFullName.trim() || editingBikeUser.ownerName,
+        district: editBikeDistrict,
+        province: editBikeProvince,
+        model: editBikeModel.trim() || undefined,
+      });
+
+      setEditBikeStatusMsg({
+        type: 'success',
+        text: `Bike plate updated & synced to ${cleanPlate}!`,
+      });
+      triggerSyncPulse();
+      setTimeout(() => {
+        setEditingBikeUser(null);
+        setEditBikeStatusMsg(null);
+      }, 1500);
+    } catch (err: any) {
+      setEditBikeStatusMsg({ type: 'error', text: err.message || 'Failed to update bike details.' });
+    } finally {
+      setIsSavingBikeDetails(false);
     }
   };
 
@@ -472,6 +592,20 @@ export const OwnerManagerControlTab: React.FC<OwnerManagerControlTabProps> = ({
               <span>{isManualSyncing ? 'Syncing...' : 'Sync Now'}</span>
             </motion.button>
 
+            {/* Detect Exact GPS Location Button */}
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              type="button"
+              onClick={handleDetectExactGpsLocation}
+              disabled={isDetectingGps}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 text-xs font-semibold font-mono transition-all cursor-pointer shadow-sm active:scale-95 disabled:opacity-50"
+              title="Acquire exact device GPS coordinates (100% precision in Sri Lanka)"
+            >
+              <LocateFixed className={`w-3.5 h-3.5 ${isDetectingGps ? 'animate-spin text-sky-400' : 'text-sky-300'}`} />
+              <span>{isDetectingGps ? 'Locating...' : '📍 Verify Exact GPS'}</span>
+            </motion.button>
+
             {/* Export CSV */}
             <button
               type="button"
@@ -484,6 +618,27 @@ export const OwnerManagerControlTab: React.FC<OwnerManagerControlTabProps> = ({
             </button>
           </div>
         </div>
+
+        {/* GPS Notification Toast if triggered */}
+        {gpsNotification && (
+          <motion.div
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-3 p-3 rounded-2xl bg-sky-950/80 border border-sky-400/40 text-xs font-mono text-sky-200 flex items-center justify-between shadow-lg"
+          >
+            <div className="flex items-center gap-2">
+              <Crosshair className="w-4 h-4 text-sky-400 shrink-0" />
+              <span>{gpsNotification}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setGpsNotification(null)}
+              className="text-sky-400 hover:text-white px-2 py-0.5 rounded text-xs"
+            >
+              ✕
+            </button>
+          </motion.div>
+        )}
 
         {/* Quick KPI Strip & Owner Connected IP Monitor */}
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-2.5 mt-5 pt-4 border-t border-amber-500/20">
@@ -504,17 +659,24 @@ export const OwnerManagerControlTab: React.FC<OwnerManagerControlTabProps> = ({
             <div className="text-xl font-black font-mono text-amber-300 mt-0.5">{stats.uniqueIps}</div>
           </div>
           <div className="col-span-2 sm:col-span-4 lg:col-span-1 bg-[#121824]/90 border border-sky-500/30 rounded-2xl p-2.5 shadow-inner flex flex-col justify-center">
-            <div className="text-[9px] font-mono text-sky-300/80 uppercase flex items-center gap-1">
-              <Globe className="w-3 h-3 text-sky-400" />
-              <span>Owner Active IP</span>
+            <div className="text-[9px] font-mono text-sky-300/80 uppercase flex items-center justify-between">
+              <span className="flex items-center gap-1">
+                <Globe className="w-3 h-3 text-sky-400" />
+                <span>Owner Active IP</span>
+              </span>
+              {currentOwnerNetInfo?.isGpsPrecise && (
+                <span className="text-[8px] px-1 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">
+                  GPS EXACT
+                </span>
+              )}
             </div>
             <div className="text-xs font-black font-mono text-white truncate mt-0.5 flex items-center justify-between">
-              <span>{currentOwnerNetInfo?.ip || 'Detecting...'}</span>
+              <span className="truncate mr-1">{currentOwnerNetInfo?.ip || 'Detecting...'}</span>
               {currentOwnerNetInfo?.ip && (
                 <button
                   type="button"
                   onClick={() => handleCopy(currentOwnerNetInfo.ip, 'owner_curr_ip')}
-                  className="text-sky-400 hover:text-white p-0.5"
+                  className="text-sky-400 hover:text-white p-0.5 shrink-0"
                 >
                   {copiedKey === 'owner_curr_ip' ? (
                     <Check className="w-3 h-3 text-emerald-400" />
@@ -524,6 +686,12 @@ export const OwnerManagerControlTab: React.FC<OwnerManagerControlTabProps> = ({
                 </button>
               )}
             </div>
+            {currentOwnerNetInfo?.city && (
+              <div className="text-[9px] text-zinc-400 font-sans truncate mt-0.5 flex items-center gap-1">
+                <MapPin className="w-2.5 h-2.5 text-rose-400 shrink-0" />
+                <span>{currentOwnerNetInfo.city}, {currentOwnerNetInfo.region || 'Sri Lanka'}</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -790,81 +958,120 @@ export const OwnerManagerControlTab: React.FC<OwnerManagerControlTabProps> = ({
                       </div>
                     </div>
 
-                    {/* Bike Plate & Location */}
-                    <div className="grid grid-cols-2 gap-2 text-xs mb-3">
-                      <div className="p-2.5 rounded-2xl bg-[#0e121a] border border-[#1c2333] flex items-center gap-2">
-                        <Bike className="w-4 h-4 text-amber-400 shrink-0" />
-                        <div className="truncate">
-                          <div className="text-[9px] text-zinc-500 uppercase font-mono">Assigned Bike</div>
-                          <div className="font-mono font-bold text-white text-xs truncate">
-                            {user.bikeNumber || 'N/A'}
+                    {/* Bike Plate & Real Location */}
+                    {(() => {
+                      const displayLocation =
+                        user.lastLoginLocation ||
+                        (isMasterSachi && currentOwnerNetInfo?.city
+                          ? `${currentOwnerNetInfo.city}, ${currentOwnerNetInfo.region || 'Sri Lanka'}`
+                          : user.district
+                          ? `${user.district}, ${user.province || 'Sri Lanka'}`
+                          : 'Sri Lanka');
+
+                      const displayIp =
+                        user.lastLoginIp || (isMasterSachi ? currentOwnerNetInfo?.ip : null);
+
+                      return (
+                        <>
+                          <div className="grid grid-cols-2 gap-2 text-xs mb-3">
+                            <div className="p-2.5 rounded-2xl bg-[#0e121a] border border-[#1c2333] flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-2 truncate">
+                                <Bike className="w-4 h-4 text-amber-400 shrink-0" />
+                                <div className="truncate">
+                                  <div className="text-[9px] text-zinc-500 uppercase font-mono flex items-center gap-1">
+                                    <span>Assigned Bike</span>
+                                  </div>
+                                  <div className="font-mono font-bold text-white text-xs truncate">
+                                    {user.bikeNumber || 'N/A'}
+                                  </div>
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleOpenBikeEdit(user)}
+                                className="text-[10px] text-amber-400 hover:text-amber-200 bg-amber-500/10 hover:bg-amber-500/20 px-2 py-0.5 rounded-lg border border-amber-500/30 font-semibold cursor-pointer shrink-0 transition-colors"
+                                title="Edit & Sync Bike Registration Number"
+                              >
+                                Edit
+                              </button>
+                            </div>
+
+                            <div className="p-2.5 rounded-2xl bg-[#0e121a] border border-[#1c2333] flex items-center gap-2">
+                              <MapPin className="w-4 h-4 text-rose-400 shrink-0" />
+                              <div className="truncate">
+                                <div className="text-[9px] text-zinc-500 uppercase font-mono flex items-center gap-1">
+                                  <span>Live Location</span>
+                                  {user.lastLoginLocation && (
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping inline-block" />
+                                  )}
+                                </div>
+                                <div className="font-semibold text-zinc-200 text-xs truncate" title={displayLocation}>
+                                  {displayLocation}
+                                </div>
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </div>
 
-                      <div className="p-2.5 rounded-2xl bg-[#0e121a] border border-[#1c2333] flex items-center gap-2">
-                        <MapPin className="w-4 h-4 text-rose-400 shrink-0" />
-                        <div className="truncate">
-                          <div className="text-[9px] text-zinc-500 uppercase font-mono">Location</div>
-                          <div className="font-medium text-zinc-300 text-xs truncate">
-                            {user.district ? `${user.district}` : 'Sri Lanka'}
+                          {/* LIVE IP SHOWCASE CARD SECTION */}
+                          <div className="p-3 rounded-2xl bg-[#0a0d13] border border-sky-500/25 space-y-1.5 mb-3">
+                            <div className="flex items-center justify-between text-[11px] font-mono">
+                              <span className="text-sky-300 font-bold flex items-center gap-1.5">
+                                <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+                                <span>Client Login IP:</span>
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => setInspectingUser(user)}
+                                className="text-[10px] text-sky-400 hover:text-sky-200 font-sans font-semibold underline underline-offset-2 flex items-center gap-1 cursor-pointer"
+                              >
+                                <span>Full IP Details</span>
+                                <ExternalLink className="w-2.5 h-2.5" />
+                              </button>
+                            </div>
+
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-2 font-mono text-xs truncate">
+                                <span className="text-zinc-200 font-bold bg-[#121724] px-2.5 py-1 rounded-lg border border-sky-500/30 truncate">
+                                  {displayIp || 'No sign-in recorded'}
+                                </span>
+                                {displayLocation && (
+                                  <span className="text-[10px] text-zinc-400 truncate hidden sm:inline">
+                                    📍 {displayLocation}
+                                  </span>
+                                )}
+                              </div>
+
+                              {displayIp && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleCopy(displayIp, `ip_${user.username}`)}
+                                  className="text-zinc-400 hover:text-white p-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 cursor-pointer shrink-0 transition-colors"
+                                  title="Copy IP address"
+                                >
+                                  {copiedKey === `ip_${user.username}` ? (
+                                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                                  ) : (
+                                    <Copy className="w-3.5 h-3.5" />
+                                  )}
+                                </button>
+                              )}
+                            </div>
+
+                            {user.lastLoginAt ? (
+                              <div className="text-[10px] text-zinc-500 font-mono flex items-center gap-1 pt-0.5">
+                                <Clock className="w-3 h-3 text-zinc-600" />
+                                <span>Last online: {new Date(user.lastLoginAt).toLocaleString()}</span>
+                              </div>
+                            ) : isMasterSachi ? (
+                              <div className="text-[10px] text-emerald-400/90 font-mono flex items-center gap-1 pt-0.5">
+                                <Activity className="w-3 h-3 text-emerald-400" />
+                                <span>Live Active Session</span>
+                              </div>
+                            ) : null}
                           </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* LIVE IP SHOWCASE CARD SECTION */}
-                    <div className="p-3 rounded-2xl bg-[#0a0d13] border border-sky-500/25 space-y-1.5 mb-3">
-                      <div className="flex items-center justify-between text-[11px] font-mono">
-                        <span className="text-sky-300 font-bold flex items-center gap-1.5">
-                          <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
-                          <span>Client Login IP:</span>
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => setInspectingUser(user)}
-                          className="text-[10px] text-sky-400 hover:text-sky-200 font-sans font-semibold underline underline-offset-2 flex items-center gap-1 cursor-pointer"
-                        >
-                          <span>Full IP Details</span>
-                          <ExternalLink className="w-2.5 h-2.5" />
-                        </button>
-                      </div>
-
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2 font-mono text-xs truncate">
-                          <span className="text-zinc-200 font-bold bg-[#121724] px-2.5 py-1 rounded-lg border border-sky-500/30 truncate">
-                            {user.lastLoginIp || 'No sign-in recorded'}
-                          </span>
-                          {user.lastLoginLocation && (
-                            <span className="text-[10px] text-zinc-400 truncate hidden sm:inline">
-                              📍 {user.lastLoginLocation}
-                            </span>
-                          )}
-                        </div>
-
-                        {user.lastLoginIp && (
-                          <button
-                            type="button"
-                            onClick={() => handleCopy(user.lastLoginIp!, `ip_${user.username}`)}
-                            className="text-zinc-400 hover:text-white p-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 cursor-pointer shrink-0 transition-colors"
-                            title="Copy IP address"
-                          >
-                            {copiedKey === `ip_${user.username}` ? (
-                              <Check className="w-3.5 h-3.5 text-emerald-400" />
-                            ) : (
-                              <Copy className="w-3.5 h-3.5" />
-                            )}
-                          </button>
-                        )}
-                      </div>
-
-                      {user.lastLoginAt && (
-                        <div className="text-[10px] text-zinc-500 font-mono flex items-center gap-1 pt-0.5">
-                          <Clock className="w-3 h-3 text-zinc-600" />
-                          <span>Last online: {new Date(user.lastLoginAt).toLocaleString()}</span>
-                        </div>
-                      )}
-                    </div>
+                        </>
+                      );
+                    })()}
 
                     {/* Actions Row */}
                     {!isMasterSachi && (
@@ -882,7 +1089,17 @@ export const OwnerManagerControlTab: React.FC<OwnerManagerControlTabProps> = ({
                           <span>{isSuspended ? 'Reactivate' : 'Suspend'}</span>
                         </button>
 
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap justify-end">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenBikeEdit(user)}
+                            className="text-xs px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 font-semibold transition-all cursor-pointer flex items-center gap-1.5"
+                            title="Edit and sync real bike number"
+                          >
+                            <Bike className="w-3.5 h-3.5 text-amber-400" />
+                            <span>Edit Bike</span>
+                          </button>
+
                           <button
                             type="button"
                             onClick={() => {
@@ -1458,6 +1675,156 @@ export const OwnerManagerControlTab: React.FC<OwnerManagerControlTabProps> = ({
                     className="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-zinc-950 text-xs font-bold hover:brightness-110 shadow-md"
                   >
                     Update Password
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ============================================================== */}
+      {/* MODAL 1B: EDIT BIKE REGISTRATION NUMBER & LIVE SYNC            */}
+      {/* ============================================================== */}
+      <AnimatePresence>
+        {editingBikeUser && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-md bg-[#11141d] border border-amber-500/40 rounded-3xl p-6 shadow-2xl space-y-4"
+            >
+              <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 rounded-xl bg-amber-500/20 text-amber-300">
+                    <Bike className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-white text-base">
+                      Sync Real Bike Number
+                    </h3>
+                    <p className="text-[11px] text-zinc-400">
+                      User: <span className="text-amber-300 font-mono">@{editingBikeUser.username}</span> ({editingBikeUser.role.toUpperCase()})
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingBikeUser(null);
+                    setEditBikeStatusMsg(null);
+                  }}
+                  className="text-zinc-500 hover:text-white text-sm font-mono px-2 py-1 rounded-xl bg-zinc-800/80 cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {editBikeStatusMsg && (
+                <div
+                  className={`p-3 rounded-2xl text-xs font-semibold flex items-center gap-2 ${
+                    editBikeStatusMsg.type === 'success'
+                      ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300'
+                      : 'bg-rose-500/20 border border-rose-500/40 text-rose-300'
+                  }`}
+                >
+                  {editBikeStatusMsg.type === 'success' ? (
+                    <CheckCircle2 className="w-4 h-4 shrink-0" />
+                  ) : (
+                    <AlertTriangle className="w-4 h-4 shrink-0" />
+                  )}
+                  <span>{editBikeStatusMsg.text}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleUpdateBikeDetails} className="space-y-3.5 text-xs">
+                <div>
+                  <label className="text-[11px] font-mono text-amber-300 mb-1 flex items-center justify-between">
+                    <span>REAL BIKE REGISTRATION NO. / NUMBER PLATE *</span>
+                    <span className="text-[10px] text-zinc-400 font-sans">e.g. WP BKT-1374, WP Bxx-xxxx</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editBikePlate}
+                    onChange={(e) => setEditBikePlate(e.target.value.toUpperCase())}
+                    placeholder="e.g. WP BKT-1374 or BKT-2001"
+                    className="w-full bg-[#0a0d14] border border-amber-500/40 rounded-xl px-3.5 py-2.5 text-amber-200 font-mono font-bold text-sm tracking-wider focus:outline-none focus:border-amber-400"
+                    autoFocus
+                  />
+                  <p className="text-[10px] text-zinc-400 mt-1">
+                    Updates this user&apos;s assigned vehicle plate and instantly synchronizes across all cloud documents.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-mono text-zinc-300 mb-1 block">
+                    FULL OWNER / RIDER NAME
+                  </label>
+                  <input
+                    type="text"
+                    value={editOwnerFullName}
+                    onChange={(e) => setEditOwnerFullName(e.target.value)}
+                    placeholder="e.g. Chathura (Admin)"
+                    className="w-full bg-[#0a0d14] border border-zinc-700 rounded-xl px-3.5 py-2 text-white text-xs focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-[11px] font-mono text-zinc-300 mb-1 block">PROVINCE</label>
+                    <select
+                      value={editBikeProvince}
+                      onChange={(e) => handleEditProvinceChange(e.target.value)}
+                      className="w-full bg-[#0a0d14] border border-zinc-700 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-amber-400"
+                    >
+                      {ALL_PROVINCES.map((prov) => (
+                        <option key={prov} value={prov}>
+                          {prov}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-mono text-zinc-300 mb-1 block">DISTRICT</label>
+                    <select
+                      value={editBikeDistrict}
+                      onChange={(e) => setEditBikeDistrict(e.target.value)}
+                      className="w-full bg-[#0a0d14] border border-zinc-700 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-amber-400"
+                    >
+                      {editDistricts.map((dist) => (
+                        <option key={dist} value={dist}>
+                          {dist}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-zinc-800">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingBikeUser(null);
+                      setEditBikeStatusMsg(null);
+                    }}
+                    className="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSavingBikeDetails}
+                    className="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-zinc-950 text-xs font-bold hover:brightness-110 shadow-md flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  >
+                    {isSavingBikeDetails ? (
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Check className="w-3.5 h-3.5" />
+                    )}
+                    <span>Save & Live Sync</span>
                   </button>
                 </div>
               </form>

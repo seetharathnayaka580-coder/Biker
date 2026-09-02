@@ -27,7 +27,7 @@ import {
 import firebaseConfigJson from '../../firebase-applet-config.json';
 import { AppState, AuthSession, LoginLog, MaintenanceNote, ServiceRecord, UserAccount, UserRole, VehicleDetails } from '../types';
 import { SEED_STATE, getSeedStateForBike } from '../data/seed';
-import { fetchClientNetworkInfo } from '../utils/ipTracker';
+import { fetchClientNetworkInfo, ClientNetworkInfo } from '../utils/ipTracker';
 
 // Suppress Firestore internal connection retry warnings
 setLogLevel('silent');
@@ -366,6 +366,43 @@ export async function saveVehicleToCloud(vehicle: VehicleDetails, bikeId: string
       updatedAt: new Date().toISOString(),
     });
     await setDoc(bikeDocRef, sanitized, { merge: true });
+
+    // Automatically sync real vehicle registration / bike plate to the assigned user account in Firestore
+    if (vehicle.regNo) {
+      const cleanPlate = vehicle.regNo.trim().toUpperCase();
+      let targetUser = '';
+      if (bikeId === 'BKT-1374') targetUser = 'sachi';
+      else if (bikeId === 'chathura_bike' || bikeId.toLowerCase().includes('chathura')) targetUser = 'chathura';
+      else if (bikeId.startsWith('bike_')) {
+        const parts = bikeId.split('_');
+        if (parts.length >= 2) targetUser = parts[1];
+      }
+
+      if (targetUser) {
+        const userDocRef = doc(db, 'users', targetUser);
+        await setDoc(
+          userDocRef,
+          sanitizeForFirestore({
+            bikeNumber: cleanPlate,
+            ownerName: vehicle.owner || undefined,
+            district: vehicle.district || undefined,
+            province: vehicle.province || undefined,
+            updatedAt: new Date().toISOString(),
+          }),
+          { merge: true }
+        );
+
+        // Update local cache
+        const local = getLocalAccounts();
+        if (local[targetUser]) {
+          local[targetUser].bikeNumber = cleanPlate;
+          if (vehicle.owner) local[targetUser].ownerName = vehicle.owner;
+          if (vehicle.district) local[targetUser].district = vehicle.district;
+          if (vehicle.province) local[targetUser].province = vehicle.province;
+          localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(local));
+        }
+      }
+    }
   } catch (err) {
     console.warn('Firestore vehicle sync notice (cached locally):', err);
   }
@@ -637,20 +674,41 @@ export async function recordLoginLog(logData: Omit<LoginLog, 'id'>): Promise<str
     const logRef = doc(db, 'login_logs', logId);
     await setDoc(logRef, sanitizeForFirestore(logDoc));
 
-    // Also update last login info on the user's account in Firestore if exists
+    // Also update last login info on the user's account in Firestore
     if (logData.status === 'success' && logData.username) {
-      const userDocRef = doc(db, 'users', logData.username.toLowerCase());
-      await setDoc(
-        userDocRef,
-        sanitizeForFirestore({
-          lastLoginIp: logData.ip,
-          lastLoginAt: logData.timestamp,
-          lastLoginLocation: logData.location,
-          lastLoginDevice: logData.device,
-          updatedAt: new Date().toISOString(),
-        }),
-        { merge: true }
-      );
+      const normUser = logData.username.toLowerCase();
+      const userDocRef = doc(db, 'users', normUser);
+
+      // Base user payload
+      const updatePayload: Record<string, any> = {
+        lastLoginIp: logData.ip,
+        lastLoginAt: logData.timestamp,
+        lastLoginLocation: logData.location,
+        lastLoginDevice: logData.device,
+        updatedAt: new Date().toISOString(),
+      };
+
+      if (normUser === 'sachi') {
+        updatePayload.ownerName = 'Pathum Sachintha';
+        updatePayload.bikeNumber = 'BKT-1374';
+        updatePayload.role = 'admin';
+        updatePayload.district = 'Kurunegala';
+        updatePayload.province = 'North Western Province';
+        updatePayload.status = 'active';
+        updatePayload.password = '•••••• (988800)';
+      } else if (normUser === 'chathura') {
+        updatePayload.ownerName = logData.ownerName || 'Chathura (Admin)';
+        if (logData.bikeNumber && !logData.bikeNumber.includes('WP BKT-2001')) {
+          updatePayload.bikeNumber = logData.bikeNumber;
+        }
+        updatePayload.role = 'admin';
+        updatePayload.status = 'active';
+        updatePayload.password = 'password-200135';
+      } else if (logData.bikeNumber) {
+        updatePayload.bikeNumber = logData.bikeNumber;
+      }
+
+      await setDoc(userDocRef, sanitizeForFirestore(updatePayload), { merge: true });
     }
   } catch (err) {
     console.warn('Firestore login log record notice (cached locally):', err);
@@ -752,37 +810,67 @@ export function subscribeToUsers(
         });
       });
 
-      // Also ensure standard default accounts (Sachi & Chathura) are present in the list if not stored in firestore
-      const hasSachi = list.some((u) => u.username.toLowerCase() === 'sachi');
-      if (!hasSachi) {
-        list.unshift({
-          username: 'sachi',
-          password: '•••••• (988800)',
-          ownerName: 'Pathum Sachintha',
-          bikeNumber: 'BKT-1374',
-          district: 'Kurunegala',
-          province: 'North Western Province',
+      // Normalize Sachi Master Owner
+      const sachiIndex = list.findIndex((u) => u.username.toLowerCase() === 'sachi');
+      const defaultSachi: UserAccount = {
+        username: 'sachi',
+        password: '•••••• (988800)',
+        ownerName: 'Pathum Sachintha',
+        bikeNumber: 'BKT-1374',
+        district: 'Kurunegala',
+        province: 'North Western Province',
+        role: 'admin',
+        bikeId: 'BKT-1374',
+        createdAt: '2024-01-01T00:00:00.000Z',
+        status: 'active',
+      };
+
+      if (sachiIndex >= 0) {
+        list[sachiIndex] = {
+          ...defaultSachi,
+          ...list[sachiIndex],
+          ownerName: list[sachiIndex].ownerName || defaultSachi.ownerName,
+          bikeNumber: list[sachiIndex].bikeNumber || defaultSachi.bikeNumber,
           role: 'admin',
-          bikeId: 'BKT-1374',
-          createdAt: '2024-01-01T00:00:00.000Z',
-          status: 'active',
-        });
+          password: list[sachiIndex].password || defaultSachi.password,
+        };
+      } else {
+        list.unshift(defaultSachi);
       }
 
-      const hasChathura = list.some((u) => u.username.toLowerCase() === 'chathura');
-      if (!hasChathura) {
-        list.push({
-          username: 'chathura',
-          password: 'password-200135',
-          ownerName: 'Chathura (Admin)',
-          bikeNumber: 'WP BKT-2001',
-          district: 'Western Province',
-          province: 'Western Province',
-          role: 'admin',
-          bikeId: 'chathura_bike',
-          createdAt: '2024-02-01T00:00:00.000Z',
-          status: 'active',
-        });
+      // Normalize Chathura Admin
+      const chathuraIndex = list.findIndex((u) => u.username.toLowerCase() === 'chathura');
+      const defaultChathura: UserAccount = {
+        username: 'chathura',
+        password: 'password-200135',
+        ownerName: 'Chathura (Admin)',
+        bikeNumber: 'WP Bxx-xxxx',
+        district: 'Western Province',
+        province: 'Western Province',
+        role: 'admin',
+        bikeId: 'chathura_bike',
+        createdAt: '2024-02-01T00:00:00.000Z',
+        status: 'active',
+      };
+
+      if (chathuraIndex >= 0) {
+        // If Firestore had the old hardcoded WP BKT-2001 or missing bikeNumber, allow real bikeNumber
+        const existingBikeNumber = list[chathuraIndex].bikeNumber;
+        const finalBikeNumber =
+          existingBikeNumber && existingBikeNumber !== 'WP BKT-2001'
+            ? existingBikeNumber
+            : existingBikeNumber || defaultChathura.bikeNumber;
+
+        list[chathuraIndex] = {
+          ...defaultChathura,
+          ...list[chathuraIndex],
+          ownerName: list[chathuraIndex].ownerName || defaultChathura.ownerName,
+          bikeNumber: finalBikeNumber,
+          role: list[chathuraIndex].role || 'admin',
+          password: list[chathuraIndex].password || defaultChathura.password,
+        };
+      } else {
+        list.push(defaultChathura);
       }
 
       onData(list);
@@ -797,6 +885,78 @@ export function subscribeToUsers(
   );
 
   return unsub;
+}
+
+// Live Session IP & Real Data Cloud Synchronizer
+export async function syncLiveUserSessionToCloud(
+  session: AuthSession,
+  customNetInfo?: ClientNetworkInfo
+): Promise<ClientNetworkInfo | null> {
+  if (!session) return null;
+
+  try {
+    const netInfo = customNetInfo || (await fetchClientNetworkInfo(true));
+    const loc =
+      [netInfo.city, netInfo.region, netInfo.country].filter(Boolean).join(', ') || 'Sri Lanka';
+
+    // Determine normalized username
+    let targetUsername = 'sachi';
+    if (session.username.toLowerCase().includes('sachi') || session.role === 'admin' && session.bikeNumber === 'BKT-1374') {
+      targetUsername = 'sachi';
+    } else if (session.username.toLowerCase().includes('chathura')) {
+      targetUsername = 'chathura';
+    } else {
+      // Find matching user from local accounts or username
+      targetUsername = session.username.toLowerCase().replace(/\s+/g, '');
+    }
+
+    const userDocRef = doc(db, 'users', targetUsername);
+
+    const updatePayload: Record<string, any> = {
+      lastLoginIp: netInfo.ip,
+      lastLoginAt: new Date().toISOString(),
+      lastLoginLocation: loc,
+      lastLoginDevice: netInfo.device,
+      updatedAt: new Date().toISOString(),
+      status: 'active',
+    };
+
+    if (netInfo.latitude && netInfo.longitude) {
+      updatePayload.lastLatitude = netInfo.latitude;
+      updatePayload.lastLongitude = netInfo.longitude;
+    }
+
+    if (targetUsername === 'sachi') {
+      updatePayload.ownerName = 'Pathum Sachintha';
+      updatePayload.bikeNumber = 'BKT-1374';
+      updatePayload.role = 'admin';
+      updatePayload.district = netInfo.city || 'Kurunegala';
+      updatePayload.province = netInfo.region || 'North Western Province';
+      updatePayload.password = '•••••• (988800)';
+    }
+
+    await setDoc(userDocRef, sanitizeForFirestore(updatePayload), { merge: true });
+
+    // Also record a login log
+    await recordLoginLog({
+      username: targetUsername,
+      role: session.role || 'client',
+      ip: netInfo.ip,
+      location: loc,
+      device: netInfo.device,
+      userAgent: netInfo.userAgent,
+      status: 'success',
+      timestamp: new Date().toISOString(),
+      bikeId: session.bikeId || 'BKT-1374',
+      bikeNumber: session.bikeNumber || 'BKT-1374',
+      ownerName: session.username || 'Pathum Sachintha',
+    });
+
+    return netInfo;
+  } catch (err) {
+    console.warn('Error syncing live session to cloud:', err);
+    return null;
+  }
 }
 
 // Create new Manager or Client account by Owner Sachi
@@ -964,6 +1124,78 @@ export async function toggleUserStatus(username: string, currentStatus: 'active'
   return nextStatus;
 }
 
+// Update User's Assigned Bike Details & Sync with Vehicle Cloud Document
+export async function updateUserBikeDetailsByOwner(
+  username: string,
+  updates: {
+    bikeNumber?: string;
+    ownerName?: string;
+    district?: string;
+    province?: string;
+    model?: string;
+    colour?: string;
+  }
+): Promise<void> {
+  const normUser = username.trim().toLowerCase();
+  try {
+    const userDocRef = doc(db, 'users', normUser);
+    const userSnap = await getDoc(userDocRef);
+    let bikeId = `bike_${normUser}`;
+
+    if (userSnap.exists()) {
+      const uData = userSnap.data();
+      if (uData.bikeId) {
+        bikeId = uData.bikeId;
+      }
+    } else if (normUser === 'chathura') {
+      bikeId = 'chathura_bike';
+    } else if (normUser === 'sachi') {
+      bikeId = 'BKT-1374';
+    }
+
+    // 1. Update user document in Firestore
+    const userUpdate: Record<string, any> = {
+      updatedAt: new Date().toISOString(),
+    };
+    if (updates.bikeNumber !== undefined) userUpdate.bikeNumber = updates.bikeNumber.trim().toUpperCase();
+    if (updates.ownerName !== undefined) userUpdate.ownerName = updates.ownerName.trim();
+    if (updates.district !== undefined) userUpdate.district = updates.district.trim();
+    if (updates.province !== undefined) userUpdate.province = updates.province.trim();
+    if (bikeId) userUpdate.bikeId = bikeId;
+
+    await setDoc(userDocRef, sanitizeForFirestore(userUpdate), { merge: true });
+
+    // 2. Sync to bike document in Firestore
+    if (bikeId) {
+      const bikeDocRef = doc(db, 'bikes', bikeId);
+      const bikeUpdate: Record<string, any> = {
+        updatedAt: new Date().toISOString(),
+      };
+      if (updates.bikeNumber !== undefined) bikeUpdate.regNo = updates.bikeNumber.trim().toUpperCase();
+      if (updates.ownerName !== undefined) bikeUpdate.owner = updates.ownerName.trim();
+      if (updates.district !== undefined) bikeUpdate.district = updates.district.trim();
+      if (updates.province !== undefined) bikeUpdate.province = updates.province.trim();
+      if (updates.model !== undefined) bikeUpdate.model = updates.model.trim();
+      if (updates.colour !== undefined) bikeUpdate.colour = updates.colour.trim();
+
+      await setDoc(bikeDocRef, sanitizeForFirestore(bikeUpdate), { merge: true });
+    }
+
+    // 3. Update local cache
+    const localAccounts = getLocalAccounts();
+    if (localAccounts[normUser]) {
+      localAccounts[normUser] = {
+        ...localAccounts[normUser],
+        ...userUpdate,
+      };
+      localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(localAccounts));
+    }
+  } catch (err) {
+    console.warn('Firestore update user bike details notice:', err);
+    throw err;
+  }
+}
+
 export async function loginUser(username: string, password: string): Promise<{ session: AuthSession; userAccount?: UserAccount }> {
   const trimmedUser = username.trim().toLowerCase();
   const trimmedPass = password.trim();
@@ -1021,11 +1253,36 @@ export async function loginUser(username: string, password: string): Promise<{ s
     };
   }
 
-  // 2. Chathura Admin
+  // 2. Chathura Admin (Read real plate from Firestore if available)
   if (
     trimmedUser === 'chathura' &&
     (trimmedPass === 'password-200135' || trimmedPass === '200135')
   ) {
+    let chathuraBikePlate = 'WP Bxx-xxxx';
+    let chathuraOwnerName = 'Chathura (Admin)';
+    let chathuraDistrict = 'Western Province';
+    let chathuraProvince = 'Western Province';
+
+    try {
+      const userDocRef = doc(db, 'users', 'chathura');
+      const snap = await getDoc(userDocRef);
+      if (snap.exists()) {
+        const uData = snap.data();
+        if (uData.bikeNumber && uData.bikeNumber !== 'WP BKT-2001') chathuraBikePlate = uData.bikeNumber;
+        if (uData.ownerName) chathuraOwnerName = uData.ownerName;
+        if (uData.district) chathuraDistrict = uData.district;
+        if (uData.province) chathuraProvince = uData.province;
+      } else {
+        const bikeRef = doc(db, 'bikes', 'chathura_bike');
+        const bSnap = await getDoc(bikeRef);
+        if (bSnap.exists() && bSnap.data().regNo) {
+          chathuraBikePlate = bSnap.data().regNo;
+        }
+      }
+    } catch (e) {
+      console.warn('Could not read chathura doc on login:', e);
+    }
+
     await recordLoginLog({
       username: 'chathura',
       role: 'admin',
@@ -1036,18 +1293,18 @@ export async function loginUser(username: string, password: string): Promise<{ s
       status: 'success',
       timestamp: new Date().toISOString(),
       bikeId: 'chathura_bike',
-      bikeNumber: 'WP Bxx-xxxx',
-      ownerName: 'Chathura',
+      bikeNumber: chathuraBikePlate,
+      ownerName: chathuraOwnerName,
     });
 
     return {
       session: {
         role: 'admin',
-        username: 'Chathura',
+        username: chathuraOwnerName,
         bikeId: 'chathura_bike',
-        district: 'Western Province',
-        province: 'Western Province',
-        bikeNumber: 'WP Bxx-xxxx',
+        district: chathuraDistrict,
+        province: chathuraProvince,
+        bikeNumber: chathuraBikePlate,
         loginIp: netInfo.ip,
         signedInAt: new Date().toISOString(),
       },
