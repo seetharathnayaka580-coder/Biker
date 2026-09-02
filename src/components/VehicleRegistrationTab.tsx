@@ -796,11 +796,17 @@ export const VehicleRegistrationTab: React.FC<VehicleRegistrationTabProps> = ({
             </div>
             <div className="p-2.5 rounded-xl bg-[#161a24] border border-[#262c3a]">
               <span className="text-[10px] text-zinc-400 uppercase block font-medium">Trim & Colour</span>
-              <span className="text-xs font-bold text-amber-400 mt-0.5 block truncate" title={vehicle.colour}>{vehicle.colour}</span>
+              <span className="text-xs font-bold text-sky-400 mt-0.5 block truncate flex items-center gap-1" title={vehicle.colour}>
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse shadow-[0_0_6px_#38bdf8]" />
+                {vehicle.colour || 'Brooklyn Black (Blue Light)'}
+              </span>
             </div>
-            <div className="p-2.5 rounded-xl bg-[#161a24] border border-[#262c3a]">
+            <div className="p-2.5 rounded-xl bg-red-950/20 border border-red-500/30">
               <span className="text-[10px] text-zinc-400 uppercase block font-medium">ABS System</span>
-              <span className="text-xs font-bold text-red-400 mt-0.5 block">{vehicle.absSystem || 'Dual-Channel ABS'}</span>
+              <span className="text-xs font-black text-red-300 mt-0.5 block flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                {vehicle.absSystem || 'Dual-Channel ABS'}
+              </span>
             </div>
             <div className="p-2.5 rounded-xl bg-[#161a24] border border-[#262c3a]">
               <span className="text-[10px] text-zinc-400 uppercase block font-medium">Engine Oil Spec</span>

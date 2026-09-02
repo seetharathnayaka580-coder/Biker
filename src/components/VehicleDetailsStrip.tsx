@@ -167,7 +167,7 @@ export const VehicleDetailsStrip: React.FC<VehicleDetailsStripProps> = ({
         <div className="flex flex-col md:flex-row gap-2.5 bg-[#12151b] p-2.5 rounded-2xl border border-[#262b35] shadow-lg">
           {/* N160 Photo Showcase Badge */}
           <div className="flex items-center gap-3 p-2 bg-[#181c24] border border-[#2d3444] rounded-xl shrink-0 md:w-48">
-            <div className="w-14 h-14 rounded-lg bg-black/50 border border-amber-500/30 p-1 flex items-center justify-center shrink-0 overflow-hidden">
+            <div className="w-14 h-14 rounded-lg bg-black/50 border border-blue-500/40 p-1 flex items-center justify-center shrink-0 overflow-hidden shadow-[0_0_10px_rgba(59,130,246,0.25)]">
               <img
                 src="/pulsar_n160.svg"
                 alt="Bajaj Pulsar N160"
@@ -177,24 +177,26 @@ export const VehicleDetailsStrip: React.FC<VehicleDetailsStripProps> = ({
             </div>
             <div className="min-w-0 flex-1">
               <div className="text-xs font-display font-black text-white tracking-wider">
-                PULSAR <span className="text-amber-400">N160</span>
+                PULSAR <span className="text-sky-400">N160</span>
               </div>
-              <div className="text-[10px] text-zinc-400 truncate">
-                {vehicle.colour}
+              <div className="text-[10px] text-sky-300 font-mono font-medium truncate flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+                {vehicle.colour || 'Brooklyn Black'}
               </div>
               {onOpenMap ? (
                 <button
                   type="button"
                   onClick={onOpenMap}
-                  className="mt-1 flex items-center gap-1 text-[9px] font-mono text-amber-400 hover:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 px-1.5 py-0.5 rounded cursor-pointer transition-colors"
+                  className="mt-1 flex items-center gap-1 text-[9px] font-mono text-sky-400 hover:text-sky-300 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 px-1.5 py-0.5 rounded cursor-pointer transition-colors"
                   title="Open Google Maps Service Locator"
                 >
-                  <MapPin className="w-2.5 h-2.5 text-amber-400" />
+                  <MapPin className="w-2.5 h-2.5 text-sky-400" />
                   <span>Map Locator</span>
                 </button>
               ) : (
-                <div className="text-[9px] font-mono text-emerald-400">
-                  Dual-ABS Verified
+                <div className="text-[9px] font-mono font-black text-red-400 bg-red-950/60 border border-red-500/40 px-1.5 py-0.5 rounded mt-0.5 inline-flex items-center gap-1">
+                  <span className="w-1 h-1 rounded-full bg-red-400" />
+                  Dual-ABS Red
                 </div>
               )}
             </div>

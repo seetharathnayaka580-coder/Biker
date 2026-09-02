@@ -63,21 +63,19 @@ export const OdometerGauge: React.FC<OdometerGaugeProps> = ({
 
   return (
     <div className="relative bg-[#0d1117] border border-[#1a2333] rounded-2xl p-5 sm:p-6 shadow-xl overflow-hidden flex flex-col justify-between group">
-      {/* Rainbow ambient background glow */}
+      {/* Subtle ambient background glow */}
       <div
-        className="absolute -top-12 -right-12 w-64 h-64 rounded-full blur-3xl opacity-20 pointer-events-none bg-gradient-to-tr from-rose-500 via-emerald-400 via-cyan-400 to-purple-600 animate-rainbow"
+        className="absolute -top-12 -right-12 w-56 h-56 rounded-full blur-3xl opacity-15 pointer-events-none bg-cyan-500/20"
       />
       <div
-        className="absolute -bottom-12 -left-12 w-48 h-48 rounded-full blur-3xl opacity-15 pointer-events-none bg-gradient-to-tr from-cyan-400 via-amber-400 to-rose-500 animate-rainbow"
+        className="absolute -bottom-12 -left-12 w-48 h-48 rounded-full blur-3xl opacity-10 pointer-events-none bg-blue-600/20"
       />
 
       {/* Header */}
       <div className="flex items-center justify-between gap-2 mb-2 relative z-10">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-rose-500 via-amber-400 via-cyan-400 to-purple-500 p-[1px] flex items-center justify-center">
-            <div className="w-full h-full bg-[#0d1117] rounded-[7px] flex items-center justify-center">
-              <Gauge className="w-3.5 h-3.5 text-cyan-400" />
-            </div>
+          <div className="w-6 h-6 rounded-lg bg-cyan-500/15 border border-cyan-400/30 flex items-center justify-center text-cyan-400">
+            <Gauge className="w-3.5 h-3.5" />
           </div>
           <h2 className="font-display font-bold text-base sm:text-lg text-white tracking-wide">
             Distance to Next Service
@@ -101,7 +99,7 @@ export const OdometerGauge: React.FC<OdometerGaugeProps> = ({
                   setTempTarget(currentTarget.toString());
                   setShowTargetModal(true);
                 }}
-                className="px-2.5 py-1 text-[11px] font-medium text-zinc-300 hover:text-white bg-[#101520] hover:bg-[#161e2e] border border-[#1a2333] hover:border-purple-400/50 rounded-lg transition-all cursor-pointer shadow-sm"
+                className="px-2.5 py-1 text-[11px] font-medium text-zinc-300 hover:text-white bg-[#101520] hover:bg-[#161e2e] border border-[#1a2333] hover:border-cyan-400/50 rounded-lg transition-all cursor-pointer shadow-sm"
               >
                 Target: <span className="text-cyan-300 font-mono font-bold">{currentTarget} km</span>
               </button>
@@ -118,23 +116,20 @@ export const OdometerGauge: React.FC<OdometerGaugeProps> = ({
       <div className="relative flex flex-col items-center justify-center my-3 z-10">
         <svg viewBox="0 0 220 135" className="w-full max-w-[280px] sm:max-w-[310px] overflow-visible">
           <defs>
-            {/* Rainbow Spectrum Gradient for Gauge */}
-            <linearGradient id="rainbowGaugeGradient" x1="0%" y1="100%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#ff0055" />
-              <stop offset="18%" stopColor="#ff6d00" />
-              <stop offset="38%" stopColor="#ffd600" />
-              <stop offset="58%" stopColor="#00e676" />
-              <stop offset="78%" stopColor="#00e5ff" />
-              <stop offset="100%" stopColor="#7c4dff" />
+            {/* Clean Cyan to Sky Gauge Gradient */}
+            <linearGradient id="cyanGaugeGradient" x1="0%" y1="100%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#06b6d4" />
+              <stop offset="50%" stopColor="#0ea5e9" />
+              <stop offset="100%" stopColor="#38bdf8" />
             </linearGradient>
             <linearGradient id="gaugeOverdueGradient" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#ef4444" />
               <stop offset="100%" stopColor="#b91c1c" />
             </linearGradient>
-            <filter id="rainbowGlowFilter" x="-30%" y="-30%" width="160%" height="160%">
-              <feGaussianBlur stdDeviation="4" result="blur" />
-              <feComposite in="SourceGraphic" in2="blur" operator="over" />
-            </filter>
+            <linearGradient id="gaugeDueSoonGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#d97706" />
+            </linearGradient>
           </defs>
 
           {/* Background Track */}
@@ -150,43 +145,51 @@ export const OdometerGauge: React.FC<OdometerGaugeProps> = ({
           <path
             d="M 20 120 A 90 90 0 0 1 200 120"
             fill="none"
-            stroke={stats.isOverdue ? 'url(#gaugeOverdueGradient)' : 'url(#rainbowGaugeGradient)'}
+            stroke={
+              stats.isOverdue
+                ? 'url(#gaugeOverdueGradient)'
+                : stats.isDueSoon
+                ? 'url(#gaugeDueSoonGradient)'
+                : 'url(#cyanGaugeGradient)'
+            }
             strokeWidth="14"
             strokeLinecap="round"
             strokeDasharray={arcLength}
             strokeDashoffset={strokeOffset}
             style={{
               transition: 'stroke-dashoffset 0.8s cubic-bezier(0.16, 1, 0.3, 1), stroke 0.3s ease',
-              filter: 'drop-shadow(0 0 10px rgba(0, 229, 255, 0.45)) drop-shadow(0 0 14px rgba(255, 0, 100, 0.25))',
+              filter: stats.isOverdue
+                ? 'drop-shadow(0 0 8px rgba(239, 68, 68, 0.5))'
+                : 'drop-shadow(0 0 8px rgba(6, 182, 212, 0.4))',
             }}
           />
 
-          {/* Rainbow Tick markers */}
-          <circle cx="20" cy="120" r="3" fill="#ff0055" />
-          <circle cx="65" cy="55" r="2.5" fill="#ffd600" />
-          <circle cx="110" cy="30" r="3" fill="#00e676" />
-          <circle cx="155" cy="55" r="2.5" fill="#00e5ff" />
-          <circle cx="200" cy="120" r="3" fill="#7c4dff" />
+          {/* Matching Tick markers */}
+          <circle cx="20" cy="120" r="3" fill="#06b6d4" />
+          <circle cx="65" cy="55" r="2.5" fill="#38bdf8" />
+          <circle cx="110" cy="30" r="3" fill="#67e8f9" />
+          <circle cx="155" cy="55" r="2.5" fill="#38bdf8" />
+          <circle cx="200" cy="120" r="3" fill="#06b6d4" />
         </svg>
 
         {/* Readout overlay inside arc */}
         <div className="absolute top-[52%] left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
-          <span className="font-mono text-3xl sm:text-4xl font-black tracking-tight text-white drop-shadow-[0_2px_12px_rgba(0,229,255,0.4)]">
+          <span className="font-mono text-3xl sm:text-4xl font-black tracking-tight text-white drop-shadow-[0_2px_12px_rgba(6,182,212,0.3)]">
             {odometer.toLocaleString('en-US')}
           </span>
-          <span className="block text-[11px] font-bold rainbow-text uppercase tracking-widest mt-0.5">
+          <span className="block text-[11px] font-bold text-cyan-400 uppercase tracking-widest mt-0.5">
             KM ON THE CLOCK
           </span>
         </div>
 
-        {/* Quick Increment Chips / Rainbow Palette */}
+        {/* Quick Increment Chips */}
         {isAdmin ? (
           <div className="flex items-center gap-1.5 mt-2">
             <span className="text-[11px] text-zinc-400 font-medium mr-1">Quick Add:</span>
             {[
-              { val: 10, color: 'text-rose-300 bg-rose-500/10 border-rose-500/30 hover:bg-rose-500/25' },
-              { val: 25, color: 'text-amber-300 bg-amber-500/10 border-amber-500/30 hover:bg-amber-500/25' },
-              { val: 50, color: 'text-emerald-300 bg-emerald-500/10 border-emerald-500/30 hover:bg-emerald-500/25' },
+              { val: 10, color: 'text-cyan-300 bg-cyan-500/10 border-cyan-500/30 hover:bg-cyan-500/25' },
+              { val: 25, color: 'text-cyan-300 bg-cyan-500/10 border-cyan-500/30 hover:bg-cyan-500/25' },
+              { val: 50, color: 'text-cyan-300 bg-cyan-500/10 border-cyan-500/30 hover:bg-cyan-500/25' },
               { val: 100, color: 'text-cyan-300 bg-cyan-500/10 border-cyan-500/30 hover:bg-cyan-500/25' },
             ].map(({ val, color }) => (
               <button
@@ -209,8 +212,8 @@ export const OdometerGauge: React.FC<OdometerGaugeProps> = ({
 
       {/* Stats Breakdown Bar */}
       <div className="grid grid-cols-3 gap-2 pt-3 border-t border-[#1a2333] mt-2 text-center relative z-10">
-        <div className="p-2 rounded-xl bg-[#101520] border border-cyan-500/20">
-          <span className="block text-[10px] uppercase font-semibold text-cyan-300 tracking-wider">
+        <div className="p-2 rounded-xl bg-[#101520] border border-[#1a2333]">
+          <span className="block text-[10px] uppercase font-semibold text-zinc-400 tracking-wider">
             Last Service
           </span>
           <span className="font-mono text-xs sm:text-sm font-semibold text-zinc-200">
@@ -218,8 +221,8 @@ export const OdometerGauge: React.FC<OdometerGaugeProps> = ({
           </span>
         </div>
 
-        <div className="p-2 rounded-xl bg-[#101520] border border-purple-500/20">
-          <span className="block text-[10px] uppercase font-semibold text-purple-300 tracking-wider">
+        <div className="p-2 rounded-xl bg-[#101520] border border-[#1a2333]">
+          <span className="block text-[10px] uppercase font-semibold text-zinc-400 tracking-wider">
             Next Target
           </span>
           <span className="font-mono text-xs sm:text-sm font-bold text-cyan-300">
@@ -227,8 +230,8 @@ export const OdometerGauge: React.FC<OdometerGaugeProps> = ({
           </span>
         </div>
 
-        <div className="p-2 rounded-xl bg-[#101520] border border-emerald-500/20">
-          <span className="block text-[10px] uppercase font-semibold text-emerald-300 tracking-wider">
+        <div className="p-2 rounded-xl bg-[#101520] border border-[#1a2333]">
+          <span className="block text-[10px] uppercase font-semibold text-zinc-400 tracking-wider">
             Remaining
           </span>
           <span
@@ -245,8 +248,8 @@ export const OdometerGauge: React.FC<OdometerGaugeProps> = ({
         </div>
       </div>
 
-      {/* Ridden This Period Info banner with Rainbow Accent */}
-      <div className="mt-3 p-2.5 rounded-xl bg-gradient-to-r from-[#101520] via-[#131b2c] to-[#101520] border border-cyan-500/25 flex items-center justify-between text-xs relative z-10 shadow-sm">
+      {/* Ridden This Period Info banner */}
+      <div className="mt-3 p-2.5 rounded-xl bg-[#101520] border border-[#1a2333] flex items-center justify-between text-xs relative z-10 shadow-sm">
         <div className="flex items-center gap-2">
           {stats.isOverdue ? (
             <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
@@ -262,7 +265,7 @@ export const OdometerGauge: React.FC<OdometerGaugeProps> = ({
             </span>
           </div>
         </div>
-        <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-gradient-to-r from-rose-500/20 via-cyan-500/20 to-purple-500/20 text-cyan-300 border border-cyan-500/30 font-bold">
+        <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 font-bold">
           {Math.round(stats.progressRatio * 100)}%
         </span>
       </div>

@@ -172,14 +172,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, o
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#07090e] text-[#eef1f4] flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-y-auto select-none font-sans">
-      {/* Dynamic Raindrop / Cyber Water droplet background */}
+    <div className="min-h-screen w-full bg-[#090b0e] text-[#e2e8f0] flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-y-auto select-none font-sans">
+      {/* Carbon / Slate Gray Mesh Background */}
       <div
-        className="absolute inset-0 opacity-20 pointer-events-none"
-        style={{
-          backgroundImage: `radial-gradient(circle at 50% 50%, rgba(30, 41, 59, 0.4) 0%, transparent 80%), radial-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 1px)`,
-          backgroundSize: '100% 100%, 28px 28px',
-        }}
+        className="absolute inset-0 opacity-25 pointer-events-none bg-carbon-mesh"
       />
 
       {/* Atmospheric Ambient Glow & Darkness Gradient */}
@@ -188,8 +184,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, o
           isLampOn ? 'opacity-100' : 'opacity-20'
         }`}
       >
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-gradient-to-b from-cyan-500/15 via-emerald-500/10 to-transparent rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-[280px] h-[350px] bg-gradient-to-b from-cyan-400/25 to-transparent blur-2xl pointer-events-none" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-gradient-to-b from-zinc-700/15 via-slate-800/10 to-transparent rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-[280px] h-[350px] bg-gradient-to-b from-zinc-500/20 to-transparent blur-2xl pointer-events-none" />
       </div>
 
       {/* Main Interactive Stage */}
@@ -215,47 +211,47 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, o
             <div className="relative flex flex-col items-center">
               {/* Smoked Tinted Windscreen */}
               <div
-                className="w-16 h-5 bg-gradient-to-b from-zinc-900 via-black to-zinc-800 rounded-t-lg border-t border-x border-cyan-500/40 shadow-inner -mb-1 relative z-10"
+                className="w-16 h-5 bg-gradient-to-b from-zinc-900 via-black to-zinc-800 rounded-t-lg border-t border-x border-zinc-600 shadow-inner -mb-1 relative z-10"
                 style={{ clipPath: 'polygon(15% 0%, 85% 0%, 100% 100%, 0% 100%)' }}
               >
-                <div className="w-6 h-0.5 bg-cyan-400/60 mx-auto mt-1 rounded-full" />
+                <div className="w-6 h-0.5 bg-zinc-400 mx-auto mt-1 rounded-full" />
               </div>
 
               {/* Main Angular Headlight Housing */}
               <div
                 className={`w-32 sm:w-36 h-16 transition-all duration-300 relative rounded-2xl flex flex-col items-center justify-center p-2 shadow-2xl border ${
                   isLampOn
-                    ? 'bg-gradient-to-b from-[#111620] via-[#0b0e14] to-[#06080c] border-cyan-400/70 shadow-[0_0_40px_rgba(6,182,212,0.5)]'
-                    : 'bg-[#0e121a] border-zinc-700 shadow-black/90'
+                    ? 'bg-gradient-to-b from-[#181c26] via-[#12151e] to-[#0b0e14] border-sky-400/70 shadow-[0_0_35px_rgba(56,189,248,0.35)]'
+                    : 'bg-[#10131a] border-zinc-700 shadow-black/90'
                 }`}
               >
-                {/* Dual Wolf-Eye LED DRL Brows */}
+                {/* Dual Wolf-Eye LED DRL Brows - Blue Light Design */}
                 <div className="w-full flex items-center justify-between px-3.5 -mt-1 mb-1">
                   <div
                     className={`h-1.5 w-7 rounded-full transition-all duration-300 ${
-                      isLampOn ? 'bg-cyan-300 shadow-[0_0_12px_#00f2fe]' : 'bg-zinc-700'
+                      isLampOn ? 'bg-sky-300 shadow-[0_0_12px_#38bdf8]' : 'bg-zinc-700'
                     }`}
                     style={{ transform: 'rotate(14deg)' }}
                   />
                   <div
                     className={`h-1.5 w-7 rounded-full transition-all duration-300 ${
-                      isLampOn ? 'bg-cyan-300 shadow-[0_0_12px_#00f2fe]' : 'bg-zinc-700'
+                      isLampOn ? 'bg-sky-300 shadow-[0_0_12px_#38bdf8]' : 'bg-zinc-700'
                     }`}
                     style={{ transform: 'rotate(-14deg)' }}
                   />
                 </div>
 
-                {/* Central Projector Lens */}
+                {/* Central Bi-LED Projector Lens - Blue Light Design */}
                 <div
                   className={`relative w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 border-2 ${
                     isLampOn
-                      ? 'border-cyan-300 bg-gradient-to-tr from-cyan-400 via-white to-cyan-200 shadow-[0_0_35px_12px_rgba(6,182,212,0.95)]'
+                      ? 'border-sky-300 bg-gradient-to-tr from-sky-400 via-white to-blue-400 shadow-[0_0_32px_10px_rgba(56,189,248,0.85)]'
                       : 'border-zinc-600 bg-zinc-800/90 shadow-inner'
                   }`}
                 >
                   <div
                     className={`w-4.5 h-4.5 rounded-full transition-all duration-300 ${
-                      isLampOn ? 'bg-white shadow-[0_0_18px_#fff] animate-pulse' : 'bg-zinc-900'
+                      isLampOn ? 'bg-white shadow-[0_0_18px_#38bdf8] animate-pulse' : 'bg-zinc-900'
                     }`}
                   />
                 </div>
@@ -268,13 +264,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, o
                 </div>
               </div>
 
-              {/* Pulsar High-Beam Projector Light Cone */}
+              {/* Pulsar High-Beam Projector Blue Light Cone */}
               {isLampOn && (
                 <div
                   className="absolute left-1/2 -translate-x-1/2 top-14 w-[360px] h-[380px] pointer-events-none transition-opacity duration-500 z-10"
                   style={{
                     background:
-                      'radial-gradient(ellipse at 50% 0%, rgba(6, 182, 212, 0.30) 0%, rgba(14, 165, 233, 0.16) 42%, transparent 75%)',
+                      'radial-gradient(ellipse at 50% 0%, rgba(56, 189, 248, 0.30) 0%, rgba(37, 99, 235, 0.14) 45%, transparent 75%)',
                     clipPath: 'polygon(28% 0%, 72% 0%, 100% 100%, 0% 100%)',
                   }}
                 />
@@ -290,7 +286,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, o
               <motion.div
                 animate={{ height: isCordPulled ? 48 : 34 }}
                 transition={{ type: 'spring', stiffness: 450, damping: 15 }}
-                className="w-[2px] bg-gradient-to-b from-zinc-500 via-amber-400 to-red-500 group-hover:bg-cyan-300"
+                className="w-[2px] bg-gradient-to-b from-zinc-500 via-amber-400 to-red-500 group-hover:bg-zinc-300"
               />
 
               <motion.div
@@ -312,7 +308,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, o
                 </span>
               </motion.div>
 
-              <span className="text-[9px] font-mono font-bold tracking-wider text-cyan-300 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap bg-[#0a0d14] px-1.5 py-0.5 rounded border border-cyan-500/40 mt-1 shadow-md">
+              <span className="text-[9px] font-mono font-bold tracking-wider text-zinc-300 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap bg-[#12151f] px-1.5 py-0.5 rounded border border-zinc-600 mt-1 shadow-md">
                 PULL KEY
               </span>
             </div>
@@ -325,8 +321,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, o
         <div
           className={`w-full rounded-3xl pt-6 pb-7 px-5 sm:px-7 transition-all duration-500 relative border shadow-2xl ${
             isLampOn
-              ? 'bg-[#0d1117]/95 border-[#1f2d3d] shadow-[0_20px_50px_rgba(0,0,0,0.8),0_0_40px_rgba(6,182,212,0.15)] backdrop-blur-xl'
-              : 'bg-[#0a0d13]/90 border-zinc-800/60 shadow-2xl backdrop-blur-md'
+              ? 'bg-[#11141c]/95 border-[#242b3b] shadow-[0_20px_50px_rgba(0,0,0,0.8),0_0_30px_rgba(0,0,0,0.4)] backdrop-blur-xl'
+              : 'bg-[#0e1117]/90 border-zinc-800/60 shadow-2xl backdrop-blur-md'
           }`}
         >
           {/* Header Title & Subtitle */}
@@ -336,12 +332,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, o
             </h1>
             <p className="text-xs text-zinc-400 mt-1 flex items-center justify-center gap-1.5">
               <span>{authMode === 'signin' ? 'Sign in to access your digital service record' : 'Register your bike, province, and district'}</span>
-              {isLampOn && <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />}
+              {isLampOn && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />}
             </p>
           </div>
 
           {/* Mode Switch Tabs (Sign In / Sign Up) */}
-          <div className="grid grid-cols-2 p-1 rounded-xl bg-[#141924] border border-[#222c3d] mb-5">
+          <div className="grid grid-cols-2 p-1 rounded-xl bg-[#161a24] border border-[#262e3f] mb-5">
             <button
               type="button"
               onClick={() => {
@@ -351,7 +347,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, o
               }}
               className={`flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 authMode === 'signin'
-                  ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md'
+                  ? 'bg-zinc-700 hover:bg-zinc-600 text-white shadow-md border border-zinc-600'
                   : 'text-zinc-400 hover:text-zinc-200'
               }`}
             >
@@ -367,7 +363,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, o
               }}
               className={`flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 authMode === 'signup'
-                  ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md'
+                  ? 'bg-zinc-700 hover:bg-zinc-600 text-white shadow-md border border-zinc-600'
                   : 'text-zinc-400 hover:text-zinc-200'
               }`}
             >
@@ -419,7 +415,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, o
                     onChange={(e) => setUsername(e.target.value)}
                     placeholder="e.g. sachi, chathura, or your username"
                     autoComplete="username"
-                    className="w-full bg-[#131924] border border-[#233044] focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/50 rounded-xl px-4 py-3 text-sm text-white placeholder:text-zinc-600 transition-all font-mono outline-none shadow-inner"
+                    className="w-full bg-[#161a24] border border-[#283244] focus:border-zinc-400 focus:ring-1 focus:ring-zinc-400/50 rounded-xl px-4 py-3 text-sm text-white placeholder:text-zinc-600 transition-all font-mono outline-none shadow-inner"
                     required
                   />
                   <User className="w-4 h-4 text-zinc-500 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -438,13 +434,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, o
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter password"
                     autoComplete="current-password"
-                    className="w-full bg-[#131924] border border-[#233044] focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/50 rounded-xl px-4 py-3 text-sm text-white placeholder:text-zinc-600 transition-all font-mono tracking-wider outline-none shadow-inner"
+                    className="w-full bg-[#161a24] border border-[#283244] focus:border-zinc-400 focus:ring-1 focus:ring-zinc-400/50 rounded-xl px-4 py-3 text-sm text-white placeholder:text-zinc-600 transition-all font-mono tracking-wider outline-none shadow-inner"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-cyan-300 transition-colors p-1 cursor-pointer"
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-200 transition-colors p-1 cursor-pointer"
                     title={showPassword ? 'Hide password' : 'Show password'}
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -458,17 +454,17 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, o
                 whileTap={{ scale: 0.985 }}
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full mt-2 py-3.5 px-5 rounded-xl font-display font-black text-sm tracking-wider text-white uppercase bg-gradient-to-r from-[#00e5ff] via-[#00a2ff] to-[#0066ff] hover:from-[#33ecff] hover:to-[#1a75ff] shadow-[0_4px_20px_rgba(0,162,255,0.4)] border border-cyan-300/30 transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full mt-2 py-3.5 px-5 rounded-xl font-display font-black text-sm tracking-wider text-white uppercase bg-gradient-to-r from-zinc-700 via-zinc-800 to-zinc-900 hover:from-zinc-600 hover:to-zinc-800 shadow-[0_4px_20px_rgba(0,0,0,0.5)] border border-zinc-600 transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {isSubmitting ? (
                   <>
                     <Sparkles className="w-4 h-4 animate-spin text-white" />
-                    <span>Signing In...</span>
+                    <span>Signing in...</span>
                   </>
                 ) : (
                   <>
-                    <span>Sign In</span>
-                    <ArrowRight className="w-4 h-4 text-white" />
+                    <span>Unlock Service Dashboard</span>
+                    <ArrowRight className="w-4 h-4 text-zinc-300" />
                   </>
                 )}
               </motion.button>
@@ -491,7 +487,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, o
                     value={signUpOwnerName}
                     onChange={(e) => setSignUpOwnerName(e.target.value)}
                     placeholder="e.g. Kasun Sandaruwan"
-                    className="w-full bg-[#131924] border border-[#233044] focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/50 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder:text-zinc-600 transition-all outline-none"
+                    className="w-full bg-[#161a24] border border-[#283244] focus:border-zinc-400 focus:ring-1 focus:ring-zinc-400/50 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder:text-zinc-600 transition-all outline-none"
                     required
                   />
                   <User className="w-3.5 h-3.5 text-zinc-500 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -509,7 +505,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, o
                     value={signUpUsername}
                     onChange={(e) => setSignUpUsername(e.target.value.toLowerCase().replace(/\s+/g, ''))}
                     placeholder="e.g. kasun99"
-                    className="w-full bg-[#131924] border border-[#233044] focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/50 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono placeholder:text-zinc-600 transition-all outline-none"
+                    className="w-full bg-[#161a24] border border-[#283244] focus:border-zinc-400 focus:ring-1 focus:ring-zinc-400/50 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono placeholder:text-zinc-600 transition-all outline-none"
                     required
                   />
                 </div>
@@ -524,13 +520,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, o
                       value={signUpPassword}
                       onChange={(e) => setSignUpPassword(e.target.value)}
                       placeholder="Password (4+ chars)"
-                      className="w-full bg-[#131924] border border-[#233044] focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/50 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono placeholder:text-zinc-600 transition-all outline-none"
+                      className="w-full bg-[#161a24] border border-[#283244] focus:border-zinc-400 focus:ring-1 focus:ring-zinc-400/50 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono placeholder:text-zinc-600 transition-all outline-none"
                       required
                     />
                     <button
                       type="button"
                       onClick={() => setShowSignUpPassword(!showSignUpPassword)}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-cyan-300 p-1 cursor-pointer"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-200 p-1 cursor-pointer"
                     >
                       {showSignUpPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                     </button>
@@ -549,7 +545,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, o
                     value={signUpBikeNumber}
                     onChange={(e) => setSignUpBikeNumber(e.target.value.toUpperCase())}
                     placeholder="e.g. WP BGH-4592 or BKT-1374"
-                    className="w-full bg-[#131924] border border-[#233044] focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/50 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono uppercase tracking-wider placeholder:text-zinc-600 transition-all outline-none"
+                    className="w-full bg-[#161a24] border border-[#283244] focus:border-zinc-400 focus:ring-1 focus:ring-zinc-400/50 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono uppercase tracking-wider placeholder:text-zinc-600 transition-all outline-none"
                     required
                   />
                   <Bike className="w-3.5 h-3.5 text-zinc-500 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -566,10 +562,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, o
                   <select
                     value={signUpProvince}
                     onChange={(e) => handleProvinceChange(e.target.value)}
-                    className="w-full bg-[#131924] border border-[#233044] focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/50 rounded-xl px-3 py-2 text-xs text-white outline-none cursor-pointer"
+                    className="w-full bg-[#161a24] border border-[#283244] focus:border-zinc-400 focus:ring-1 focus:ring-zinc-400/50 rounded-xl px-3 py-2 text-xs text-white outline-none cursor-pointer"
                   >
                     {ALL_PROVINCES.map((prov) => (
-                      <option key={prov} value={prov} className="bg-[#111620] text-white">
+                      <option key={prov} value={prov} className="bg-[#11141c] text-white">
                         {prov}
                       </option>
                     ))}
@@ -584,10 +580,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, o
                   <select
                     value={signUpDistrict}
                     onChange={(e) => setSignUpDistrict(e.target.value)}
-                    className="w-full bg-[#131924] border border-[#233044] focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/50 rounded-xl px-3 py-2 text-xs text-white outline-none cursor-pointer"
+                    className="w-full bg-[#161a24] border border-[#283244] focus:border-zinc-400 focus:ring-1 focus:ring-zinc-400/50 rounded-xl px-3 py-2 text-xs text-white outline-none cursor-pointer"
                   >
                     {currentDistricts.map((dist) => (
-                      <option key={dist} value={dist} className="bg-[#111620] text-white">
+                      <option key={dist} value={dist} className="bg-[#11141c] text-white">
                         {dist}
                       </option>
                     ))}
@@ -607,7 +603,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, o
                 whileTap={{ scale: 0.985 }}
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full mt-2 py-3.5 px-5 rounded-xl font-display font-black text-sm tracking-wider text-white uppercase bg-gradient-to-r from-[#00e5ff] via-[#00a2ff] to-[#0066ff] hover:from-[#33ecff] hover:to-[#1a75ff] shadow-[0_4px_20px_rgba(0,162,255,0.4)] border border-cyan-300/30 transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full mt-2 py-3.5 px-5 rounded-xl font-display font-black text-sm tracking-wider text-white uppercase bg-gradient-to-r from-zinc-700 via-zinc-800 to-zinc-900 hover:from-zinc-600 hover:to-zinc-800 shadow-[0_4px_20px_rgba(0,0,0,0.5)] border border-zinc-600 transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {isSubmitting ? (
                   <>

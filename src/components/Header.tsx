@@ -143,17 +143,17 @@ export const Header: React.FC<HeaderProps> = ({
   ];
 
   return (
-    <header className="border-b border-[#1a2333] bg-[#07090e]/95 backdrop-blur-xl sticky top-0 z-40 px-3 sm:px-6 py-2.5 shadow-xl shadow-black/60 relative overflow-hidden">
-      {/* Sleek top rainbow ambient line */}
-      <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-rose-500 via-amber-400 via-emerald-400 via-cyan-400 via-blue-500 to-purple-500 animate-rainbow" />
+    <header className="border-b border-[#1b202c] bg-[#0c0e14]/95 backdrop-blur-xl sticky top-0 z-40 px-3 sm:px-6 py-2.5 shadow-xl shadow-black/60 relative overflow-hidden">
+      {/* Sleek top gray accent line */}
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-zinc-600 via-zinc-400 to-zinc-600 opacity-80" />
 
       <div className="max-w-6xl mx-auto space-y-2.5">
         {/* Top Row: Brand, Reg No, Cloud Status & Quick Tool Actions */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           {/* Brand & Plate */}
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#131924] via-[#0d1117] to-[#07090e] p-[1.5px] bg-gradient-to-tr from-rose-500 via-amber-400 via-cyan-400 to-purple-500 animate-rainbow flex items-center justify-center shadow-lg shadow-cyan-500/15 overflow-hidden shrink-0 relative group">
-              <div className="w-full h-full bg-[#090c12] rounded-[10px] p-0.5 overflow-hidden">
+            <div className="w-11 h-11 rounded-xl bg-[#141824] border border-[#262e40] p-[2px] flex items-center justify-center shadow-lg shadow-black/40 overflow-hidden shrink-0 relative group">
+              <div className="w-full h-full bg-[#0a0c10] rounded-[9px] p-0.5 overflow-hidden">
                 <img
                   src={state.vehicle.photoUrl || '/app_icon.svg'}
                   alt="Bajaj Pulsar N160"
@@ -165,9 +165,9 @@ export const Header: React.FC<HeaderProps> = ({
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="font-display font-black text-lg sm:text-xl tracking-wider text-white">
-                  PULSAR <span className="rainbow-text font-black">N160</span>
+                  PULSAR <span className="text-zinc-400 font-black">N160</span>
                 </span>
-                <span className="text-[11px] uppercase tracking-widest px-2 py-0.5 rounded-md bg-gradient-to-r from-cyan-500/15 to-purple-500/15 text-cyan-200 border border-cyan-400/40 font-mono font-bold shadow-sm">
+                <span className="text-[11px] uppercase tracking-widest px-2 py-0.5 rounded-md bg-[#161a26] text-zinc-200 border border-[#2a3247] font-mono font-bold shadow-sm">
                   {state.vehicle.regNo}
                 </span>
 
@@ -178,25 +178,25 @@ export const Header: React.FC<HeaderProps> = ({
                       <Crown className="w-3.5 h-3.5 text-zinc-950 fill-zinc-950" />
                       PREMIUM
                     </span>
-                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-gradient-to-r from-rose-500/20 via-cyan-500/20 to-purple-500/20 text-cyan-200 border border-cyan-400/40 shadow-sm" title="Web Page Creator & Full Access Master Admin">
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#161b26] text-zinc-200 border border-[#2b3348] shadow-sm" title="Web Page Creator & Full Access Master Admin">
                       <Sparkles className="w-3 h-3 text-amber-300" />
                       Creator & Admin
                     </span>
                   </>
                 ) : isAdmin ? (
                   <>
-                    <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 shadow-sm uppercase tracking-wider">
-                      <User className="w-3.5 h-3.5 text-cyan-400" />
+                    <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-zinc-800/80 text-zinc-200 border border-zinc-700/60 shadow-sm uppercase tracking-wider">
+                      <User className="w-3.5 h-3.5 text-zinc-400" />
                       CLIENT
                     </span>
-                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 shadow-sm">
-                      <Flame className="w-3 h-3 text-cyan-400" />
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#161b26] text-zinc-300 border border-[#2b3348] shadow-sm">
+                      <Flame className="w-3 h-3 text-zinc-400" />
                       Admin
                     </span>
                   </>
                 ) : (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-slate-500/20 text-slate-300 border border-slate-400/40 shadow-sm uppercase tracking-wider">
-                    <User className="w-3.5 h-3.5 text-slate-400" />
+                  <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-zinc-800/80 text-zinc-300 border border-zinc-700/60 shadow-sm uppercase tracking-wider">
+                    <User className="w-3.5 h-3.5 text-zinc-400" />
                     CLIENT
                   </span>
                 )}
@@ -209,8 +209,8 @@ export const Header: React.FC<HeaderProps> = ({
                   </span>
                 )}
                 {syncStatus === 'syncing' && (
-                  <span className="hidden md:inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/25 animate-pulse">
-                    <Loader2 className="w-2.5 h-2.5 text-cyan-400 animate-spin" />
+                  <span className="hidden md:inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded-full bg-zinc-800/60 text-zinc-300 border border-zinc-700/50 animate-pulse">
+                    <Loader2 className="w-2.5 h-2.5 text-zinc-400 animate-spin" />
                     Syncing
                   </span>
                 )}
@@ -226,13 +226,13 @@ export const Header: React.FC<HeaderProps> = ({
                   <img
                     src={state.vehicle.ownerPhotoUrl}
                     alt={state.vehicle.owner}
-                    className="w-4 h-4 rounded-full object-cover border border-cyan-500/40 shrink-0"
+                    className="w-4 h-4 rounded-full object-cover border border-zinc-600 shrink-0"
                   />
                 )}
                 <p className="text-[11px] text-zinc-400 font-medium">
                   <span className="text-zinc-200 font-semibold">{state.vehicle.owner}</span>
                   {isSachi && (
-                    <span className="ml-1 text-[10px] text-cyan-400 font-mono font-semibold hidden sm:inline">
+                    <span className="ml-1 text-[10px] text-zinc-400 font-mono font-semibold hidden sm:inline">
                       (Web Page Creator · Full Access Admin)
                     </span>
                   )}
@@ -260,10 +260,10 @@ export const Header: React.FC<HeaderProps> = ({
               <button
                 type="button"
                 onClick={onOpenInstall}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-cyan-300 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 transition-all cursor-pointer shadow-sm active:scale-95"
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-zinc-200 bg-[#141824] hover:bg-[#1a2030] border border-[#252e42] transition-all cursor-pointer shadow-sm active:scale-95"
                 title="Install Chrome App Shortcut to Home Screen"
               >
-                <Download className="w-3.5 h-3.5" />
+                <Download className="w-3.5 h-3.5 text-zinc-400" />
                 <span className="hidden sm:inline">Install App</span>
               </button>
             )}
@@ -271,20 +271,20 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               type="button"
               onClick={onOpenSchedule}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-medium text-zinc-300 bg-[#0d1117] hover:bg-[#131924] hover:text-white border border-[#1a2333] hover:border-cyan-500/30 transition-all cursor-pointer shadow-sm active:scale-95"
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-medium text-zinc-300 bg-[#11141d] hover:bg-[#181c28] hover:text-white border border-[#202636] hover:border-zinc-500/40 transition-all cursor-pointer shadow-sm active:scale-95"
               title="View Factory Schedule Guide"
             >
-              <Wrench className="w-3.5 h-3.5 text-cyan-400" />
+              <Wrench className="w-3.5 h-3.5 text-zinc-400" />
               <span className="hidden sm:inline">Guide</span>
             </button>
 
             <button
               type="button"
               onClick={onOpenPrint}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-medium text-zinc-300 bg-[#0d1117] hover:bg-[#131924] hover:text-white border border-[#1a2333] hover:border-cyan-500/30 transition-all cursor-pointer shadow-sm active:scale-95"
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-medium text-zinc-300 bg-[#11141d] hover:bg-[#181c28] hover:text-white border border-[#202636] hover:border-zinc-500/40 transition-all cursor-pointer shadow-sm active:scale-95"
               title="Print Official Service Booklet"
             >
-              <Printer className="w-3.5 h-3.5 text-cyan-400" />
+              <Printer className="w-3.5 h-3.5 text-zinc-400" />
               <span className="hidden sm:inline">Print</span>
             </button>
 
@@ -303,7 +303,7 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               type="button"
               onClick={onExportData}
-              className="p-1.5 rounded-xl text-zinc-400 hover:text-zinc-200 bg-[#0d1117] hover:bg-[#131924] border border-[#1a2333] hover:border-cyan-500/30 transition-all cursor-pointer shadow-sm active:scale-95"
+              className="p-1.5 rounded-xl text-zinc-400 hover:text-zinc-200 bg-[#11141d] hover:bg-[#181c28] border border-[#202636] hover:border-zinc-500/40 transition-all cursor-pointer shadow-sm active:scale-95"
               title="Download JSON Backup"
             >
               <Download className="w-3.5 h-3.5" />
@@ -321,7 +321,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="p-1.5 rounded-xl text-zinc-400 hover:text-zinc-200 bg-[#0d1117] hover:bg-[#131924] border border-[#1a2333] hover:border-cyan-500/30 transition-all cursor-pointer shadow-sm active:scale-95"
+                  className="p-1.5 rounded-xl text-zinc-400 hover:text-zinc-200 bg-[#11141d] hover:bg-[#181c28] border border-[#202636] hover:border-zinc-500/40 transition-all cursor-pointer shadow-sm active:scale-95"
                   title="Import JSON Record"
                 >
                   <Upload className="w-3.5 h-3.5" />
@@ -330,7 +330,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <button
                   type="button"
                   onClick={onResetToDefaults}
-                  className="p-1.5 rounded-xl text-zinc-400 hover:text-cyan-300 bg-[#0d1117] hover:bg-[#131924] border border-[#1a2333] hover:border-cyan-500/30 transition-all cursor-pointer shadow-sm active:scale-95"
+                  className="p-1.5 rounded-xl text-zinc-400 hover:text-zinc-200 bg-[#11141d] hover:bg-[#181c28] border border-[#202636] hover:border-zinc-500/40 transition-all cursor-pointer shadow-sm active:scale-95"
                   title="Reset to Factory Defaults"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
@@ -354,13 +354,13 @@ export const Header: React.FC<HeaderProps> = ({
               <button
                 type="button"
                 onClick={onOpenProfile}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-[#0d1117] hover:bg-[#131924] border border-[#1a2333] hover:border-cyan-400/50 text-xs transition-all cursor-pointer shadow-sm active:scale-95 group"
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-[#11141d] hover:bg-[#181c28] border border-[#202636] hover:border-zinc-500/40 text-xs transition-all cursor-pointer shadow-sm active:scale-95 group"
                 title={isSachi ? "Web Page Creator & Full Access Master Admin Profile" : "Click to edit user profile, bike number, and location"}
               >
                 {isSachi ? (
                   <Crown className="w-3.5 h-3.5 text-amber-400 fill-amber-400/25 group-hover:scale-110 transition-transform" />
                 ) : (
-                  <User className="w-3.5 h-3.5 text-cyan-400 group-hover:scale-110 transition-transform" />
+                  <User className="w-3.5 h-3.5 text-zinc-400 group-hover:scale-110 transition-transform" />
                 )}
                 <span className="font-semibold text-zinc-200">{authSession.username}</span>
                 {isSachi ? (
@@ -368,15 +368,15 @@ export const Header: React.FC<HeaderProps> = ({
                     PREMIUM
                   </span>
                 ) : (
-                  <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 uppercase tracking-wider">
+                  <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-zinc-800 text-zinc-300 border border-zinc-700 uppercase tracking-wider">
                     CLIENT
                   </span>
                 )}
-                <span className="text-[10px] text-cyan-400 font-mono hidden md:inline">✎ Edit</span>
+                <span className="text-[10px] text-zinc-400 font-mono hidden md:inline">✎ Edit</span>
               </button>
             ) : (
-              <div className="hidden sm:flex items-center gap-1 px-2.5 py-1 rounded-xl bg-[#0d1117] border border-[#1a2333] text-xs">
-                <User className="w-3 h-3 text-cyan-400" />
+              <div className="hidden sm:flex items-center gap-1 px-2.5 py-1 rounded-xl bg-[#11141d] border border-[#202636] text-xs">
+                <User className="w-3 h-3 text-zinc-400" />
                 <span className="font-semibold text-zinc-200">{authSession.username}</span>
               </div>
             )}

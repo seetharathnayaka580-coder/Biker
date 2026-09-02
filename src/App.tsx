@@ -370,16 +370,12 @@ export default function App() {
   };
 
   return (
-    <div className={`min-h-screen bg-[#07090e] text-[#eef1f4] flex flex-col selection:bg-cyan-500/30 selection:text-cyan-200 relative overflow-x-hidden ${!isAdmin ? 'select-none' : ''}`}>
-      {/* Dynamic Ambient Glow & Mesh from Login Pattern */}
+    <div className={`min-h-screen bg-[#090b0e] text-[#e2e8f0] flex flex-col selection:bg-zinc-700/60 selection:text-white relative overflow-x-hidden ${!isAdmin ? 'select-none' : ''}`}>
+      {/* Dynamic Ambient Carbon Mesh & Gray Glow */}
       <div
-        className="fixed inset-0 opacity-20 pointer-events-none z-0"
-        style={{
-          backgroundImage: `radial-gradient(circle at 50% 50%, rgba(30, 41, 59, 0.4) 0%, transparent 80%), radial-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 1px)`,
-          backgroundSize: '100% 100%, 28px 28px',
-        }}
+        className="fixed inset-0 opacity-25 pointer-events-none z-0 bg-carbon-mesh"
       />
-      <div className="fixed -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-gradient-to-b from-cyan-500/10 via-blue-600/5 to-transparent rounded-full blur-3xl pointer-events-none z-0" />
+      <div className="fixed -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-gradient-to-b from-zinc-700/10 via-slate-800/5 to-transparent rounded-full blur-3xl pointer-events-none z-0" />
 
       {/* Top Bar Navigation with 5 Category Tabs */}
       <div className="relative z-10">
