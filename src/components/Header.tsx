@@ -30,7 +30,7 @@ import {
 } from 'lucide-react';
 import { AppState, AuthSession } from '../types';
 
-export type ActiveTab = 'home' | 'vehicle' | 'service' | 'notes' | 'dealers';
+export type ActiveTab = 'home' | 'vehicle' | 'service' | 'notes' | 'dealers' | 'owner_control';
 
 interface HeaderProps {
   state: AppState;
@@ -140,6 +140,23 @@ export const Header: React.FC<HeaderProps> = ({
       inactiveClass: 'bg-[#1a0711] text-rose-200/90 hover:text-rose-100 border-rose-500/30 hover:border-rose-400 hover:bg-rose-950/50',
       iconColor: 'text-rose-400',
     },
+    ...(isSachi
+      ? [
+          {
+            id: 'owner_control' as ActiveTab,
+            label: 'Owner Sachi Control',
+            sub: 'Managers, Clients & IPs',
+            icon: Crown,
+            badge: 'OWNER',
+            badgeColor: 'bg-amber-400 text-zinc-950',
+            activeClass:
+              'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-zinc-950 font-black shadow-[0_0_25px_rgba(245,158,11,0.6)] border-amber-300 scale-[1.02]',
+            inactiveClass:
+              'bg-[#19140a] text-amber-300 hover:text-amber-100 border-amber-500/40 hover:border-amber-400 hover:bg-amber-950/60 ring-1 ring-amber-500/20',
+            iconColor: 'text-amber-400',
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -203,21 +220,29 @@ export const Header: React.FC<HeaderProps> = ({
 
                 {/* Sync Status */}
                 {syncStatus === 'synced' && (
-                  <span className="hidden md:inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/25" title="Realtime Cloud Database Sync Active">
-                    <Cloud className="w-2.5 h-2.5 text-emerald-400" />
-                    Synced
+                  <span className="hidden md:inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/25" title="Realtime Cloud Database Sync Active (Firestore)">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                    Live Synced
                   </span>
                 )}
                 {syncStatus === 'syncing' && (
                   <span className="hidden md:inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded-full bg-zinc-800/60 text-zinc-300 border border-zinc-700/50 animate-pulse">
                     <Loader2 className="w-2.5 h-2.5 text-zinc-400 animate-spin" />
-                    Syncing
+                    Syncing...
                   </span>
                 )}
                 {syncStatus === 'offline' && (
                   <span className="hidden md:inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded-full bg-zinc-800/80 text-zinc-400 border border-zinc-700/40" title="Offline Cache Active - Changes saved locally">
                     <CloudOff className="w-2.5 h-2.5 text-zinc-400" />
                     Offline Mode
+                  </span>
+                )}
+
+                {/* Logged in User IP Badge */}
+                {authSession.loginIp && (
+                  <span className="hidden lg:inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-300 border border-sky-500/25" title={`Your active connection IP: ${authSession.loginIp}`}>
+                    <span className="w-1.5 h-1.5 rounded-full bg-sky-400" />
+                    IP: {authSession.loginIp}
                   </span>
                 )}
               </div>

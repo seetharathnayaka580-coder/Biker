@@ -3,6 +3,44 @@
   "title": "Bike Service Log Book Firestore Blueprint",
   "description": "Firestore database blueprint schema for Pulsar N160 bike service logs and maintenance tracking",
   "entities": {
+    "users": {
+      "title": "User Account",
+      "description": "User credentials, roles (admin, manager, client), bike assignment, and last login IP",
+      "type": "object",
+      "properties": {
+        "username": { "type": "string", "description": "Unique username" },
+        "password": { "type": "string", "description": "User login password" },
+        "ownerName": { "type": "string", "description": "Full name of the user or client" },
+        "bikeNumber": { "type": "string", "description": "Vehicle registration plate number" },
+        "district": { "type": "string", "description": "Sri Lanka district" },
+        "province": { "type": "string", "description": "Sri Lanka province" },
+        "role": { "type": "string", "enum": ["admin", "manager", "client"], "description": "Access level role" },
+        "bikeId": { "type": "string", "description": "Associated bike document ID" },
+        "lastLoginIp": { "type": "string", "description": "Latest captured login IP address" },
+        "lastLoginAt": { "type": "string", "description": "Timestamp of most recent login" },
+        "lastLoginLocation": { "type": "string", "description": "City/Country of latest login" },
+        "status": { "type": "string", "enum": ["active", "suspended"], "description": "Account status" },
+        "createdAt": { "type": "string", "description": "Account creation timestamp" }
+      },
+      "required": ["username", "role", "bikeNumber"]
+    },
+    "login_logs": {
+      "title": "Login Audit Log",
+      "description": "Historical audit of user login attempts including IP address, location, device, and status",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique log identifier" },
+        "username": { "type": "string", "description": "Username attempting login" },
+        "role": { "type": "string", "description": "User role at login time" },
+        "ip": { "type": "string", "description": "Client public IP address" },
+        "location": { "type": "string", "description": "Approximate geographic location" },
+        "device": { "type": "string", "description": "Client device and browser parsed information" },
+        "status": { "type": "string", "enum": ["success", "failed"], "description": "Authentication outcome" },
+        "timestamp": { "type": "string", "description": "ISO timestamp of login attempt" },
+        "bikeNumber": { "type": "string", "description": "Bike registration plate" }
+      },
+      "required": ["username", "ip", "status", "timestamp"]
+    },
     "bikes": {
       "title": "Bike Document",
       "description": "Vehicle details, odometer, and target intervals for a registered motorcycle",

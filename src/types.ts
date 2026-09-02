@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'client';
+export type UserRole = 'admin' | 'manager' | 'client';
 
 export interface AuthSession {
   role: UserRole;
@@ -10,6 +10,7 @@ export interface AuthSession {
   district?: string;
   province?: string;
   bikeNumber?: string;
+  loginIp?: string;
 }
 
 export interface UserAccount {
@@ -23,8 +24,30 @@ export interface UserAccount {
   bikeId: string;
   createdAt: string;
   updatedAt?: string;
+  lastLoginIp?: string;
+  lastLoginAt?: string;
+  lastLoginLocation?: string;
+  lastLoginDevice?: string;
   email?: string;
+  phone?: string;
+  status?: 'active' | 'suspended';
+  createdBy?: string;
   photoUrl?: string;
+}
+
+export interface LoginLog {
+  id: string;
+  username: string;
+  role: UserRole;
+  ip: string;
+  location?: string;
+  device?: string;
+  userAgent?: string;
+  status: 'success' | 'failed';
+  timestamp: string;
+  bikeId?: string;
+  bikeNumber?: string;
+  ownerName?: string;
 }
 
 export interface VehicleDetails {

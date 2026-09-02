@@ -5,6 +5,7 @@ import { VehicleRegistrationTab } from './components/VehicleRegistrationTab';
 import { ServiceTab } from './components/ServiceTab';
 import { MaintenanceNotesTab } from './components/MaintenanceNotesTab';
 import { GoogleMapsServiceLocator } from './components/GoogleMapsServiceLocator';
+import { OwnerManagerControlTab } from './components/OwnerManagerControlTab';
 import { PrintBookletModal } from './components/PrintBookletModal';
 import { ScheduleGuideModal } from './components/ScheduleGuideModal';
 import { LoginPage } from './components/LoginPage';
@@ -453,6 +454,14 @@ export default function App() {
             currentOdometer={state.odometer}
             nextServiceKm={currentTarget}
             isAdmin={isAdmin}
+          />
+        )}
+
+        {/* TAB 6: EXCLUSIVE OWNER SACHI CONTROL (Managers, Clients, Passwords & Live IPs) */}
+        {activeTab === 'owner_control' && authSession && (
+          <OwnerManagerControlTab
+            authSession={authSession}
+            vehicle={state.vehicle}
           />
         )}
 

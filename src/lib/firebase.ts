@@ -25,8 +25,9 @@ import {
   User,
 } from 'firebase/auth';
 import firebaseConfigJson from '../../firebase-applet-config.json';
-import { AppState, AuthSession, MaintenanceNote, ServiceRecord, UserAccount, VehicleDetails } from '../types';
+import { AppState, AuthSession, LoginLog, MaintenanceNote, ServiceRecord, UserAccount, UserRole, VehicleDetails } from '../types';
 import { SEED_STATE, getSeedStateForBike } from '../data/seed';
+import { fetchClientNetworkInfo } from '../utils/ipTracker';
 
 // Suppress Firestore internal connection retry warnings
 setLogLevel('silent');
@@ -587,6 +588,27 @@ export async function registerAdminUser(data: {
   // 3. Save to localStorage
   saveLocalAccount(userAccount);
 
+  // Capture and log registration login IP
+  try {
+    const netInfo = await fetchClientNetworkInfo();
+    const loc = [netInfo.city, netInfo.region, netInfo.country].filter(Boolean).join(', ') || 'Sri Lanka';
+    await recordLoginLog({
+      username: normUser,
+      role: 'admin',
+      ip: netInfo.ip,
+      location: loc,
+      device: netInfo.device,
+      userAgent: netInfo.userAgent,
+      status: 'success',
+      timestamp: new Date().toISOString(),
+      bikeId,
+      bikeNumber: userAccount.bikeNumber,
+      ownerName: userAccount.ownerName,
+    });
+  } catch (e) {
+    console.warn('Register login log notice:', e);
+  }
+
   const session: AuthSession = {
     role: 'admin',
     username: userAccount.ownerName || userAccount.username,
@@ -600,12 +622,391 @@ export async function registerAdminUser(data: {
   return { session, userAccount };
 }
 
+// ==========================================
+// LOGIN AUDIT LOGS & IP TRACKING
+// ==========================================
+
+export async function recordLoginLog(logData: Omit<LoginLog, 'id'>): Promise<string> {
+  const logId = `log_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+  const logDoc: LoginLog = {
+    id: logId,
+    ...logData,
+  };
+
+  try {
+    const logRef = doc(db, 'login_logs', logId);
+    await setDoc(logRef, sanitizeForFirestore(logDoc));
+
+    // Also update last login info on the user's account in Firestore if exists
+    if (logData.status === 'success' && logData.username) {
+      const userDocRef = doc(db, 'users', logData.username.toLowerCase());
+      await setDoc(
+        userDocRef,
+        sanitizeForFirestore({
+          lastLoginIp: logData.ip,
+          lastLoginAt: logData.timestamp,
+          lastLoginLocation: logData.location,
+          lastLoginDevice: logData.device,
+          updatedAt: new Date().toISOString(),
+        }),
+        { merge: true }
+      );
+    }
+  } catch (err) {
+    console.warn('Firestore login log record notice (cached locally):', err);
+  }
+
+  // Store in local storage fallback
+  try {
+    const logsRaw = localStorage.getItem('bajaj_login_logs_cache');
+    const existing: LoginLog[] = logsRaw ? JSON.parse(logsRaw) : [];
+    const updated = [logDoc, ...existing].slice(0, 100);
+    localStorage.setItem('bajaj_login_logs_cache', JSON.stringify(updated));
+  } catch (e) {
+    console.warn('Could not cache login log locally:', e);
+  }
+
+  return logId;
+}
+
+export function subscribeToLoginLogs(
+  onData: (logs: LoginLog[]) => void,
+  onError?: (err: Error) => void
+): () => void {
+  const logsColRef = collection(db, 'login_logs');
+
+  const unsub = onSnapshot(
+    logsColRef,
+    (snapshot) => {
+      const list: LoginLog[] = [];
+      snapshot.forEach((docSnap) => {
+        const item = docSnap.data();
+        list.push({
+          id: docSnap.id,
+          username: item.username || 'unknown',
+          role: item.role || 'client',
+          ip: item.ip || 'Unknown IP',
+          location: item.location,
+          device: item.device,
+          userAgent: item.userAgent,
+          status: item.status || 'success',
+          timestamp: item.timestamp || new Date().toISOString(),
+          bikeId: item.bikeId,
+          bikeNumber: item.bikeNumber,
+          ownerName: item.ownerName,
+        });
+      });
+
+      // Sort newest first
+      const sorted = list.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+      onData(sorted);
+    },
+    (err) => {
+      console.warn('Error subscribing to login_logs collection:', err);
+      // Fallback to local storage cache
+      try {
+        const raw = localStorage.getItem('bajaj_login_logs_cache');
+        if (raw) onData(JSON.parse(raw));
+      } catch {}
+      if (onError) onError(err);
+    }
+  );
+
+  return unsub;
+}
+
+export async function clearAllLoginLogsFromCloud(): Promise<void> {
+  try {
+    const logsColRef = collection(db, 'login_logs');
+    const snap = await getDocs(logsColRef);
+    const batch = writeBatch(db);
+    snap.forEach((docSnap) => {
+      batch.delete(docSnap.ref);
+    });
+    await batch.commit();
+    localStorage.removeItem('bajaj_login_logs_cache');
+  } catch (err) {
+    console.warn('Clear login logs notice:', err);
+  }
+}
+
+// ==========================================
+// ALL USERS REALTIME SUBSCRIPTION & MGMT
+// ==========================================
+
+export function subscribeToUsers(
+  onData: (users: UserAccount[]) => void,
+  onError?: (err: Error) => void
+): () => void {
+  const usersColRef = collection(db, 'users');
+
+  const unsub = onSnapshot(
+    usersColRef,
+    (snapshot) => {
+      const list: UserAccount[] = [];
+      snapshot.forEach((docSnap) => {
+        const item = docSnap.data() as UserAccount;
+        list.push({
+          ...item,
+          username: docSnap.id,
+        });
+      });
+
+      // Also ensure standard default accounts (Sachi & Chathura) are present in the list if not stored in firestore
+      const hasSachi = list.some((u) => u.username.toLowerCase() === 'sachi');
+      if (!hasSachi) {
+        list.unshift({
+          username: 'sachi',
+          password: '•••••• (988800)',
+          ownerName: 'Pathum Sachintha',
+          bikeNumber: 'BKT-1374',
+          district: 'Kurunegala',
+          province: 'North Western Province',
+          role: 'admin',
+          bikeId: 'BKT-1374',
+          createdAt: '2024-01-01T00:00:00.000Z',
+          status: 'active',
+        });
+      }
+
+      const hasChathura = list.some((u) => u.username.toLowerCase() === 'chathura');
+      if (!hasChathura) {
+        list.push({
+          username: 'chathura',
+          password: 'password-200135',
+          ownerName: 'Chathura (Admin)',
+          bikeNumber: 'WP BKT-2001',
+          district: 'Western Province',
+          province: 'Western Province',
+          role: 'admin',
+          bikeId: 'chathura_bike',
+          createdAt: '2024-02-01T00:00:00.000Z',
+          status: 'active',
+        });
+      }
+
+      onData(list);
+    },
+    (err) => {
+      console.warn('Error subscribing to users collection:', err);
+      // Fallback to local accounts
+      const local = Object.values(getLocalAccounts());
+      onData(local);
+      if (onError) onError(err);
+    }
+  );
+
+  return unsub;
+}
+
+// Create new Manager or Client account by Owner Sachi
+export async function createUserByOwnerOrManager(data: {
+  username: string;
+  password: string;
+  ownerName: string;
+  bikeNumber: string;
+  district: string;
+  province: string;
+  role: UserRole;
+  email?: string;
+  phone?: string;
+  createdBy?: string;
+}): Promise<{ userAccount: UserAccount }> {
+  const normUser = data.username.trim().toLowerCase();
+  if (!normUser) throw new Error('Username is required.');
+  if (normUser === 'sachi') {
+    throw new Error('Username "sachi" is reserved for the primary owner.');
+  }
+
+  // Generate clean bike ID
+  const cleanPlate = data.bikeNumber.trim().toUpperCase().replace(/[^A-Z0-9]/g, '_');
+  const bikeId = `bike_${normUser}_${cleanPlate || 'REG'}`;
+
+  const userAccount: UserAccount = {
+    username: normUser,
+    password: data.password.trim(),
+    ownerName: data.ownerName.trim(),
+    bikeNumber: data.bikeNumber.trim().toUpperCase(),
+    district: data.district.trim(),
+    province: data.province.trim(),
+    role: data.role,
+    bikeId: bikeId,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    email: data.email?.trim(),
+    phone: data.phone?.trim(),
+    status: 'active',
+    createdBy: data.createdBy || 'sachi',
+  };
+
+  // 1. Save user in Firestore
+  const userDocRef = doc(db, 'users', normUser);
+  await setDoc(userDocRef, sanitizeForFirestore(userAccount));
+
+  // 2. Initialize corresponding bike document in Firestore
+  try {
+    const bikeDocRef = doc(db, 'bikes', bikeId);
+    const snap = await getDoc(bikeDocRef);
+    if (!snap.exists()) {
+      const bikeVehicle: VehicleDetails = {
+        owner: userAccount.ownerName,
+        regNo: userAccount.bikeNumber,
+        district: userAccount.district,
+        province: userAccount.province,
+        model: 'Bajaj Pulsar N160 Dual Channel ABS',
+        colour: 'Brooklyn Black',
+        chassisNo: `MD2B54DX-${normUser.toUpperCase()}-01`,
+        engineNo: `PDXCSH-${normUser.toUpperCase()}-01`,
+        bookNo: `POR0022026-${normUser.toUpperCase()}`,
+        absSystem: 'Dual-Channel ABS',
+        oilSpec: '20W50 (1150 ml)',
+        fuelType: 'Octane 95 Euro-4',
+        tyrePressures: 'F: 25 PSI / R: 28-32',
+        authority: 'Dept. of Motor Traffic (Sri Lanka)',
+      };
+
+      await setDoc(
+        bikeDocRef,
+        sanitizeForFirestore({
+          ...bikeVehicle,
+          odometer: 0,
+          targets: [2500],
+          serviceInterval: 2500,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        })
+      );
+    }
+  } catch (err) {
+    console.warn('Firestore bike document init notice:', err);
+  }
+
+  // 3. Save to localStorage
+  saveLocalAccount(userAccount);
+
+  return { userAccount };
+}
+
+// Delete user account
+export async function deleteUserAccountFromCloud(username: string): Promise<void> {
+  const normUser = username.trim().toLowerCase();
+  if (normUser === 'sachi') {
+    throw new Error('Cannot delete the primary owner account.');
+  }
+
+  try {
+    const userDocRef = doc(db, 'users', normUser);
+    await deleteDoc(userDocRef);
+  } catch (err) {
+    console.warn('Firestore delete user notice:', err);
+  }
+
+  // Remove from local cache
+  const current = getLocalAccounts();
+  delete current[normUser];
+  localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(current));
+}
+
+// Change user password by Owner
+export async function changeUserPasswordByOwner(username: string, newPass: string): Promise<void> {
+  const normUser = username.trim().toLowerCase();
+  if (!newPass.trim() || newPass.trim().length < 3) {
+    throw new Error('Password must be at least 3 characters long.');
+  }
+
+  try {
+    const userDocRef = doc(db, 'users', normUser);
+    await setDoc(
+      userDocRef,
+      sanitizeForFirestore({
+        password: newPass.trim(),
+        updatedAt: new Date().toISOString(),
+      }),
+      { merge: true }
+    );
+  } catch (err) {
+    console.warn('Firestore change password notice:', err);
+  }
+
+  // Update local cache
+  const localAccounts = getLocalAccounts();
+  if (localAccounts[normUser]) {
+    localAccounts[normUser].password = newPass.trim();
+    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(localAccounts));
+  }
+}
+
+// Toggle user status (Active / Suspended)
+export async function toggleUserStatus(username: string, currentStatus: 'active' | 'suspended'): Promise<'active' | 'suspended'> {
+  const normUser = username.trim().toLowerCase();
+  const nextStatus: 'active' | 'suspended' = currentStatus === 'active' ? 'suspended' : 'active';
+
+  try {
+    const userDocRef = doc(db, 'users', normUser);
+    await setDoc(
+      userDocRef,
+      sanitizeForFirestore({
+        status: nextStatus,
+        updatedAt: new Date().toISOString(),
+      }),
+      { merge: true }
+    );
+  } catch (err) {
+    console.warn('Firestore toggle user status notice:', err);
+  }
+
+  const localAccounts = getLocalAccounts();
+  if (localAccounts[normUser]) {
+    localAccounts[normUser].status = nextStatus;
+    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(localAccounts));
+  }
+
+  return nextStatus;
+}
+
 export async function loginUser(username: string, password: string): Promise<{ session: AuthSession; userAccount?: UserAccount }> {
   const trimmedUser = username.trim().toLowerCase();
   const trimmedPass = password.trim();
 
+  // Detect client IP and network information for audit tracking
+  let netInfo = {
+    ip: '127.0.0.1 (Local)',
+    city: 'Kurunegala',
+    region: 'North Western',
+    country: 'Sri Lanka',
+    device: 'Desktop/Mobile Browser',
+    userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
+  };
+
+  try {
+    const fetched = await fetchClientNetworkInfo();
+    netInfo = {
+      ...netInfo,
+      ...fetched,
+    };
+  } catch {
+    // Continue with default network info
+  }
+
+  const locationStr = [netInfo.city, netInfo.region, netInfo.country].filter(Boolean).join(', ') || 'Sri Lanka';
+
   // 1. Sachi Master Admin
   if (trimmedUser === 'sachi' && trimmedPass === '988800') {
+    // Record login audit log
+    await recordLoginLog({
+      username: 'sachi',
+      role: 'admin',
+      ip: netInfo.ip,
+      location: locationStr,
+      device: netInfo.device,
+      userAgent: netInfo.userAgent,
+      status: 'success',
+      timestamp: new Date().toISOString(),
+      bikeId: 'BKT-1374',
+      bikeNumber: 'BKT-1374',
+      ownerName: 'Pathum Sachintha',
+    });
+
     return {
       session: {
         role: 'admin',
@@ -614,6 +1015,7 @@ export async function loginUser(username: string, password: string): Promise<{ s
         district: 'Kurunegala',
         province: 'North Western Province',
         bikeNumber: 'BKT-1374',
+        loginIp: netInfo.ip,
         signedInAt: new Date().toISOString(),
       },
     };
@@ -624,6 +1026,20 @@ export async function loginUser(username: string, password: string): Promise<{ s
     trimmedUser === 'chathura' &&
     (trimmedPass === 'password-200135' || trimmedPass === '200135')
   ) {
+    await recordLoginLog({
+      username: 'chathura',
+      role: 'admin',
+      ip: netInfo.ip,
+      location: locationStr,
+      device: netInfo.device,
+      userAgent: netInfo.userAgent,
+      status: 'success',
+      timestamp: new Date().toISOString(),
+      bikeId: 'chathura_bike',
+      bikeNumber: 'WP Bxx-xxxx',
+      ownerName: 'Chathura',
+    });
+
     return {
       session: {
         role: 'admin',
@@ -632,6 +1048,7 @@ export async function loginUser(username: string, password: string): Promise<{ s
         district: 'Western Province',
         province: 'Western Province',
         bikeNumber: 'WP Bxx-xxxx',
+        loginIp: netInfo.ip,
         signedInAt: new Date().toISOString(),
       },
     };
@@ -643,27 +1060,61 @@ export async function loginUser(username: string, password: string): Promise<{ s
     const snap = await getDoc(userDocRef);
     if (snap.exists()) {
       const data = snap.data() as UserAccount;
+      if (data.status === 'suspended') {
+        throw new Error('This account has been suspended by the administrator.');
+      }
+
       if (data.password === trimmedPass) {
-        // Save/update in local storage cache
         saveLocalAccount(data);
+
+        // Record successful login
+        await recordLoginLog({
+          username: trimmedUser,
+          role: data.role || 'client',
+          ip: netInfo.ip,
+          location: locationStr,
+          device: netInfo.device,
+          userAgent: netInfo.userAgent,
+          status: 'success',
+          timestamp: new Date().toISOString(),
+          bikeId: data.bikeId || `bike_${trimmedUser}`,
+          bikeNumber: data.bikeNumber,
+          ownerName: data.ownerName,
+        });
+
         return {
           session: {
-            role: data.role || 'admin',
+            role: data.role || 'client',
             username: data.ownerName || data.username,
             bikeId: data.bikeId || `bike_${trimmedUser}`,
             district: data.district,
             province: data.province,
             bikeNumber: data.bikeNumber,
+            loginIp: netInfo.ip,
             signedInAt: new Date().toISOString(),
           },
           userAccount: data,
         };
       } else {
+        // Record failed login attempt
+        await recordLoginLog({
+          username: trimmedUser,
+          role: data.role || 'client',
+          ip: netInfo.ip,
+          location: locationStr,
+          device: netInfo.device,
+          userAgent: netInfo.userAgent,
+          status: 'failed',
+          timestamp: new Date().toISOString(),
+          bikeId: data.bikeId,
+          bikeNumber: data.bikeNumber,
+          ownerName: data.ownerName,
+        });
         throw new Error('Incorrect password. Please verify and try again.');
       }
     }
   } catch (err: any) {
-    if (err.message && err.message.includes('Incorrect password')) {
+    if (err.message && (err.message.includes('Incorrect password') || err.message.includes('suspended'))) {
       throw err;
     }
     console.warn('Firestore user lookup notice, checking local cache:', err);
@@ -673,25 +1124,71 @@ export async function loginUser(username: string, password: string): Promise<{ s
   const localAccounts = getLocalAccounts();
   const localAcc = localAccounts[trimmedUser];
   if (localAcc) {
+    if (localAcc.status === 'suspended') {
+      throw new Error('This account has been suspended by the administrator.');
+    }
+
     if (localAcc.password === trimmedPass) {
+      await recordLoginLog({
+        username: trimmedUser,
+        role: localAcc.role || 'client',
+        ip: netInfo.ip,
+        location: locationStr,
+        device: netInfo.device,
+        userAgent: netInfo.userAgent,
+        status: 'success',
+        timestamp: new Date().toISOString(),
+        bikeId: localAcc.bikeId,
+        bikeNumber: localAcc.bikeNumber,
+        ownerName: localAcc.ownerName,
+      });
+
       return {
         session: {
-          role: localAcc.role || 'admin',
+          role: localAcc.role || 'client',
           username: localAcc.ownerName || localAcc.username,
           bikeId: localAcc.bikeId || `bike_${trimmedUser}`,
           district: localAcc.district,
           province: localAcc.province,
           bikeNumber: localAcc.bikeNumber,
+          loginIp: netInfo.ip,
           signedInAt: new Date().toISOString(),
         },
         userAccount: localAcc,
       };
     } else {
+      await recordLoginLog({
+        username: trimmedUser,
+        role: localAcc.role || 'client',
+        ip: netInfo.ip,
+        location: locationStr,
+        device: netInfo.device,
+        userAgent: netInfo.userAgent,
+        status: 'failed',
+        timestamp: new Date().toISOString(),
+        bikeId: localAcc.bikeId,
+        bikeNumber: localAcc.bikeNumber,
+        ownerName: localAcc.ownerName,
+      });
       throw new Error('Incorrect password. Please verify and try again.');
     }
   }
 
-  throw new Error('User not found. Please check your username or create a new account.');
+  // Log unknown user attempt
+  try {
+    await recordLoginLog({
+      username: trimmedUser,
+      role: 'client',
+      ip: netInfo.ip,
+      location: locationStr,
+      device: netInfo.device,
+      userAgent: netInfo.userAgent,
+      status: 'failed',
+      timestamp: new Date().toISOString(),
+    });
+  } catch {}
+
+  throw new Error('User not found. Please check your username or contact Admin Sachintha.');
 }
 
 export async function updateUserAccount(

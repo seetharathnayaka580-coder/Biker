@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { AuthSession, VehicleDetails } from '../types';
 import { loginUser, registerAdminUser } from '../lib/firebase';
+import { fetchClientNetworkInfo, ClientNetworkInfo } from '../utils/ipTracker';
 import { ALL_DISTRICTS, ALL_PROVINCES, SRI_LANKA_REGIONS } from '../data/sriLankaRegions';
 
 interface LoginPageProps {
@@ -83,6 +84,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, o
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [detectedNetInfo, setDetectedNetInfo] = useState<ClientNetworkInfo | null>(null);
+
+  React.useEffect(() => {
+    fetchClientNetworkInfo().then((info) => {
+      setDetectedNetInfo(info);
+    });
+  }, []);
 
   // Filter districts dynamically based on selected province in Sign Up
   const currentDistricts = useMemo(() => {
@@ -621,8 +629,22 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, o
           )}
         </div>
 
+        {/* Live Detected IP & Security Badge */}
+        {detectedNetInfo && (
+          <div className="mt-3 p-2.5 rounded-2xl bg-[#0b0e14]/90 border border-sky-500/30 backdrop-blur-md flex items-center justify-between gap-2 text-[11px] font-mono">
+            <div className="flex items-center gap-1.5 text-zinc-400 truncate">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+              <span className="text-zinc-400 font-sans">Network IP:</span>
+              <span className="text-sky-300 font-bold font-mono truncate">{detectedNetInfo.ip}</span>
+            </div>
+            <span className="text-[10px] text-zinc-500 font-sans truncate">
+              📍 {detectedNetInfo.city || 'Sri Lanka'}
+            </span>
+          </div>
+        )}
+
         {/* App Owner & Direct Support Access */}
-        <div className="mt-4 p-3.5 rounded-2xl bg-[#090d16]/90 border border-emerald-500/30 backdrop-blur-md space-y-2">
+        <div className="mt-3 p-3.5 rounded-2xl bg-[#090d16]/90 border border-emerald-500/30 backdrop-blur-md space-y-2">
           <div className="flex items-center justify-between gap-2">
             <span className="text-[11px] font-bold text-zinc-300 flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
