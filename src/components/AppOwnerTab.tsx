@@ -567,7 +567,7 @@ export const AppOwnerTab: React.FC<AppOwnerTabProps> = ({ state, isAdmin, onNavi
             <Cpu className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-white">Live Firestore Sync</h3>
+            <h3 className="text-sm font-bold text-white">Live Cloud Sync</h3>
             <p className="text-xs text-zinc-400 mt-0.5">
               Realtime multi-device synchronization with offline fallback persistence.
             </p>

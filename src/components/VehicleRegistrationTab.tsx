@@ -318,7 +318,7 @@ export const VehicleRegistrationTab: React.FC<VehicleRegistrationTabProps> = ({
       {saveSuccess && (
         <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-medium animate-fadeIn">
           <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-          <span>Vehicle details updated successfully and synced to Cloud Firestore!</span>
+          <span>Vehicle details updated successfully and synced to Secure Cloud!</span>
         </div>
       )}
 

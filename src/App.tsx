@@ -344,7 +344,7 @@ export default function App() {
               }
             }
             setSyncStatus('synced');
-            alert('Service log book backup successfully restored & synced to Firebase cloud!');
+            alert('Service log book backup successfully restored & synced to Cloud database!');
           }
         } catch {
           alert('Invalid backup file format.');
@@ -355,7 +355,7 @@ export default function App() {
 
   const handleResetToDefaults = async () => {
     if (!isAdmin) return;
-    if (globalThis.confirm('Reset service log book to verified initial state and resync with Firebase?')) {
+    if (globalThis.confirm('Reset service log book to verified initial state and resync with Cloud database?')) {
       const template = getSeedStateForBike(activeBikeId);
       const reset = JSON.parse(JSON.stringify(template));
       setState(reset);
@@ -489,7 +489,7 @@ export default function App() {
             <span>WA: +94 763961123</span>
             <span>TG: @X_x_x_xzZ</span>
             <span>
-              {syncStatus === 'synced' ? '● Connected (Firestore)' : syncStatus === 'syncing' ? '◐ Syncing...' : '○ Local Mode'}
+              {syncStatus === 'synced' ? '● Connected (Cloud)' : syncStatus === 'syncing' ? '◐ Syncing...' : '○ Local Mode'}
             </span>
           </div>
         </footer>
