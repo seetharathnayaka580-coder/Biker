@@ -16,6 +16,9 @@ import {
   FileBadge,
   Crown,
   BadgeCheck,
+  MessageCircle,
+  Send,
+  Phone,
 } from 'lucide-react';
 import { AuthSession, UserAccount, VehicleDetails } from '../types';
 import { updateUserAccount, getLocalAccounts } from '../lib/firebase';
@@ -325,8 +328,8 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
             </div>
           </div>
 
-          {/* Account Meta Info */}
-          <div className="p-3 rounded-xl bg-[#151923] border border-[#222a3a] space-y-1 text-xs">
+          {/* Account Meta Info & Owner Support */}
+          <div className="p-3 rounded-xl bg-[#151923] border border-[#222a3a] space-y-2 text-xs">
             <div className="flex items-center justify-between text-zinc-400">
               <span className="font-mono text-[11px]">Active Bike ID:</span>
               <span className="font-mono text-[11px] text-amber-300 font-bold">{authSession.bikeId || 'BKT-1374'}</span>
@@ -334,6 +337,30 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
             <div className="flex items-center justify-between text-zinc-400">
               <span className="font-mono text-[11px]">Signed In As:</span>
               <span className="font-mono text-[11px] text-zinc-200">{authSession.username}</span>
+            </div>
+            <div className="pt-2 border-t border-zinc-800 flex items-center justify-between text-[11px]">
+              <span className="text-zinc-400">App Owner Support:</span>
+              <div className="flex items-center gap-2">
+                <a
+                  href="https://wa.me/94763961123"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-emerald-400 hover:underline flex items-center gap-1 font-mono font-semibold"
+                >
+                  <MessageCircle className="w-3 h-3" />
+                  +94 763961123
+                </a>
+                <span className="text-zinc-600">·</span>
+                <a
+                  href="https://t.me/X_x_x_xzZ"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sky-400 hover:underline flex items-center gap-1 font-mono font-semibold"
+                >
+                  <Send className="w-3 h-3" />
+                  @X_x_x_xzZ
+                </a>
+              </div>
             </div>
           </div>
 

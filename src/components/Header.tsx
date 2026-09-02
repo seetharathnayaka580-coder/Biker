@@ -24,10 +24,13 @@ import {
   Crown,
   Sparkles,
   BadgeCheck,
+  MessageCircle,
+  Send,
+  Phone,
 } from 'lucide-react';
 import { AppState, AuthSession } from '../types';
 
-export type ActiveTab = 'home' | 'vehicle' | 'service' | 'notes' | 'dealers';
+export type ActiveTab = 'home' | 'vehicle' | 'service' | 'notes' | 'dealers' | 'owner';
 
 interface HeaderProps {
   state: AppState;
@@ -80,8 +83,8 @@ export const Header: React.FC<HeaderProps> = ({
   const navItems = [
     {
       id: 'home' as ActiveTab,
-      label: 'Home Dashboard',
-      sub: 'Overview & Odometer',
+      label: 'Home',
+      sub: 'Overview & Stats',
       icon: Home,
       activeClass: 'bg-gradient-to-r from-cyan-500 via-sky-500 to-blue-600 text-white shadow-[0_0_20px_rgba(6,182,212,0.5)] border-cyan-300 scale-[1.02]',
       inactiveClass: 'bg-[#09111c] text-cyan-200/90 hover:text-cyan-100 border-cyan-500/30 hover:border-cyan-400 hover:bg-cyan-950/50',
@@ -92,20 +95,18 @@ export const Header: React.FC<HeaderProps> = ({
       label: 'Vehicle ID & Reg',
       sub: 'Bike & Owner',
       icon: Shield,
-      activeClass: 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-zinc-950 font-black shadow-[0_0_20px_rgba(245,158,11,0.5)] border-yellow-200 scale-[1.02]',
-      inactiveClass: 'bg-[#181207] text-amber-200/90 hover:text-amber-100 border-amber-500/30 hover:border-amber-400 hover:bg-amber-950/50',
-      iconColor: 'text-amber-400',
+      activeClass: 'bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.5)] border-blue-300 scale-[1.02]',
+      inactiveClass: 'bg-[#080e1b] text-blue-200/90 hover:text-blue-100 border-blue-500/30 hover:border-blue-400 hover:bg-blue-950/50',
+      iconColor: 'text-blue-400',
     },
     {
       id: 'service' as ActiveTab,
-      label: 'Service Records',
+      label: 'Service',
       sub: 'Distance & History',
       icon: Wrench,
-      badge: stats.isOverdue ? 'Overdue' : 'Active',
-      badgeColor: stats.isOverdue ? 'bg-red-500 text-white' : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
-      activeClass: 'bg-gradient-to-r from-emerald-500 via-teal-500 to-green-600 text-white shadow-[0_0_20px_rgba(16,185,129,0.5)] border-emerald-300 scale-[1.02]',
-      inactiveClass: 'bg-[#071710] text-emerald-200/90 hover:text-emerald-100 border-emerald-500/30 hover:border-emerald-400 hover:bg-emerald-950/50',
-      iconColor: 'text-emerald-400',
+      activeClass: 'bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-400 text-zinc-950 font-black shadow-[0_0_22px_rgba(245,158,11,0.55)] border-amber-300 scale-[1.02]',
+      inactiveClass: 'bg-[#181207] text-amber-200/90 hover:text-amber-100 border-amber-500/30 hover:border-amber-400 hover:bg-amber-950/50',
+      iconColor: 'text-amber-400',
     },
     {
       id: 'notes' as ActiveTab,
@@ -119,12 +120,23 @@ export const Header: React.FC<HeaderProps> = ({
     },
     {
       id: 'dealers' as ActiveTab,
-      label: 'Bajaj Dealers & Map',
+      label: 'Bajaj Dealers',
       sub: 'Google Maps & Hubs',
       icon: MapPin,
       activeClass: 'bg-gradient-to-r from-rose-500 via-pink-500 to-red-600 text-white shadow-[0_0_20px_rgba(244,63,94,0.5)] border-rose-300 scale-[1.02]',
       inactiveClass: 'bg-[#1a0711] text-rose-200/90 hover:text-rose-100 border-rose-500/30 hover:border-rose-400 hover:bg-rose-950/50',
       iconColor: 'text-rose-400',
+    },
+    {
+      id: 'owner' as ActiveTab,
+      label: 'Owner Direct',
+      sub: 'WhatsApp & Telegram',
+      icon: MessageCircle,
+      badge: '+94 763961123',
+      badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+      activeClass: 'bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-600 text-white shadow-[0_0_20px_rgba(16,185,129,0.5)] border-emerald-300 scale-[1.02]',
+      inactiveClass: 'bg-[#06140e] text-emerald-200/90 hover:text-emerald-100 border-emerald-500/30 hover:border-emerald-400 hover:bg-emerald-950/50',
+      iconColor: 'text-emerald-400',
     },
   ];
 
@@ -272,6 +284,17 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <Printer className="w-3.5 h-3.5 text-cyan-400" />
               <span className="hidden sm:inline">Print</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onSelectTab('owner')}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold text-emerald-300 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 hover:border-emerald-400 transition-all cursor-pointer shadow-sm active:scale-95"
+              title="Contact App Owner: WhatsApp +94 763961123 · Telegram @X_x_x_xzZ"
+            >
+              <MessageCircle className="w-3.5 h-3.5 text-emerald-400 fill-emerald-400/30" />
+              <span className="hidden lg:inline">Owner Contact</span>
+              <span className="text-[10px] font-mono px-1 py-0.2 rounded bg-emerald-500/20 text-emerald-300 hidden xl:inline">WA/TG</span>
             </button>
 
             {/* Backup & Export */}

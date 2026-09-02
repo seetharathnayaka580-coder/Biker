@@ -5,6 +5,7 @@ import { VehicleRegistrationTab } from './components/VehicleRegistrationTab';
 import { ServiceTab } from './components/ServiceTab';
 import { MaintenanceNotesTab } from './components/MaintenanceNotesTab';
 import { GoogleMapsServiceLocator } from './components/GoogleMapsServiceLocator';
+import { AppOwnerTab } from './components/AppOwnerTab';
 import { PrintBookletModal } from './components/PrintBookletModal';
 import { ScheduleGuideModal } from './components/ScheduleGuideModal';
 import { LoginPage } from './components/LoginPage';
@@ -460,14 +461,37 @@ export default function App() {
           />
         )}
 
+        {/* TAB 6: APP OWNER & CONTACT (WhatsApp & Telegram Direct Support) */}
+        {activeTab === 'owner' && (
+          <AppOwnerTab
+            state={state}
+            isAdmin={isAdmin}
+            onNavigateToTab={setActiveTab}
+          />
+        )}
+
         {/* Footer */}
-        <footer className="text-center py-6 text-xs text-zinc-500 border-t border-[#1d212a] mt-8 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <p>
-            {state.vehicle.model || 'Motorcycle'} ({state.vehicle.regNo || 'Log Book'}) · Official Maintenance Manager.
-          </p>
-          <span className="font-mono text-[11px] text-zinc-400">
-            Database: {syncStatus === 'synced' ? '● Connected (Firestore)' : syncStatus === 'syncing' ? '◐ Syncing...' : '○ Local Mode'}
-          </span>
+        <footer className="text-center py-6 text-xs text-zinc-500 border-t border-[#1d212a] mt-8 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-start">
+            <p>
+              {state.vehicle.model || 'Motorcycle'} ({state.vehicle.regNo || 'Log Book'}) · Official Maintenance Manager.
+            </p>
+            <span className="text-zinc-600 hidden sm:inline">|</span>
+            <button
+              type="button"
+              onClick={() => setActiveTab('owner')}
+              className="text-cyan-400 hover:text-cyan-300 underline font-medium cursor-pointer transition-colors"
+            >
+              App Owner & Support
+            </button>
+          </div>
+          <div className="flex items-center gap-3 font-mono text-[11px] text-zinc-400">
+            <span>WA: +94 763961123</span>
+            <span>TG: @X_x_x_xzZ</span>
+            <span>
+              {syncStatus === 'synced' ? '● Connected (Firestore)' : syncStatus === 'syncing' ? '◐ Syncing...' : '○ Local Mode'}
+            </span>
+          </div>
         </footer>
       </main>
 

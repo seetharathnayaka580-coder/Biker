@@ -31,6 +31,9 @@ import {
   Bike,
   Crown,
   BadgeCheck,
+  MessageCircle,
+  Send,
+  Phone,
 } from 'lucide-react';
 import { VehicleDetails } from '../types';
 import { ALL_DISTRICTS, ALL_PROVINCES, SRI_LANKA_REGIONS } from '../data/sriLankaRegions';
@@ -968,6 +971,30 @@ export const VehicleRegistrationTab: React.FC<VehicleRegistrationTabProps> = ({
                   <span className="text-emerald-400 font-medium flex items-center gap-1">
                     <ShieldCheck className="w-3.5 h-3.5" /> {isSachi ? 'Creator · Full Master Administrative Access' : 'Full Administrative Access'}
                   </span>
+                </div>
+                <div className="pt-2 border-t border-zinc-800 flex items-center justify-between text-[11px]">
+                  <span className="text-zinc-400">App Owner Direct:</span>
+                  <div className="flex items-center gap-2">
+                    <a
+                      href="https://wa.me/94763961123"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-emerald-400 hover:text-emerald-300 flex items-center gap-1 font-mono font-semibold"
+                    >
+                      <MessageCircle className="w-3 h-3" />
+                      +94 763961123
+                    </a>
+                    <span className="text-zinc-600">·</span>
+                    <a
+                      href="https://t.me/X_x_x_xzZ"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sky-400 hover:text-sky-300 flex items-center gap-1 font-mono font-semibold"
+                    >
+                      <Send className="w-3 h-3" />
+                      @X_x_x_xzZ
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>

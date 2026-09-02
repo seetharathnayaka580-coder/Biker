@@ -16,6 +16,9 @@ import {
   MapPin,
   Compass,
   CheckCircle2,
+  MessageCircle,
+  Send,
+  Phone,
 } from 'lucide-react';
 import { AuthSession, VehicleDetails } from '../types';
 import { loginUser, registerAdminUser } from '../lib/firebase';
@@ -622,8 +625,43 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, o
           )}
         </div>
 
+        {/* App Owner & Direct Support Access */}
+        <div className="mt-4 p-3.5 rounded-2xl bg-[#090d16]/90 border border-emerald-500/30 backdrop-blur-md space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[11px] font-bold text-zinc-300 flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              App Owner & Support:
+            </span>
+            <span className="text-[10px] font-mono text-emerald-300 font-semibold">
+              Sachintha Pathum
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 pt-1">
+            <a
+              href="https://wa.me/94763961123?text=Hi%20Sachintha,%20I'm%20contacting%20you%20regarding%20the%20Bike%20Service%20Log%20Book%20login."
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-1.5 py-1.5 px-2.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-xs font-semibold transition-all"
+            >
+              <MessageCircle className="w-3.5 h-3.5 fill-emerald-400/40" />
+              <span>WhatsApp (+94 763961123)</span>
+            </a>
+
+            <a
+              href="https://t.me/X_x_x_xzZ"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-1.5 py-1.5 px-2.5 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/30 text-sky-300 text-xs font-semibold transition-all"
+            >
+              <Send className="w-3.5 h-3.5 fill-sky-400/40" />
+              <span>Telegram (@X_x_x_xzZ)</span>
+            </a>
+          </div>
+        </div>
+
         {/* Footer info badge & Chrome App Install Shortcut */}
-        <div className="flex flex-col items-center justify-center gap-2.5 mt-4">
+        <div className="flex flex-col items-center justify-center gap-2.5 mt-3">
           {onOpenInstall && (
             <button
               type="button"
