@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import {
   ShieldCheck,
   Shield,
+  User,
   Calendar,
   AlertTriangle,
   Clock,
@@ -38,7 +39,7 @@ interface HomeTabProps {
   state: AppState;
   isAdmin: boolean;
   onUpdateVehicle?: (updated: VehicleDetails) => void;
-  onNavigateToTab: (tab: 'home' | 'vehicle' | 'service' | 'notes' | 'dealers' | 'owner') => void;
+  onNavigateToTab: (tab: 'home' | 'vehicle' | 'service' | 'notes' | 'dealers') => void;
   onOpenScheduleGuide: () => void;
   onOpenPrint: () => void;
 }
@@ -431,10 +432,15 @@ export const HomeTab: React.FC<HomeTabProps> = ({
                 <span className="text-[10px] text-zinc-400 block uppercase font-medium">Registered Owner</span>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <span className="font-semibold text-zinc-200">{state.vehicle.owner}</span>
-                  {(state.vehicle.owner?.toLowerCase().includes('sachintha') || state.vehicle.owner?.toLowerCase().includes('sachi') || state.vehicle.regNo === 'BKT-1374') && (
+                  {(state.vehicle.owner?.toLowerCase().includes('sachintha') || state.vehicle.owner?.toLowerCase().includes('sachi') || state.vehicle.regNo === 'BKT-1374') ? (
                     <span className="inline-flex items-center gap-1 text-[9px] font-black px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 text-zinc-950 border border-yellow-200 shadow-sm uppercase tracking-wider">
                       <Crown className="w-2.5 h-2.5 text-zinc-950 fill-zinc-950" />
                       PREMIUM
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 shadow-sm uppercase tracking-wider">
+                      <User className="w-2.5 h-2.5 text-cyan-400" />
+                      CLIENT
                     </span>
                   )}
                 </div>
@@ -459,8 +465,8 @@ export const HomeTab: React.FC<HomeTabProps> = ({
           <span className="text-[10px] text-zinc-500 font-mono">Tap to Jump to Module</span>
         </div>
 
-        {/* 6 Distinct Category Action Buttons */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        {/* 5 Distinct Category Action Buttons */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           {/* Category 1: Vehicle Details - Golden Amber */}
           <button
             type="button"
@@ -561,7 +567,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
           <button
             type="button"
             onClick={onOpenScheduleGuide}
-            className="flex flex-col items-start justify-between p-3.5 rounded-2xl bg-gradient-to-br from-[#09111c] to-[#040910] border border-cyan-500/40 hover:border-cyan-400 hover:shadow-[0_0_20px_rgba(6,182,212,0.25)] transition-all cursor-pointer text-left group active:scale-95"
+            className="flex flex-col items-start justify-between p-3.5 rounded-2xl bg-gradient-to-br from-[#09111c] to-[#040910] border border-cyan-500/40 hover:border-cyan-400 hover:shadow-[0_0_20px_rgba(6,182,212,0.25)] transition-all cursor-pointer text-left group active:scale-95 col-span-2 sm:col-span-1"
           >
             <div className="flex items-center justify-between w-full mb-3">
               <div className="w-8 h-8 rounded-xl bg-cyan-500/20 border border-cyan-400/50 flex items-center justify-center text-cyan-400 group-hover:scale-110 group-hover:bg-cyan-500 group-hover:text-zinc-950 transition-all">
@@ -577,32 +583,6 @@ export const HomeTab: React.FC<HomeTabProps> = ({
               </span>
               <span className="text-[10px] text-zinc-400 block mt-0.5">
                 Factory service steps
-              </span>
-            </div>
-          </button>
-
-          {/* Category 6: App Owner & Support - Glowing Emerald & Cyan */}
-          <button
-            type="button"
-            onClick={() => onNavigateToTab('owner')}
-            className="flex flex-col items-start justify-between p-3.5 rounded-2xl bg-gradient-to-br from-[#061710] via-[#04110b] to-[#020b07] border border-emerald-400/50 hover:border-emerald-300 hover:shadow-[0_0_22px_rgba(16,185,129,0.35)] transition-all cursor-pointer text-left group active:scale-95 col-span-2 sm:col-span-1 relative overflow-hidden"
-          >
-            <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500/10 rounded-full blur-xl pointer-events-none" />
-            <div className="flex items-center justify-between w-full mb-3">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-zinc-950 font-black shadow-md shadow-emerald-500/30 group-hover:scale-110 transition-all">
-                <MessageCircle className="w-4 h-4 fill-zinc-950" />
-              </div>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/40">
-                Owner Direct
-              </span>
-            </div>
-            <div>
-              <span className="text-xs font-black text-white block group-hover:text-emerald-300 transition-colors flex items-center gap-1">
-                App Owner
-                <Sparkles className="w-3 h-3 text-amber-300 animate-pulse" />
-              </span>
-              <span className="text-[10px] text-emerald-400/80 block mt-0.5 font-mono">
-                WA: +94 763961123
               </span>
             </div>
           </button>

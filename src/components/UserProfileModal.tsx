@@ -203,8 +203,8 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
           )}
         </AnimatePresence>
 
-        {/* Creator / Master Admin Premium Banner */}
-        {isSachi && (
+        {/* Creator / Master Admin Premium Banner vs Client Owner Banner */}
+        {isSachi ? (
           <div className="mt-4 p-3 rounded-xl bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-500/15 border border-amber-500/35 flex items-center justify-between gap-2 shadow-inner">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-300 shrink-0">
@@ -223,6 +223,27 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
             <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/25 px-2 py-0.5 rounded-full flex items-center gap-1">
               <BadgeCheck className="w-3 h-3 text-emerald-400" />
               Verified
+            </span>
+          </div>
+        ) : (
+          <div className="mt-4 p-3 rounded-xl bg-gradient-to-r from-cyan-500/10 via-sky-500/10 to-blue-500/10 border border-cyan-500/30 flex items-center justify-between gap-2 shadow-inner">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-300 shrink-0">
+                <User className="w-4 h-4 text-cyan-300" />
+              </div>
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-bold text-cyan-200">Bike Owner Account</span>
+                  <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 uppercase tracking-widest shadow-sm">
+                    CLIENT
+                  </span>
+                </div>
+                <p className="text-[11px] text-zinc-400">Authorized Vehicle Owner Logbook Account</p>
+              </div>
+            </div>
+            <span className="text-[10px] font-mono text-cyan-400 bg-cyan-500/10 border border-cyan-500/25 px-2 py-0.5 rounded-full flex items-center gap-1">
+              <BadgeCheck className="w-3 h-3 text-cyan-400" />
+              Active
             </span>
           </div>
         )}

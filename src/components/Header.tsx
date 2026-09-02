@@ -30,7 +30,7 @@ import {
 } from 'lucide-react';
 import { AppState, AuthSession } from '../types';
 
-export type ActiveTab = 'home' | 'vehicle' | 'service' | 'notes' | 'dealers' | 'owner';
+export type ActiveTab = 'home' | 'vehicle' | 'service' | 'notes' | 'dealers';
 
 interface HeaderProps {
   state: AppState;
@@ -80,7 +80,20 @@ export const Header: React.FC<HeaderProps> = ({
     state.vehicle.owner?.toLowerCase().includes('sachintha') ||
     state.vehicle.regNo === 'BKT-1374';
 
-  const navItems = [
+  interface NavItem {
+    id: ActiveTab;
+    label: string;
+    sub: string;
+    icon: React.ComponentType<{ className?: string }>;
+    activeClass: string;
+    inactiveClass: string;
+    iconColor: string;
+    badge?: string;
+    badgeColor?: string;
+    count?: number;
+  }
+
+  const navItems: NavItem[] = [
     {
       id: 'home' as ActiveTab,
       label: 'Home',
@@ -127,17 +140,6 @@ export const Header: React.FC<HeaderProps> = ({
       inactiveClass: 'bg-[#1a0711] text-rose-200/90 hover:text-rose-100 border-rose-500/30 hover:border-rose-400 hover:bg-rose-950/50',
       iconColor: 'text-rose-400',
     },
-    {
-      id: 'owner' as ActiveTab,
-      label: 'Owner Direct',
-      sub: 'WhatsApp & Telegram',
-      icon: MessageCircle,
-      badge: '+94 763961123',
-      badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
-      activeClass: 'bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-600 text-white shadow-[0_0_20px_rgba(16,185,129,0.5)] border-emerald-300 scale-[1.02]',
-      inactiveClass: 'bg-[#06140e] text-emerald-200/90 hover:text-emerald-100 border-emerald-500/30 hover:border-emerald-400 hover:bg-emerald-950/50',
-      iconColor: 'text-emerald-400',
-    },
   ];
 
   return (
@@ -183,9 +185,9 @@ export const Header: React.FC<HeaderProps> = ({
                   </>
                 ) : isAdmin ? (
                   <>
-                    <span className="inline-flex items-center gap-1 text-[11px] font-black px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 text-zinc-950 border border-yellow-200 shadow-sm">
-                      <Crown className="w-3 h-3 text-zinc-950 fill-zinc-950" />
-                      PREMIUM
+                    <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 shadow-sm uppercase tracking-wider">
+                      <User className="w-3.5 h-3.5 text-cyan-400" />
+                      CLIENT
                     </span>
                     <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 shadow-sm">
                       <Flame className="w-3 h-3 text-cyan-400" />
@@ -193,9 +195,9 @@ export const Header: React.FC<HeaderProps> = ({
                     </span>
                   </>
                 ) : (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-red-500/15 text-red-300 border border-red-500/30 shadow-sm">
-                    <ShieldAlert className="w-3 h-3 text-red-400" />
-                    Read-Only Guest
+                  <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-slate-500/20 text-slate-300 border border-slate-400/40 shadow-sm uppercase tracking-wider">
+                    <User className="w-3.5 h-3.5 text-slate-400" />
+                    CLIENT
                   </span>
                 )}
 
@@ -361,9 +363,15 @@ export const Header: React.FC<HeaderProps> = ({
                   <User className="w-3.5 h-3.5 text-cyan-400 group-hover:scale-110 transition-transform" />
                 )}
                 <span className="font-semibold text-zinc-200">{authSession.username}</span>
-                <span className="px-1.5 py-0.5 rounded text-[9px] font-black bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 text-zinc-950 border border-yellow-200 shadow-sm uppercase tracking-wider">
-                  PREMIUM
-                </span>
+                {isSachi ? (
+                  <span className="px-1.5 py-0.5 rounded text-[9px] font-black bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 text-zinc-950 border border-yellow-200 shadow-sm uppercase tracking-wider">
+                    PREMIUM
+                  </span>
+                ) : (
+                  <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 uppercase tracking-wider">
+                    CLIENT
+                  </span>
+                )}
                 <span className="text-[10px] text-cyan-400 font-mono hidden md:inline">✎ Edit</span>
               </button>
             ) : (

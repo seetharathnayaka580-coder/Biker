@@ -909,10 +909,15 @@ export const VehicleRegistrationTab: React.FC<VehicleRegistrationTabProps> = ({
                   <div>
                     <div className="text-base font-bold text-white flex items-center gap-2 flex-wrap">
                       <span>{vehicle.owner}</span>
-                      {isSachi && (
+                      {isSachi ? (
                         <span className="inline-flex items-center gap-1 text-[10px] font-black px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 text-zinc-950 border border-yellow-200 shadow-[0_0_12px_rgba(251,191,36,0.5)] uppercase tracking-wider">
                           <Crown className="w-3 h-3 text-zinc-950 fill-zinc-950" />
                           PREMIUM
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 uppercase tracking-wider shadow-sm">
+                          <User className="w-3 h-3 text-cyan-400" />
+                          CLIENT
                         </span>
                       )}
                       {uploadSuccess && (
