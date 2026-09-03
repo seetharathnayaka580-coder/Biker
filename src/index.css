@@ -41,6 +41,23 @@
   font-family: 'JetBrains Mono', monospace;
 }
 
+.font-orbitron {
+  font-family: 'Orbitron', 'Rajdhani', sans-serif;
+}
+
+.font-lcd {
+  font-family: 'Share Tech Mono', 'Orbitron', monospace;
+}
+
+/* Pulsar LCD Instrument Console Phosphor Glow */
+.pulsar-lcd-glow {
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(186, 230, 253, 0.5);
+}
+
+.pulsar-border-glow {
+  box-shadow: 0 0 15px rgba(224, 242, 254, 0.3), inset 0 0 15px rgba(224, 242, 254, 0.15);
+}
+
 /* Carbon & Slate Gray Mesh Background */
 .bg-carbon-mesh {
   background-image: radial-gradient(#1a1f2c 1px, transparent 1px), radial-gradient(#121622 1px, #090b0e 1px);

@@ -33,6 +33,7 @@ export const ServiceTab: React.FC<ServiceTabProps> = ({
             targets={state.targets}
             services={state.services}
             isAdmin={isAdmin}
+            bikeName={state.vehicle.registrationNumber || 'PULSAR4904'}
             onUpdateOdometer={onUpdateOdometer}
             onUpdateTarget={onUpdateTarget}
           />

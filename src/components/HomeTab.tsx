@@ -694,11 +694,21 @@ export const HomeTab: React.FC<HomeTabProps> = ({
 
             <button
               type="button"
+              onClick={() => onNavigateToTab('service')}
+              className="flex items-center justify-center gap-2 py-2.5 px-3.5 rounded-xl bg-[#0e131e] hover:bg-[#151c2c] active:scale-95 text-cyan-300 border border-cyan-500/30 font-semibold text-xs transition-all cursor-pointer shadow-sm"
+              title="Open Pulsar Digital Instrument Cluster"
+            >
+              <Gauge className="w-4 h-4 text-cyan-400" />
+              <span>Digital Cockpit</span>
+            </button>
+
+            <button
+              type="button"
               onClick={() => onNavigateToTab('dealers')}
               className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#141822] hover:bg-[#1c2230] active:scale-95 text-zinc-300 border border-zinc-700 font-semibold text-xs transition-all cursor-pointer shadow-sm"
             >
               <MapPin className="w-4 h-4 text-zinc-400" />
-              <span>Find Nearest Dealer</span>
+              <span>Find Dealer</span>
             </button>
           </div>
         </div>
