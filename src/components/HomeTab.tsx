@@ -44,6 +44,112 @@ interface HomeTabProps {
   onOpenPrint: () => void;
 }
 
+export type CardColorTheme = 'cyan' | 'amber' | 'emerald' | 'red' | 'purple';
+
+export const CARD_THEMES: Record<CardColorTheme, {
+  name: string;
+  dotColor: string;
+  badge: string;
+  cardBorder: string;
+  glowRgba: string;
+  topLine: string;
+  iconBg: string;
+  iconBorder: string;
+  iconText: string;
+  accentText: string;
+  buttonGradient: string;
+  buttonShadow: string;
+  buttonBorder: string;
+  progressTrack: string;
+  progressFill: string;
+}> = {
+  cyan: {
+    name: 'Pulsar Cyan',
+    dotColor: '#00e5ff',
+    badge: 'bg-cyan-500/15 text-cyan-300 border-cyan-400/40',
+    cardBorder: 'border-cyan-500/35 hover:border-cyan-400/60',
+    glowRgba: 'rgba(6, 182, 212, 0.16)',
+    topLine: 'from-transparent via-cyan-400 to-transparent',
+    iconBg: 'bg-gradient-to-br from-cyan-500/25 to-blue-600/10',
+    iconBorder: 'border-cyan-400/50',
+    iconText: 'text-cyan-300',
+    accentText: 'text-cyan-400',
+    buttonGradient: 'bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-blue-500',
+    buttonShadow: 'shadow-[0_4px_22px_rgba(6,182,212,0.45)]',
+    buttonBorder: 'border-cyan-300/50',
+    progressTrack: 'border-cyan-900/40',
+    progressFill: 'bg-gradient-to-r from-cyan-500 via-teal-400 to-emerald-400 shadow-[0_0_12px_rgba(6,182,212,0.6)]',
+  },
+  amber: {
+    name: 'Brooklyn Amber',
+    dotColor: '#f59e0b',
+    badge: 'bg-amber-500/15 text-amber-300 border-amber-400/40',
+    cardBorder: 'border-amber-500/35 hover:border-amber-400/60',
+    glowRgba: 'rgba(245, 158, 11, 0.16)',
+    topLine: 'from-transparent via-amber-400 to-transparent',
+    iconBg: 'bg-gradient-to-br from-amber-500/25 to-yellow-600/10',
+    iconBorder: 'border-amber-400/50',
+    iconText: 'text-amber-300',
+    accentText: 'text-amber-400',
+    buttonGradient: 'bg-gradient-to-r from-amber-500 via-amber-600 to-yellow-600 hover:from-amber-400 hover:to-yellow-500',
+    buttonShadow: 'shadow-[0_4px_22px_rgba(245,158,11,0.45)]',
+    buttonBorder: 'border-amber-300/50',
+    progressTrack: 'border-amber-900/40',
+    progressFill: 'bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.6)]',
+  },
+  emerald: {
+    name: 'Neon Emerald',
+    dotColor: '#10b981',
+    badge: 'bg-emerald-500/15 text-emerald-300 border-emerald-400/40',
+    cardBorder: 'border-emerald-500/35 hover:border-emerald-400/60',
+    glowRgba: 'rgba(16, 185, 129, 0.16)',
+    topLine: 'from-transparent via-emerald-400 to-transparent',
+    iconBg: 'bg-gradient-to-br from-emerald-500/25 to-teal-600/10',
+    iconBorder: 'border-emerald-400/50',
+    iconText: 'text-emerald-300',
+    accentText: 'text-emerald-400',
+    buttonGradient: 'bg-gradient-to-r from-emerald-500 via-teal-600 to-emerald-700 hover:from-emerald-400 hover:to-teal-500',
+    buttonShadow: 'shadow-[0_4px_22px_rgba(16,185,129,0.45)]',
+    buttonBorder: 'border-emerald-300/50',
+    progressTrack: 'border-emerald-900/40',
+    progressFill: 'bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400 shadow-[0_0_12px_rgba(16,185,129,0.6)]',
+  },
+  red: {
+    name: 'Racing Crimson',
+    dotColor: '#ef4444',
+    badge: 'bg-red-500/15 text-red-300 border-red-400/40',
+    cardBorder: 'border-red-500/35 hover:border-red-400/60',
+    glowRgba: 'rgba(239, 68, 68, 0.16)',
+    topLine: 'from-transparent via-red-400 to-transparent',
+    iconBg: 'bg-gradient-to-br from-red-500/25 to-rose-600/10',
+    iconBorder: 'border-red-400/50',
+    iconText: 'text-red-300',
+    accentText: 'text-red-400',
+    buttonGradient: 'bg-gradient-to-r from-red-600 via-rose-600 to-red-700 hover:from-red-500 hover:to-rose-500',
+    buttonShadow: 'shadow-[0_4px_22px_rgba(239,68,68,0.45)]',
+    buttonBorder: 'border-red-300/50',
+    progressTrack: 'border-red-900/40',
+    progressFill: 'bg-gradient-to-r from-red-500 via-rose-400 to-orange-400 shadow-[0_0_12px_rgba(239,68,68,0.6)]',
+  },
+  purple: {
+    name: 'Midnight Purple',
+    dotColor: '#a855f7',
+    badge: 'bg-purple-500/15 text-purple-300 border-purple-400/40',
+    cardBorder: 'border-purple-500/35 hover:border-purple-400/60',
+    glowRgba: 'rgba(168, 85, 247, 0.16)',
+    topLine: 'from-transparent via-purple-400 to-transparent',
+    iconBg: 'bg-gradient-to-br from-purple-500/25 to-indigo-600/10',
+    iconBorder: 'border-purple-400/50',
+    iconText: 'text-purple-300',
+    accentText: 'text-purple-400',
+    buttonGradient: 'bg-gradient-to-r from-purple-600 via-violet-600 to-indigo-600 hover:from-purple-500 hover:to-violet-500',
+    buttonShadow: 'shadow-[0_4px_22px_rgba(168,85,247,0.45)]',
+    buttonBorder: 'border-purple-300/50',
+    progressTrack: 'border-purple-900/40',
+    progressFill: 'bg-gradient-to-r from-purple-500 via-pink-400 to-cyan-400 shadow-[0_0_12px_rgba(168,85,247,0.6)]',
+  },
+};
+
 export const HomeTab: React.FC<HomeTabProps> = ({
   state,
   isAdmin,
@@ -56,6 +162,9 @@ export const HomeTab: React.FC<HomeTabProps> = ({
   const remainingKm = currentTarget - state.odometer;
   const isOverdue = remainingKm <= 0;
   const isDueSoon = remainingKm > 0 && remainingKm <= 500;
+
+  // Fixed card color theme (Pulsar Cyan cockpit styling)
+  const activeTheme = CARD_THEMES.cyan;
 
   const [isFullscreenModalOpen, setIsFullscreenModalOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -596,106 +705,246 @@ export const HomeTab: React.FC<HomeTabProps> = ({
       {/* 3. UPCOMING SERVICE STATUS & COUNTDOWN */}
       <section className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         {/* Left: Upcoming Service Alert & Live Gauge Card */}
-        <div className="lg:col-span-7 bg-[#0c0f16] rounded-2xl border border-[#22293a] p-5 sm:p-6 shadow-xl flex flex-col justify-between relative overflow-hidden group">
-          {/* Subtle ambient background halo */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-slate-700/10 rounded-full blur-3xl pointer-events-none" />
+        <div className={`lg:col-span-7 bg-gradient-to-br from-[#0c121e] via-[#070b14] to-[#04060a] rounded-2xl border ${activeTheme.cardBorder} p-5 sm:p-7 shadow-2xl flex flex-col justify-between relative overflow-hidden group transition-colors duration-300`}>
+          {/* Top Neon Laser Beam Line */}
+          <div className={`absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r ${activeTheme.topLine} z-20`} />
+
+          {/* Ambient Background Backlight Glow */}
+          <div
+            className="absolute top-0 right-0 w-80 h-80 rounded-full blur-3xl pointer-events-none transition-all duration-700 opacity-20"
+            style={{ backgroundColor: activeTheme.dotColor }}
+          />
+
           <div>
-            <div className="flex items-center justify-between gap-2 mb-4 relative z-10">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-300 shadow-sm">
-                  <Calendar className="w-4 h-4" />
+            {/* Header: Title, Live Status Badge & Color Theme Switcher */}
+            <div className="flex items-center justify-between gap-3 mb-5 relative z-10 flex-wrap">
+              <div className="flex items-center gap-3">
+                <div className={`w-11 h-11 rounded-xl ${activeTheme.iconBg} border ${activeTheme.iconBorder} flex items-center justify-center ${activeTheme.iconText} shadow-lg shadow-black/60 relative shrink-0`}>
+                  <Calendar className="w-5 h-5" />
+                  <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-black" style={{ backgroundColor: activeTheme.dotColor }} />
                 </div>
                 <div>
-                  <h2 className="text-sm font-bold uppercase tracking-wider text-white">
+                  <h2 className="text-base sm:text-lg font-display font-black uppercase tracking-wider text-white flex items-center gap-2">
                     Upcoming Service Status
                   </h2>
-                  <span className="text-[11px] text-zinc-400">
-                    Next scheduled maintenance target
-                  </span>
+                  <div className="flex items-center gap-2 text-xs text-zinc-400 font-medium mt-0.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 inline-block" />
+                    <span>Next scheduled maintenance target</span>
+                  </div>
                 </div>
               </div>
 
+              {/* Dynamic Vehicle Health Badge */}
               {isOverdue ? (
-                <span className="px-3 py-1 rounded-full bg-red-500/20 text-red-400 border border-red-500/40 text-xs font-bold flex items-center gap-1.5 animate-pulse shadow-sm">
-                  <AlertTriangle className="w-3.5 h-3.5" />
-                  Service Overdue
+                <span className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-red-950/80 to-red-900/50 text-red-300 border border-red-500/60 text-xs font-mono font-bold flex items-center gap-2 shadow-[0_0_16px_rgba(239,68,68,0.35)] animate-pulse">
+                  <span className="w-2 h-2 rounded-full bg-red-400 animate-ping inline-block" />
+                  <AlertTriangle className="w-3.5 h-3.5 text-red-400" />
+                  <span>Service Overdue</span>
                 </span>
               ) : isDueSoon ? (
-                <span className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-bold flex items-center gap-1.5 shadow-sm">
-                  <Clock className="w-3.5 h-3.5" />
-                  Service Due Soon
+                <span className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-950/80 to-amber-900/50 text-amber-300 border border-amber-500/60 text-xs font-mono font-bold flex items-center gap-2 shadow-[0_0_16px_rgba(245,158,11,0.3)]">
+                  <span className="w-2 h-2 rounded-full bg-amber-400 inline-block shadow-[0_0_6px_#f59e0b]" />
+                  <Clock className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Service Due Soon</span>
                 </span>
               ) : (
-                <span className="px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-xs font-semibold flex items-center gap-1.5 shadow-sm">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  Within Safe Interval
+                <span className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-950/70 to-emerald-900/40 text-emerald-300 border border-emerald-500/50 text-xs font-mono font-bold flex items-center gap-2 shadow-[0_0_16px_rgba(16,185,129,0.25)]">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
+                  </span>
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Within Safe Interval</span>
                 </span>
               )}
             </div>
 
-            {/* Mileage Status Metric Box */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 rounded-xl bg-[#111520] border border-[#222838] mb-4 shadow-inner relative z-10">
-              <div className="p-2.5 rounded-lg bg-[#0e121a] border border-[#222838]">
-                <span className="text-[10px] text-zinc-400 uppercase font-semibold tracking-wider">Current Odometer</span>
-                <div className="text-xl sm:text-2xl font-mono font-black text-white mt-0.5">
-                  {state.odometer.toLocaleString()} <span className="text-xs font-normal text-zinc-400">km</span>
+            {/* 3 Cockpit Metric Displays */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mb-5 relative z-10">
+              {/* Tile 1: Current Odometer */}
+              <div className="p-4 rounded-xl bg-gradient-to-b from-[#0a1120] to-[#060b14] border border-cyan-500/30 hover:border-cyan-400/60 transition-all shadow-md relative overflow-hidden group/item">
+                <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-cyan-400/80 via-blue-500/50 to-transparent" />
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-[10px] font-mono uppercase font-bold tracking-wider text-cyan-300/90">
+                    <Gauge className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>Current Odometer</span>
+                  </div>
+                  <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 tracking-widest">
+                    LIVE
+                  </span>
+                </div>
+                <div className="text-2xl sm:text-3xl font-mono font-black text-white tracking-tight mt-2 flex items-baseline gap-1.5">
+                  {state.odometer.toLocaleString()}
+                  <span className="text-xs font-semibold text-cyan-400 font-mono">km</span>
+                </div>
+                <div className="flex items-center justify-between text-[10px] font-mono text-zinc-400 mt-2 pt-2 border-t border-cyan-900/30">
+                  <span>Instrument ODO</span>
+                  <span className="text-cyan-400 font-semibold">Active</span>
                 </div>
               </div>
 
-              <div className="p-2.5 rounded-lg bg-[#0e121a] border border-[#222838]">
-                <span className="text-[10px] text-zinc-400 uppercase font-semibold tracking-wider">Target Service Km</span>
-                <div className="text-xl sm:text-2xl font-mono font-black text-zinc-200 mt-0.5">
-                  {currentTarget.toLocaleString()} <span className="text-xs font-normal text-zinc-400">km</span>
+              {/* Tile 2: Target Service Km */}
+              <div className="p-4 rounded-xl bg-gradient-to-b from-[#161208] to-[#0c0a05] border border-amber-500/30 hover:border-amber-400/60 transition-all shadow-md relative overflow-hidden group/item">
+                <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-amber-400/80 via-yellow-500/50 to-transparent" />
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-[10px] font-mono uppercase font-bold tracking-wider text-amber-300/90">
+                    <Calendar className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Target Service Km</span>
+                  </div>
+                  <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30 tracking-widest">
+                    OEM
+                  </span>
+                </div>
+                <div className="text-2xl sm:text-3xl font-mono font-black text-amber-200 tracking-tight mt-2 flex items-baseline gap-1.5">
+                  {currentTarget.toLocaleString()}
+                  <span className="text-xs font-semibold text-amber-400 font-mono">km</span>
+                </div>
+                <div className="flex items-center justify-between text-[10px] font-mono text-zinc-400 mt-2 pt-2 border-t border-amber-900/30">
+                  <span>Target Interval</span>
+                  <span className="text-amber-400 font-semibold">Service #{state.services.length + 1}</span>
                 </div>
               </div>
 
-              <div className="p-2.5 rounded-lg bg-[#0e121a] border border-[#222838]">
-                <span className="text-[10px] text-zinc-400 uppercase font-semibold tracking-wider">
-                  {isOverdue ? 'Overdue By' : 'Distance Remaining'}
-                </span>
-                <div className={`text-xl sm:text-2xl font-mono font-black mt-0.5 ${isOverdue ? 'text-red-400' : 'text-emerald-400'}`}>
-                  {isOverdue ? `+${Math.abs(remainingKm).toLocaleString()}` : remainingKm.toLocaleString()}{' '}
-                  <span className="text-xs font-normal text-zinc-400">km</span>
+              {/* Tile 3: Distance Remaining / Overdue */}
+              <div
+                className={`p-4 rounded-xl relative overflow-hidden transition-all shadow-md group/item ${
+                  isOverdue
+                    ? 'bg-gradient-to-b from-[#200808] to-[#120505] border border-red-500/50 hover:border-red-400/70 shadow-[0_0_20px_rgba(239,68,68,0.25)]'
+                    : isDueSoon
+                    ? 'bg-gradient-to-b from-[#1e1405] to-[#100a03] border border-amber-500/40 hover:border-amber-400/60 shadow-[0_0_20px_rgba(245,158,11,0.2)]'
+                    : 'bg-gradient-to-b from-[#061811] to-[#040e0a] border border-emerald-500/40 hover:border-emerald-400/60 shadow-[0_0_20px_rgba(16,185,129,0.18)]'
+                }`}
+              >
+                <div
+                  className={`absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r ${
+                    isOverdue
+                      ? 'from-red-400 via-rose-500 to-transparent'
+                      : isDueSoon
+                      ? 'from-amber-400 via-orange-500 to-transparent'
+                      : 'from-emerald-400 via-teal-500 to-transparent'
+                  }`}
+                />
+                <div className="flex items-center justify-between">
+                  <div
+                    className={`flex items-center gap-1.5 text-[10px] font-mono uppercase font-bold tracking-wider ${
+                      isOverdue ? 'text-red-300' : isDueSoon ? 'text-amber-300' : 'text-emerald-300'
+                    }`}
+                  >
+                    {isOverdue ? (
+                      <AlertTriangle className="w-3.5 h-3.5 text-red-400 animate-pulse" />
+                    ) : isDueSoon ? (
+                      <Clock className="w-3.5 h-3.5 text-amber-400" />
+                    ) : (
+                      <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                    )}
+                    <span>{isOverdue ? 'Overdue By' : 'Distance Remaining'}</span>
+                  </div>
+                  <span
+                    className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded tracking-widest ${
+                      isOverdue
+                        ? 'bg-red-500/20 text-red-300 border border-red-500/40 animate-pulse'
+                        : isDueSoon
+                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                        : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                    }`}
+                  >
+                    {isOverdue ? 'URGENT' : isDueSoon ? 'DUE SOON' : 'SAFE'}
+                  </span>
+                </div>
+                <div
+                  className={`text-2xl sm:text-3xl font-mono font-black tracking-tight mt-2 flex items-baseline gap-1.5 ${
+                    isOverdue
+                      ? 'text-red-400 drop-shadow-[0_0_10px_rgba(239,68,68,0.6)]'
+                      : isDueSoon
+                      ? 'text-amber-300 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]'
+                      : 'text-emerald-400 drop-shadow-[0_0_10px_rgba(52,211,153,0.5)]'
+                  }`}
+                >
+                  {isOverdue ? `+${Math.abs(remainingKm).toLocaleString()}` : remainingKm.toLocaleString()}
+                  <span
+                    className={`text-xs font-semibold font-mono ${
+                      isOverdue ? 'text-red-400' : isDueSoon ? 'text-amber-400' : 'text-emerald-400'
+                    }`}
+                  >
+                    km
+                  </span>
+                </div>
+                <div
+                  className={`flex items-center justify-between text-[10px] font-mono mt-2 pt-2 border-t ${
+                    isOverdue
+                      ? 'border-red-900/30 text-red-300/80'
+                      : isDueSoon
+                      ? 'border-amber-900/30 text-amber-300/80'
+                      : 'border-emerald-900/30 text-emerald-300/80'
+                  }`}
+                >
+                  <span>Service Status</span>
+                  <span
+                    className={`font-bold ${
+                      isOverdue ? 'text-red-400' : isDueSoon ? 'text-amber-400' : 'text-emerald-400'
+                    }`}
+                  >
+                    {isOverdue ? 'Action Needed' : isDueSoon ? 'Within 500 km' : 'Safe Interval'}
+                  </span>
                 </div>
               </div>
             </div>
 
             {/* Service Interval Progress Bar */}
-            <div className="space-y-1.5 mb-5 relative z-10">
-              <div className="flex justify-between text-xs text-zinc-400 font-mono">
-                <span>Interval Elapsed</span>
-                <span className="text-zinc-200 font-bold font-mono">{progressPercent}%</span>
+            <div className="space-y-2 mb-6 relative z-10">
+              <div className="flex items-center justify-between text-xs font-mono">
+                <div className="flex items-center gap-2">
+                  <span className="text-zinc-300 font-semibold">Service Interval Elapsed</span>
+                  <span className={`px-2 py-0.5 rounded-md font-mono font-black text-[11px] border ${activeTheme.badge}`}>
+                    {progressPercent}%
+                  </span>
+                </div>
+                <span className="text-zinc-400 text-[11px] font-mono">
+                  {previousServiceKm.toLocaleString()} km → {currentTarget.toLocaleString()} km
+                </span>
               </div>
-              <div className="w-full h-3 rounded-full bg-[#080a10] p-0.5 border border-[#222838] overflow-hidden">
+
+              {/* The Recessed Precision Bar */}
+              <div className={`w-full h-3.5 rounded-full bg-[#05080f] p-0.5 border ${activeTheme.progressTrack} overflow-hidden shadow-inner relative flex items-center`}>
                 <div
-                  className={`h-full rounded-full transition-all duration-700 ${
+                  className={`h-full rounded-full transition-all duration-700 relative ${
                     isOverdue
-                      ? 'bg-gradient-to-r from-red-600 to-red-500 shadow-sm shadow-red-500/50'
+                      ? 'bg-gradient-to-r from-red-600 via-rose-500 to-red-400 shadow-[0_0_14px_rgba(239,68,68,0.7)]'
                       : isDueSoon
-                      ? 'bg-gradient-to-r from-amber-600 via-orange-500 to-amber-400 shadow-sm shadow-amber-500/50'
-                      : 'bg-gradient-to-r from-zinc-500 via-slate-400 to-zinc-200 shadow-[0_0_10px_rgba(255,255,255,0.2)]'
+                      ? 'bg-gradient-to-r from-amber-500 via-orange-400 to-amber-300 shadow-[0_0_14px_rgba(245,158,11,0.6)]'
+                      : activeTheme.progressFill
                   }`}
                   style={{ width: `${Math.min(progressPercent, 100)}%` }}
-                />
+                >
+                  {/* Subtle pulsing tip glow */}
+                  <span className="absolute right-0 top-0 bottom-0 w-2 rounded-r-full bg-white/70 shadow-[0_0_6px_#ffffff]" />
+                </div>
+              </div>
+
+              {/* Milestone Indicators */}
+              <div className="flex justify-between text-[10px] font-mono text-zinc-500 pt-0.5 px-0.5">
+                <span>0% (Last Service)</span>
+                <span>50% Mid-point</span>
+                <span>100% (Target {currentTarget.toLocaleString()} km)</span>
               </div>
             </div>
           </div>
 
           {/* Quick Action Navigation Buttons */}
-          <div className="flex flex-wrap items-center gap-3 pt-3 border-t border-[#222838] relative z-10">
+          <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-zinc-800/80 relative z-10">
             <button
               type="button"
               onClick={() => onNavigateToTab('service')}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-zinc-700 via-zinc-800 to-zinc-900 hover:from-zinc-600 hover:to-zinc-800 active:scale-95 text-white font-bold text-xs tracking-wide transition-all shadow-[0_4px_16px_rgba(0,0,0,0.5)] cursor-pointer border border-zinc-600 uppercase font-display"
+              className="flex-1 flex items-center justify-center gap-2 py-3 px-5 rounded-xl bg-gradient-to-r from-zinc-800 via-zinc-850 to-zinc-900 hover:from-zinc-750 hover:to-zinc-800 active:scale-95 text-white font-extrabold font-display uppercase tracking-wider text-xs sm:text-sm transition-all border border-zinc-700 hover:border-zinc-500 shadow-[0_4px_16px_rgba(0,0,0,0.7)] cursor-pointer group"
             >
-              <PlusCircle className="w-4 h-4 text-zinc-300" />
+              <PlusCircle className="w-4 h-4 text-zinc-300 group-hover:text-white transition-colors" />
               <span>Log Service Record</span>
             </button>
 
             <button
               type="button"
               onClick={() => onNavigateToTab('service')}
-              className="flex items-center justify-center gap-2 py-2.5 px-3.5 rounded-xl bg-[#0e131e] hover:bg-[#151c2c] active:scale-95 text-cyan-300 border border-cyan-500/30 font-semibold text-xs transition-all cursor-pointer shadow-sm"
+              className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[#0a1322] hover:bg-[#111f36] active:scale-95 text-cyan-300 hover:text-cyan-200 border border-cyan-500/40 hover:border-cyan-400 font-bold text-xs transition-all cursor-pointer shadow-sm"
               title="Open Pulsar Digital Instrument Cluster"
             >
               <Gauge className="w-4 h-4 text-cyan-400" />
@@ -705,20 +954,22 @@ export const HomeTab: React.FC<HomeTabProps> = ({
             <button
               type="button"
               onClick={() => onNavigateToTab('dealers')}
-              className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#141822] hover:bg-[#1c2230] active:scale-95 text-zinc-300 border border-zinc-700 font-semibold text-xs transition-all cursor-pointer shadow-sm"
+              className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[#10131e] hover:bg-[#181c2c] active:scale-95 text-zinc-300 hover:text-white border border-zinc-700/80 hover:border-zinc-500 font-bold text-xs transition-all cursor-pointer shadow-sm"
             >
-              <MapPin className="w-4 h-4 text-zinc-400" />
+              <MapPin className="w-4 h-4 text-rose-400" />
               <span>Find Dealer</span>
             </button>
           </div>
         </div>
 
         {/* Right: Upcoming Service Checklist Guide */}
-        <div className="lg:col-span-5 bg-[#0c0f16] rounded-2xl border border-[#22293a] p-5 sm:p-6 shadow-xl flex flex-col justify-between">
+        <div className="lg:col-span-5 bg-gradient-to-br from-[#0c101c] via-[#090d16] to-[#06080e] rounded-2xl border border-cyan-500/20 hover:border-cyan-500/40 p-5 sm:p-6 shadow-xl flex flex-col justify-between relative overflow-hidden transition-all duration-300">
+          {/* Top subtle highlight line */}
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-amber-400/50 to-transparent" />
           <div>
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-3.5">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-300 shadow-sm">
+                <div className="w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shadow-sm">
                   <Wrench className="w-4 h-4" />
                 </div>
                 <div>
@@ -734,7 +985,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
               <button
                 type="button"
                 onClick={onOpenScheduleGuide}
-                className="text-[11px] text-zinc-300 hover:text-white font-semibold underline underline-offset-2 cursor-pointer transition-colors"
+                className="text-[11px] text-amber-400 hover:text-amber-300 font-semibold underline underline-offset-2 cursor-pointer transition-colors"
               >
                 Full Guide
               </button>
@@ -745,7 +996,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
               {upcomingTasks.map((item, idx) => (
                 <div
                   key={idx}
-                  className="flex items-start gap-2.5 p-2.5 rounded-xl bg-[#111520] border border-[#222838] transition-colors hover:border-zinc-600"
+                  className="flex items-start gap-2.5 p-2.5 rounded-xl bg-[#0e121d]/80 border border-zinc-800/80 transition-colors hover:border-zinc-700"
                 >
                   <CheckCircle2
                     className={`w-4 h-4 shrink-0 mt-0.5 ${
@@ -763,12 +1014,12 @@ export const HomeTab: React.FC<HomeTabProps> = ({
             </div>
           </div>
 
-          <div className="mt-4 pt-3 border-t border-[#222838] flex items-center justify-between text-xs text-zinc-400">
+          <div className="mt-4 pt-3 border-t border-zinc-800/80 flex items-center justify-between text-xs text-zinc-400">
             <span>David Pieris Motor Company Recommended</span>
             <button
               type="button"
               onClick={() => onNavigateToTab('notes')}
-              className="text-zinc-300 hover:text-white hover:underline font-medium text-xs cursor-pointer transition-colors"
+              className="text-amber-400 hover:text-amber-300 hover:underline font-medium text-xs cursor-pointer transition-colors"
             >
               View Garage Notes →
             </button>
