@@ -97,7 +97,7 @@ export function calculateServiceStats(services: ServiceRecord[], currentOdo: num
   const totalIntervalSpan = Math.max(target - lastKm, 1);
   const progressRatio = Math.min(Math.max((currentOdo - lastKm) / totalIntervalSpan, 0), 1);
   const isOverdue = currentOdo > target;
-  const isDueSoon = !isOverdue && remaining <= 300;
+  const isDueSoon = !isOverdue && remaining <= 500;
 
   return {
     lastKm,

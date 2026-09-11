@@ -27,6 +27,7 @@ import {
   MessageCircle,
   Send,
   Phone,
+  Bell,
 } from 'lucide-react';
 import { AppState, AuthSession } from '../types';
 
@@ -46,6 +47,7 @@ interface HeaderProps {
   onClearAllData?: () => void;
   onOpenInstall?: () => void;
   onOpenProfile?: () => void;
+  onOpenThresholdAlert?: () => void;
   syncStatus: 'synced' | 'syncing' | 'offline' | 'error';
   stats: {
     remaining: number;
@@ -68,6 +70,7 @@ export const Header: React.FC<HeaderProps> = ({
   onClearAllData,
   onOpenInstall,
   onOpenProfile,
+  onOpenThresholdAlert,
   syncStatus,
   stats,
 }) => {
@@ -270,16 +273,40 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Right Action Icons & Utilities */}
           <div className="flex items-center gap-1.5 flex-wrap self-end sm:self-auto">
             {stats.isOverdue ? (
-              <span className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-red-500/15 text-red-400 border border-red-500/30 animate-pulse flex items-center gap-1.5 shadow-sm">
-                <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
-                Service Overdue
-              </span>
+              <button
+                type="button"
+                onClick={onOpenThresholdAlert}
+                className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-red-500/20 hover:bg-red-500/35 text-red-300 border border-red-500/40 animate-pulse flex items-center gap-1.5 shadow-sm cursor-pointer transition-all active:scale-95"
+                title="Service Overdue! Click to view threshold alert & checklist"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-red-400"></span>
+                <ShieldAlert className="w-3.5 h-3.5 text-red-400" />
+                <span>Service Overdue</span>
+              </button>
             ) : stats.isDueSoon ? (
-              <span className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center gap-1.5 shadow-sm">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-                Due in {stats.remaining.toLocaleString()} km
-              </span>
-            ) : null}
+              <button
+                type="button"
+                onClick={onOpenThresholdAlert}
+                className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-amber-500/20 hover:bg-amber-500/35 text-amber-200 border border-amber-500/40 flex items-center gap-1.5 shadow-sm cursor-pointer transition-all active:scale-95"
+                title={`500 km Alert: Due in ${stats.remaining.toLocaleString()} km! Click for details`}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping"></span>
+                <Bell className="w-3 h-3 text-amber-400" />
+                <span>Due in {stats.remaining.toLocaleString()} km</span>
+              </button>
+            ) : (
+              onOpenThresholdAlert && (
+                <button
+                  type="button"
+                  onClick={onOpenThresholdAlert}
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-medium text-zinc-300 hover:text-white bg-[#11141d] hover:bg-[#181c28] border border-[#202636] hover:border-zinc-500/40 transition-all cursor-pointer shadow-sm active:scale-95"
+                  title="View 500 km Service Alert Thresholds & Notification Settings"
+                >
+                  <Bell className="w-3.5 h-3.5 text-zinc-400" />
+                  <span className="hidden sm:inline">Alerts</span>
+                </button>
+              )
+            )}
 
             {onOpenInstall && (
               <button

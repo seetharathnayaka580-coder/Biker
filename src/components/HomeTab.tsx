@@ -31,6 +31,7 @@ import {
   MessageCircle,
   Send,
   Phone,
+  Bell,
 } from 'lucide-react';
 import { AppState, VehicleDetails } from '../types';
 import { fmtKm } from '../utils/formatters';
@@ -42,6 +43,7 @@ interface HomeTabProps {
   onNavigateToTab: (tab: 'home' | 'vehicle' | 'service' | 'notes' | 'dealers') => void;
   onOpenScheduleGuide: () => void;
   onOpenPrint: () => void;
+  onOpenThresholdAlert?: () => void;
 }
 
 export type CardColorTheme = 'cyan' | 'amber' | 'emerald' | 'red' | 'purple';
@@ -157,6 +159,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
   onNavigateToTab,
   onOpenScheduleGuide,
   onOpenPrint,
+  onOpenThresholdAlert,
 }) => {
   const currentTarget = state.targets[0] || 7688;
   const remainingKm = currentTarget - state.odometer;
@@ -736,26 +739,41 @@ export const HomeTab: React.FC<HomeTabProps> = ({
 
               {/* Dynamic Vehicle Health Badge */}
               {isOverdue ? (
-                <span className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-red-950/80 to-red-900/50 text-red-300 border border-red-500/60 text-xs font-mono font-bold flex items-center gap-2 shadow-[0_0_16px_rgba(239,68,68,0.35)] animate-pulse">
+                <button
+                  type="button"
+                  onClick={onOpenThresholdAlert}
+                  className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-red-950/80 to-red-900/50 hover:from-red-900/90 hover:to-red-800/60 text-red-300 border border-red-500/60 text-xs font-mono font-bold flex items-center gap-2 shadow-[0_0_16px_rgba(239,68,68,0.35)] animate-pulse cursor-pointer transition-all active:scale-95"
+                  title="Critical: Service Overdue! Click to view 500km threshold alert & actions"
+                >
                   <span className="w-2 h-2 rounded-full bg-red-400 animate-ping inline-block" />
                   <AlertTriangle className="w-3.5 h-3.5 text-red-400" />
                   <span>Service Overdue</span>
-                </span>
+                </button>
               ) : isDueSoon ? (
-                <span className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-950/80 to-amber-900/50 text-amber-300 border border-amber-500/60 text-xs font-mono font-bold flex items-center gap-2 shadow-[0_0_16px_rgba(245,158,11,0.3)]">
+                <button
+                  type="button"
+                  onClick={onOpenThresholdAlert}
+                  className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-950/80 to-amber-900/50 hover:from-amber-900/90 hover:to-amber-800/60 text-amber-300 border border-amber-500/60 text-xs font-mono font-bold flex items-center gap-2 shadow-[0_0_16px_rgba(245,158,11,0.3)] cursor-pointer transition-all active:scale-95"
+                  title="Within 500 km Service Alert Threshold! Click to view alert & checklist"
+                >
                   <span className="w-2 h-2 rounded-full bg-amber-400 inline-block shadow-[0_0_6px_#f59e0b]" />
                   <Clock className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Service Due Soon</span>
-                </span>
+                  <span>Due Soon (≤500km Alert)</span>
+                </button>
               ) : (
-                <span className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-950/70 to-emerald-900/40 text-emerald-300 border border-emerald-500/50 text-xs font-mono font-bold flex items-center gap-2 shadow-[0_0_16px_rgba(16,185,129,0.25)]">
+                <button
+                  type="button"
+                  onClick={onOpenThresholdAlert}
+                  className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-950/70 to-emerald-900/40 hover:from-emerald-900/80 hover:to-emerald-800/50 text-emerald-300 border border-emerald-500/50 text-xs font-mono font-bold flex items-center gap-2 shadow-[0_0_16px_rgba(16,185,129,0.25)] cursor-pointer transition-all active:scale-95"
+                  title="Interval Safe. Click to view threshold alerts & notification settings"
+                >
                   <span className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
                   </span>
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                   <span>Within Safe Interval</span>
-                </span>
+                </button>
               )}
             </div>
 
@@ -959,6 +977,24 @@ export const HomeTab: React.FC<HomeTabProps> = ({
               <MapPin className="w-4 h-4 text-rose-400" />
               <span>Find Dealer</span>
             </button>
+
+            {onOpenThresholdAlert && (
+              <button
+                type="button"
+                onClick={onOpenThresholdAlert}
+                className={`flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-xs transition-all cursor-pointer shadow-sm active:scale-95 border ${
+                  isOverdue
+                    ? 'bg-red-950/50 hover:bg-red-900/60 text-red-300 border-red-500/50 animate-pulse shadow-[0_0_12px_rgba(239,68,68,0.25)]'
+                    : isDueSoon
+                    ? 'bg-amber-950/50 hover:bg-amber-900/60 text-amber-300 border-amber-500/50 shadow-[0_0_12px_rgba(245,158,11,0.2)]'
+                    : 'bg-[#10131e] hover:bg-[#181c2c] text-zinc-300 hover:text-white border-zinc-700/80'
+                }`}
+                title="Service 500km Threshold Alert & Notification Settings"
+              >
+                <Bell className={`w-4 h-4 ${isOverdue ? 'text-red-400' : isDueSoon ? 'text-amber-400 animate-bounce' : 'text-zinc-400'}`} />
+                <span>{isOverdue ? 'Alert: Overdue' : isDueSoon ? 'Alert (≤500km)' : 'Alerts'}</span>
+              </button>
+            )}
           </div>
         </div>
 

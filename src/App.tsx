@@ -13,8 +13,16 @@ import { AppSplashScreen } from './components/AppSplashScreen';
 import { InstallAppModal } from './components/InstallAppModal';
 import { ClearDataModal } from './components/ClearDataModal';
 import { UserProfileModal } from './components/UserProfileModal';
+import { ServiceThresholdAlertModal } from './components/ServiceThresholdAlertModal';
 import { AppState, AuthSession, MaintenanceNote, ServiceRecord, VehicleDetails } from './types';
 import { loadState, saveState, calculateServiceStats } from './utils/formatters';
+import {
+  isThresholdReached,
+  isAlertSnoozed,
+  sendBrowserServiceNotification,
+  clearSnooze,
+  SERVICE_ALERT_THRESHOLD_KM,
+} from './utils/serviceAlerts';
 import { SEED_STATE, getSeedStateForBike } from './data/seed';
 import {
   initAuth,
@@ -60,6 +68,7 @@ export default function App() {
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [showClearModal, setShowClearModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showAlertModal, setShowAlertModal] = useState(false);
 
   // App Opening Loading Splash Screen state
   const [showSplash, setShowSplash] = useState(true);
@@ -166,6 +175,33 @@ export default function App() {
     }
   }, [state, activeBikeId]);
 
+  const isAdmin = authSession?.role === 'admin';
+  const currentTarget = state.targets[0] || 7688;
+  const stats = calculateServiceStats(state.services, state.odometer, currentTarget);
+
+  // Automated 500 km Service Threshold Alert & Browser Notification
+  useEffect(() => {
+    if (showSplash || !authSession) return;
+    const target = state.targets[0] || 7688;
+    const remaining = target - state.odometer;
+
+    if (isThresholdReached(state.odometer, target, SERVICE_ALERT_THRESHOLD_KM)) {
+      // Send background browser push notification if permitted
+      sendBrowserServiceNotification(
+        state.vehicle.model || 'Bajaj Pulsar N160',
+        state.vehicle.regNo || 'BKT-1374',
+        state.odometer,
+        target,
+        remaining
+      );
+
+      // If modal is not snoozed, trigger custom modal alert
+      if (!isAlertSnoozed(target, state.odometer)) {
+        setShowAlertModal(true);
+      }
+    }
+  }, [showSplash, authSession, state.odometer, state.targets, state.vehicle.model, state.vehicle.regNo]);
+
   // If opening splash screen is active, show the animated motorcycle boot screen
   if (showSplash) {
     return (
@@ -194,10 +230,6 @@ export default function App() {
       </>
     );
   }
-
-  const isAdmin = authSession.role === 'admin';
-  const currentTarget = state.targets[0] || 7688;
-  const stats = calculateServiceStats(state.services, state.odometer, currentTarget);
 
   // Handlers with Optimistic UI + Cloud Firestore Persistence
   const handleUpdateVehicle = async (vehicle: VehicleDetails) => {
@@ -243,6 +275,7 @@ export default function App() {
   const handleAddService = async (newService: ServiceRecord) => {
     if (!isAdmin) return;
     try {
+      clearSnooze();
       setState((prev) => ({
         ...prev,
         odometer: Math.max(prev.odometer, newService.km),
@@ -412,6 +445,7 @@ export default function App() {
         onOpenSchedule={() => setShowScheduleModal(true)}
         onOpenInstall={() => setShowInstallModal(true)}
         onOpenProfile={() => setShowProfileModal(true)}
+        onOpenThresholdAlert={() => setShowAlertModal(true)}
         onExportData={handleExportData}
         onImportData={handleImportData}
         onResetToDefaults={handleResetToDefaults}
@@ -432,6 +466,7 @@ export default function App() {
             onNavigateToTab={setActiveTab}
             onOpenScheduleGuide={() => setShowScheduleModal(true)}
             onOpenPrint={() => setShowPrintModal(true)}
+            onOpenThresholdAlert={() => setShowAlertModal(true)}
           />
         )}
 
@@ -549,6 +584,28 @@ export default function App() {
             } catch (e) {
               console.warn('Could not update cached session:', e);
             }
+          }}
+        />
+      )}
+
+      {showAlertModal && (
+        <ServiceThresholdAlertModal
+          isOpen={showAlertModal}
+          onClose={() => setShowAlertModal(false)}
+          currentOdo={state.odometer}
+          targetKm={currentTarget}
+          vehicle={state.vehicle}
+          onNavigateToService={() => {
+            setShowAlertModal(false);
+            setActiveTab('service');
+          }}
+          onOpenScheduleGuide={() => {
+            setShowAlertModal(false);
+            setShowScheduleModal(true);
+          }}
+          onOpenDealers={() => {
+            setShowAlertModal(false);
+            setActiveTab('dealers');
           }}
         />
       )}
