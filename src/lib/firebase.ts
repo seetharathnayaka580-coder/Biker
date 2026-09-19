@@ -28,6 +28,7 @@ import firebaseConfigJson from '../../firebase-applet-config.json';
 import { AppState, AuthSession, LoginLog, MaintenanceNote, ServiceRecord, UserAccount, UserRole, VehicleDetails } from '../types';
 import { SEED_STATE, getSeedStateForBike } from '../data/seed';
 import { fetchClientNetworkInfo, ClientNetworkInfo } from '../utils/ipTracker';
+import { loadState, saveState } from '../utils/formatters';
 
 // Suppress Firestore internal connection retry warnings
 setLogLevel('silent');
@@ -69,19 +70,41 @@ export const auth: Auth = getAuth(app);
 
 export const DEFAULT_BIKE_ID = 'BKT-1374';
 
-// Initialize anonymous auth session safely
+// Initialize anonymous auth session safely with a strict timeout so it never hangs
 export function initAuth(): Promise<User | null> {
   return new Promise((resolve) => {
-    onAuthStateChanged(auth, async (user) => {
+    let resolved = false;
+    const timer = setTimeout(() => {
+      if (!resolved) {
+        resolved = true;
+        resolve(auth.currentUser);
+      }
+    }, 1500);
+
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (resolved) return;
       if (user) {
+        resolved = true;
+        clearTimeout(timer);
+        unsubscribe();
         resolve(user);
       } else {
         try {
           const cred = await signInAnonymously(auth);
-          resolve(cred.user);
+          if (!resolved) {
+            resolved = true;
+            clearTimeout(timer);
+            unsubscribe();
+            resolve(cred.user);
+          }
         } catch (err) {
-          console.warn('Anonymous auth failed, continuing in guest mode:', err);
-          resolve(null);
+          console.warn('Anonymous auth notice, continuing in guest mode:', err);
+          if (!resolved) {
+            resolved = true;
+            clearTimeout(timer);
+            unsubscribe();
+            resolve(null);
+          }
         }
       }
     });
@@ -94,6 +117,71 @@ export async function signInWithGooglePopup(): Promise<User> {
   provider.setCustomParameters({ prompt: 'select_account' });
   const result = await signInWithPopup(auth, provider);
   return result.user;
+}
+
+// Full Google Sign-In handler that creates/links an authenticated session seamlessly
+export async function loginWithGoogle(): Promise<{ session: AuthSession; userAccount: UserAccount }> {
+  const user = await signInWithGooglePopup();
+  const email = user.email || '';
+  const displayName = user.displayName || email.split('@')[0] || 'Google User';
+  const username = (email.split('@')[0] || user.uid.substring(0, 8)).toLowerCase().replace(/[^a-z0-9_]/g, '_');
+
+  // Master admin recognition
+  const isMaster = email.toLowerCase().includes('seetharathnayaka580') || username === 'sachi';
+  const role: UserRole = 'admin';
+  const bikeId = isMaster ? 'BKT-1374' : `bike_google_${username}`;
+  const bikeNumber = isMaster ? 'BKT-1374' : 'WP BKT-1374';
+
+  const userAccount: UserAccount = {
+    username,
+    password: '',
+    ownerName: displayName,
+    bikeNumber,
+    district: isMaster ? 'Kurunegala' : 'Western Province',
+    province: isMaster ? 'North Western Province' : 'Western Province',
+    role,
+    bikeId,
+    email,
+    photoUrl: user.photoURL || undefined,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  saveLocalAccount(userAccount);
+
+  // Background Firestore sync
+  try {
+    const userRef = doc(db, 'users', username);
+    setDoc(userRef, sanitizeForFirestore(userAccount), { merge: true }).catch(console.warn);
+  } catch {}
+
+  const session: AuthSession = {
+    role,
+    username: displayName,
+    bikeId,
+    district: userAccount.district,
+    province: userAccount.province,
+    bikeNumber,
+    loginIp: 'Google Verified',
+    signedInAt: new Date().toISOString(),
+  };
+
+  // Record audit log asynchronously
+  recordLoginLog({
+    username,
+    role,
+    ip: 'Google Verified',
+    location: `${userAccount.district}, Sri Lanka`,
+    device: typeof navigator !== 'undefined' ? navigator.userAgent : 'Google Auth',
+    userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'Google Auth',
+    status: 'success',
+    timestamp: new Date().toISOString(),
+    bikeId,
+    bikeNumber,
+    ownerName: displayName,
+  }).catch(console.warn);
+
+  return { session, userAccount };
 }
 
 // Sign out function
@@ -131,15 +219,15 @@ export function subscribeToBike(
   const servicesColRef = collection(db, 'bikes', bikeId, 'services');
   const notesColRef = collection(db, 'bikes', bikeId, 'notes');
 
-  const seedTemplate = getSeedStateForBike(bikeId);
+  const localState = loadState(bikeId);
   const isPrimarySachiBike = bikeId === 'BKT-1374';
 
-  let currentVehicle: VehicleDetails = { ...seedTemplate.vehicle };
-  let currentOdo: number = seedTemplate.odometer;
-  let currentTargets: number[] = [...seedTemplate.targets];
-  let currentInterval: number = seedTemplate.serviceInterval;
-  let currentServices: ServiceRecord[] = [];
-  let currentNotes: MaintenanceNote[] = [];
+  let currentVehicle: VehicleDetails = { ...localState.vehicle };
+  let currentOdo: number = localState.odometer;
+  let currentTargets: number[] = [...localState.targets];
+  let currentInterval: number = localState.serviceInterval;
+  let currentServices: ServiceRecord[] = [...localState.services];
+  let currentNotes: MaintenanceNote[] = [...localState.notes];
   let hasReceivedMainDoc = false;
 
   const emit = () => {
@@ -177,41 +265,56 @@ export function subscribeToBike(
       if (snapshot.exists()) {
         const data = snapshot.data();
         currentVehicle = {
-          owner: data.owner ?? seedTemplate.vehicle.owner,
-          model: data.model ?? seedTemplate.vehicle.model,
-          colour: data.colour ?? seedTemplate.vehicle.colour,
-          regNo: data.regNo ?? seedTemplate.vehicle.regNo,
-          chassisNo: data.chassisNo ?? seedTemplate.vehicle.chassisNo,
-          engineNo: data.engineNo ?? seedTemplate.vehicle.engineNo,
-          bookNo: data.bookNo ?? seedTemplate.vehicle.bookNo,
-          absSystem: data.absSystem ?? seedTemplate.vehicle.absSystem,
-          oilSpec: data.oilSpec ?? seedTemplate.vehicle.oilSpec,
-          fuelType: data.fuelType ?? seedTemplate.vehicle.fuelType,
-          tyrePressures: data.tyrePressures ?? seedTemplate.vehicle.tyrePressures,
-          authority: data.authority ?? seedTemplate.vehicle.authority,
-          district: data.district ?? seedTemplate.vehicle.district,
-          province: data.province ?? seedTemplate.vehicle.province,
-          photoUrl: data.photoUrl !== undefined ? data.photoUrl : seedTemplate.vehicle.photoUrl,
-          ownerPhotoUrl: data.ownerPhotoUrl !== undefined ? data.ownerPhotoUrl : seedTemplate.vehicle.ownerPhotoUrl,
+          owner: data.owner ?? localState.vehicle.owner,
+          model: data.model ?? localState.vehicle.model,
+          colour: data.colour ?? localState.vehicle.colour,
+          regNo: data.regNo ?? localState.vehicle.regNo,
+          chassisNo: data.chassisNo ?? localState.vehicle.chassisNo,
+          engineNo: data.engineNo ?? localState.vehicle.engineNo,
+          bookNo: data.bookNo ?? localState.vehicle.bookNo,
+          absSystem: data.absSystem ?? localState.vehicle.absSystem,
+          oilSpec: data.oilSpec ?? localState.vehicle.oilSpec,
+          fuelType: data.fuelType ?? localState.vehicle.fuelType,
+          tyrePressures: data.tyrePressures ?? localState.vehicle.tyrePressures,
+          authority: data.authority ?? localState.vehicle.authority,
+          district: data.district ?? localState.vehicle.district,
+          province: data.province ?? localState.vehicle.province,
+          photoUrl: data.photoUrl !== undefined ? data.photoUrl : localState.vehicle.photoUrl,
+          ownerPhotoUrl: data.ownerPhotoUrl !== undefined ? data.ownerPhotoUrl : localState.vehicle.ownerPhotoUrl,
         };
-        currentOdo = typeof data.odometer === 'number' ? data.odometer : seedTemplate.odometer;
-        currentTargets = Array.isArray(data.targets) && data.targets.length ? data.targets : [...seedTemplate.targets];
-        currentInterval = typeof data.serviceInterval === 'number' ? data.serviceInterval : seedTemplate.serviceInterval;
+        currentOdo = typeof data.odometer === 'number' ? data.odometer : localState.odometer;
+        currentTargets = Array.isArray(data.targets) && data.targets.length ? data.targets : [...localState.targets];
+        currentInterval = typeof data.serviceInterval === 'number' ? data.serviceInterval : localState.serviceInterval;
         hasReceivedMainDoc = true;
         emit();
       } else {
-        // Document does not exist yet -> bootstrap with seed state
+        // Document does not exist yet in Firestore -> persist local state to Firestore if available
         hasReceivedMainDoc = true;
         try {
-          await initializeFirestoreSeed(bikeId);
+          if (isPrimarySachiBike) {
+            await initializeFirestoreSeed(bikeId);
+          } else {
+            await setDoc(
+              bikeDocRef,
+              sanitizeForFirestore({
+                ...currentVehicle,
+                odometer: currentOdo,
+                targets: currentTargets,
+                serviceInterval: currentInterval,
+                updatedAt: new Date().toISOString(),
+              }),
+              { merge: true }
+            );
+          }
         } catch (e) {
-          console.warn('Initial Firestore seed initialization:', e);
+          console.warn('Initial Firestore bike sync notice:', e);
         }
         emit();
       }
     },
     (err) => {
-      console.error('Error listening to bike document:', err);
+      console.warn('Notice listening to bike document (fallback local active):', err);
+      emit();
       if (onError) onError(err);
     }
   );
@@ -546,10 +649,11 @@ export async function registerAdminUser(data: {
   province: string;
   email?: string;
 }): Promise<{ session: AuthSession; userAccount: UserAccount }> {
-  const normUser = data.username.trim().toLowerCase();
+  const normUser = data.username.trim().toLowerCase().replace(/\s+/g, '');
   if (!normUser) throw new Error('Username is required.');
+  if (normUser.length < 3) throw new Error('Username must be at least 3 characters long.');
   if (normUser === 'sachi' || normUser === 'chathura') {
-    throw new Error('This username is reserved. Please choose another username.');
+    throw new Error('This username is reserved for system administrators. Please choose another username.');
   }
 
   // Generate clean bike ID
@@ -568,35 +672,64 @@ export async function registerAdminUser(data: {
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     email: data.email?.trim(),
+    status: 'active',
   };
 
-  // 1. Check if user already exists in Firestore
+  // 1. Check local accounts
+  const localAccounts = getLocalAccounts();
+  const existingLocal = localAccounts[normUser];
+
+  // 2. Check Firestore with timeout race
+  let existingRemote = false;
+  let remoteMatchedPass = false;
   try {
     const userDocRef = doc(db, 'users', normUser);
-    const snap = await getDoc(userDocRef);
-    if (snap.exists()) {
-      throw new Error('Username already exists. Please choose a different username.');
+    const snap = await Promise.race([
+      getDoc(userDocRef),
+      new Promise<null>((res) => setTimeout(() => res(null), 2000)),
+    ]);
+    if (snap && snap.exists()) {
+      existingRemote = true;
+      const remoteData = snap.data() as UserAccount;
+      if (remoteData.password === data.password.trim()) {
+        remoteMatchedPass = true;
+      }
     }
-
-    // Save user to Firestore
-    await setDoc(userDocRef, sanitizeForFirestore(userAccount));
-  } catch (err: any) {
-    if (err.message && err.message.includes('already exists')) {
-      throw err;
-    }
-    console.warn('Firestore user registration notice:', err);
+  } catch (err) {
+    console.warn('Firestore user check notice:', err);
   }
 
-  // 2. Initialize bike document in Firestore
-  try {
-    const bikeDocRef = doc(db, 'bikes', bikeId);
-    const bikeVehicle: VehicleDetails = {
+  // Handle existing account: if password matches, seamlessly log them in!
+  if (existingLocal || existingRemote) {
+    if ((existingLocal && existingLocal.password === data.password.trim()) || remoteMatchedPass) {
+      const activeAccount = existingLocal || userAccount;
+      saveLocalAccount(activeAccount);
+      const session: AuthSession = {
+        role: activeAccount.role || 'admin',
+        username: activeAccount.ownerName || activeAccount.username,
+        bikeId: activeAccount.bikeId || bikeId,
+        district: activeAccount.district,
+        province: activeAccount.province,
+        bikeNumber: activeAccount.bikeNumber,
+        signedInAt: new Date().toISOString(),
+      };
+      return { session, userAccount: activeAccount };
+    } else {
+      throw new Error(`Username "${normUser}" is already taken. Please choose another username or sign in from the Sign In tab.`);
+    }
+  }
+
+  // 3. Save to localStorage immediately (guaranteed instant local access)
+  saveLocalAccount(userAccount);
+
+  // 4. Initialize comprehensive bike state in localStorage
+  const initialBikeState: AppState = {
+    bikeId: bikeId,
+    vehicle: {
       owner: userAccount.ownerName,
-      regNo: userAccount.bikeNumber,
-      district: userAccount.district,
-      province: userAccount.province,
       model: 'Bajaj Pulsar N160 Dual Channel ABS',
       colour: 'Brooklyn Black',
+      regNo: userAccount.bikeNumber,
       chassisNo: `MD2B54DX-${normUser.toUpperCase()}-01`,
       engineNo: `PDXCSH-${normUser.toUpperCase()}-01`,
       bookNo: `POR0022026-${normUser.toUpperCase()}`,
@@ -605,31 +738,50 @@ export async function registerAdminUser(data: {
       fuelType: 'Octane 95 Euro-4',
       tyrePressures: 'F: 25 PSI / R: 28-32',
       authority: 'Dept. of Motor Traffic (Sri Lanka)',
-    };
+      district: userAccount.district,
+      province: userAccount.province,
+    },
+    odometer: 0,
+    services: [],
+    notes: [],
+    targets: [2500],
+    serviceInterval: 2500,
+  };
+  saveState(initialBikeState, bikeId);
 
-    await setDoc(
-      bikeDocRef,
-      sanitizeForFirestore({
-        ...bikeVehicle,
-        odometer: 0,
-        targets: [2500],
-        serviceInterval: 2500,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      })
-    );
-  } catch (err) {
-    console.warn('Firestore bike init notice:', err);
-  }
+  // 5. Sync to Cloud Firestore in non-blocking background with timeout protection
+  (async () => {
+    try {
+      const userDocRef = doc(db, 'users', normUser);
+      await Promise.race([
+        setDoc(userDocRef, sanitizeForFirestore(userAccount)),
+        new Promise((res) => setTimeout(res, 3000)),
+      ]);
 
-  // 3. Save to localStorage
-  saveLocalAccount(userAccount);
+      const bikeDocRef = doc(db, 'bikes', bikeId);
+      await Promise.race([
+        setDoc(
+          bikeDocRef,
+          sanitizeForFirestore({
+            ...initialBikeState.vehicle,
+            odometer: 0,
+            targets: [2500],
+            serviceInterval: 2500,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          })
+        ),
+        new Promise((res) => setTimeout(res, 3000)),
+      ]);
+    } catch (e) {
+      console.warn('Firestore cloud sync for registration notice:', e);
+    }
+  })();
 
-  // Capture and log registration login IP
-  try {
-    const netInfo = await fetchClientNetworkInfo();
+  // 6. Capture and log registration login IP in background (non-blocking)
+  fetchClientNetworkInfo().then((netInfo) => {
     const loc = [netInfo.city, netInfo.region, netInfo.country].filter(Boolean).join(', ') || 'Sri Lanka';
-    await recordLoginLog({
+    recordLoginLog({
       username: normUser,
       role: 'admin',
       ip: netInfo.ip,
@@ -641,10 +793,8 @@ export async function registerAdminUser(data: {
       bikeId,
       bikeNumber: userAccount.bikeNumber,
       ownerName: userAccount.ownerName,
-    });
-  } catch (e) {
-    console.warn('Register login log notice:', e);
-  }
+    }).catch(console.warn);
+  }).catch(console.warn);
 
   const session: AuthSession = {
     role: 'admin',
@@ -672,7 +822,11 @@ export async function recordLoginLog(logData: Omit<LoginLog, 'id'>): Promise<str
 
   try {
     const logRef = doc(db, 'login_logs', logId);
-    await setDoc(logRef, sanitizeForFirestore(logDoc));
+    // Timeout setDoc so it never blocks or hangs
+    await Promise.race([
+      setDoc(logRef, sanitizeForFirestore(logDoc)),
+      new Promise((res) => setTimeout(res, 1800)),
+    ]);
 
     // Also update last login info on the user's account in Firestore
     if (logData.status === 'success' && logData.username) {
@@ -708,7 +862,10 @@ export async function recordLoginLog(logData: Omit<LoginLog, 'id'>): Promise<str
         updatePayload.bikeNumber = logData.bikeNumber;
       }
 
-      await setDoc(userDocRef, sanitizeForFirestore(updatePayload), { merge: true });
+      await Promise.race([
+        setDoc(userDocRef, sanitizeForFirestore(updatePayload), { merge: true }),
+        new Promise((res) => setTimeout(res, 1800)),
+      ]);
     }
   } catch (err) {
     console.warn('Firestore login log record notice (cached locally):', err);
@@ -999,44 +1156,60 @@ export async function createUserByOwnerOrManager(data: {
     createdBy: data.createdBy || 'sachi',
   };
 
-  // 1. Save user in Firestore
-  const userDocRef = doc(db, 'users', normUser);
-  await setDoc(userDocRef, sanitizeForFirestore(userAccount));
+  // 1. Save user in Firestore with non-blocking safety
+  try {
+    const userDocRef = doc(db, 'users', normUser);
+    await Promise.race([
+      setDoc(userDocRef, sanitizeForFirestore(userAccount)),
+      new Promise((res) => setTimeout(res, 2500)),
+    ]);
+  } catch (err) {
+    console.warn('Firestore user creation notice:', err);
+  }
 
-  // 2. Initialize corresponding bike document in Firestore
+  // 2. Initialize corresponding bike document in Firestore & localStorage
+  const initialBikeState: AppState = {
+    bikeId: bikeId,
+    vehicle: {
+      owner: userAccount.ownerName,
+      regNo: userAccount.bikeNumber,
+      district: userAccount.district,
+      province: userAccount.province,
+      model: 'Bajaj Pulsar N160 Dual Channel ABS',
+      colour: 'Brooklyn Black',
+      chassisNo: `MD2B54DX-${normUser.toUpperCase()}-01`,
+      engineNo: `PDXCSH-${normUser.toUpperCase()}-01`,
+      bookNo: `POR0022026-${normUser.toUpperCase()}`,
+      absSystem: 'Dual-Channel ABS',
+      oilSpec: '20W50 (1150 ml)',
+      fuelType: 'Octane 95 Euro-4',
+      tyrePressures: 'F: 25 PSI / R: 28-32',
+      authority: 'Dept. of Motor Traffic (Sri Lanka)',
+    },
+    odometer: 0,
+    services: [],
+    notes: [],
+    targets: [2500],
+    serviceInterval: 2500,
+  };
+  saveState(initialBikeState, bikeId);
+
   try {
     const bikeDocRef = doc(db, 'bikes', bikeId);
-    const snap = await getDoc(bikeDocRef);
-    if (!snap.exists()) {
-      const bikeVehicle: VehicleDetails = {
-        owner: userAccount.ownerName,
-        regNo: userAccount.bikeNumber,
-        district: userAccount.district,
-        province: userAccount.province,
-        model: 'Bajaj Pulsar N160 Dual Channel ABS',
-        colour: 'Brooklyn Black',
-        chassisNo: `MD2B54DX-${normUser.toUpperCase()}-01`,
-        engineNo: `PDXCSH-${normUser.toUpperCase()}-01`,
-        bookNo: `POR0022026-${normUser.toUpperCase()}`,
-        absSystem: 'Dual-Channel ABS',
-        oilSpec: '20W50 (1150 ml)',
-        fuelType: 'Octane 95 Euro-4',
-        tyrePressures: 'F: 25 PSI / R: 28-32',
-        authority: 'Dept. of Motor Traffic (Sri Lanka)',
-      };
-
-      await setDoc(
+    await Promise.race([
+      setDoc(
         bikeDocRef,
         sanitizeForFirestore({
-          ...bikeVehicle,
+          ...initialBikeState.vehicle,
           odometer: 0,
           targets: [2500],
           serviceInterval: 2500,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         })
-      );
-    }
+      ),
+      new Promise((res) => setTimeout(res, 2500)),
+    ]);
   } catch (err) {
     console.warn('Firestore bike document init notice:', err);
   }
@@ -1200,7 +1373,14 @@ export async function loginUser(username: string, password: string): Promise<{ s
   const trimmedUser = username.trim().toLowerCase();
   const trimmedPass = password.trim();
 
-  // Detect client IP and network information for audit tracking
+  if (!trimmedUser) {
+    throw new Error('Please enter your username.');
+  }
+  if (!trimmedPass) {
+    throw new Error('Please enter your password.');
+  }
+
+  // Fast default network info so login is NEVER delayed by external API lookups
   let netInfo = {
     ip: '127.0.0.1 (Local)',
     city: 'Kurunegala',
@@ -1210,22 +1390,17 @@ export async function loginUser(username: string, password: string): Promise<{ s
     userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
   };
 
-  try {
-    const fetched = await fetchClientNetworkInfo();
-    netInfo = {
-      ...netInfo,
-      ...fetched,
-    };
-  } catch {
-    // Continue with default network info
-  }
+  // Background refresh of network info without blocking
+  fetchClientNetworkInfo().then((fetched) => {
+    netInfo = { ...netInfo, ...fetched };
+  }).catch(() => {});
 
   const locationStr = [netInfo.city, netInfo.region, netInfo.country].filter(Boolean).join(', ') || 'Sri Lanka';
 
-  // 1. Sachi Master Admin
+  // 1. Sachi Master Admin (Instant verification)
   if (trimmedUser === 'sachi' && trimmedPass === '988800') {
-    // Record login audit log
-    await recordLoginLog({
+    // Record login audit log in the background (non-blocking)
+    recordLoginLog({
       username: 'sachi',
       role: 'admin',
       ip: netInfo.ip,
@@ -1237,7 +1412,7 @@ export async function loginUser(username: string, password: string): Promise<{ s
       bikeId: 'BKT-1374',
       bikeNumber: 'BKT-1374',
       ownerName: 'Pathum Sachintha',
-    });
+    }).catch(console.warn);
 
     return {
       session: {
@@ -1253,7 +1428,7 @@ export async function loginUser(username: string, password: string): Promise<{ s
     };
   }
 
-  // 2. Chathura Admin (Read real plate from Firestore if available)
+  // 2. Chathura Admin (Instant verification)
   if (
     trimmedUser === 'chathura' &&
     (trimmedPass === 'password-200135' || trimmedPass === '200135')
@@ -1263,27 +1438,18 @@ export async function loginUser(username: string, password: string): Promise<{ s
     let chathuraDistrict = 'Western Province';
     let chathuraProvince = 'Western Province';
 
-    try {
-      const userDocRef = doc(db, 'users', 'chathura');
-      const snap = await getDoc(userDocRef);
-      if (snap.exists()) {
-        const uData = snap.data();
-        if (uData.bikeNumber && uData.bikeNumber !== 'WP BKT-2001') chathuraBikePlate = uData.bikeNumber;
-        if (uData.ownerName) chathuraOwnerName = uData.ownerName;
-        if (uData.district) chathuraDistrict = uData.district;
-        if (uData.province) chathuraProvince = uData.province;
-      } else {
-        const bikeRef = doc(db, 'bikes', 'chathura_bike');
-        const bSnap = await getDoc(bikeRef);
-        if (bSnap.exists() && bSnap.data().regNo) {
-          chathuraBikePlate = bSnap.data().regNo;
-        }
-      }
-    } catch (e) {
-      console.warn('Could not read chathura doc on login:', e);
+    // Fast check local storage first
+    const localAccs = getLocalAccounts();
+    if (localAccs['chathura']) {
+      const c = localAccs['chathura'];
+      if (c.bikeNumber && !c.bikeNumber.includes('WP BKT-2001')) chathuraBikePlate = c.bikeNumber;
+      if (c.ownerName) chathuraOwnerName = c.ownerName;
+      if (c.district) chathuraDistrict = c.district;
+      if (c.province) chathuraProvince = c.province;
     }
 
-    await recordLoginLog({
+    // Background audit log
+    recordLoginLog({
       username: 'chathura',
       role: 'admin',
       ip: netInfo.ip,
@@ -1295,7 +1461,7 @@ export async function loginUser(username: string, password: string): Promise<{ s
       bikeId: 'chathura_bike',
       bikeNumber: chathuraBikePlate,
       ownerName: chathuraOwnerName,
-    });
+    }).catch(console.warn);
 
     return {
       session: {
@@ -1311,73 +1477,7 @@ export async function loginUser(username: string, password: string): Promise<{ s
     };
   }
 
-  // 3. Check Firestore users collection
-  try {
-    const userDocRef = doc(db, 'users', trimmedUser);
-    const snap = await getDoc(userDocRef);
-    if (snap.exists()) {
-      const data = snap.data() as UserAccount;
-      if (data.status === 'suspended') {
-        throw new Error('This account has been suspended by the administrator.');
-      }
-
-      if (data.password === trimmedPass) {
-        saveLocalAccount(data);
-
-        // Record successful login
-        await recordLoginLog({
-          username: trimmedUser,
-          role: data.role || 'client',
-          ip: netInfo.ip,
-          location: locationStr,
-          device: netInfo.device,
-          userAgent: netInfo.userAgent,
-          status: 'success',
-          timestamp: new Date().toISOString(),
-          bikeId: data.bikeId || `bike_${trimmedUser}`,
-          bikeNumber: data.bikeNumber,
-          ownerName: data.ownerName,
-        });
-
-        return {
-          session: {
-            role: data.role || 'client',
-            username: data.ownerName || data.username,
-            bikeId: data.bikeId || `bike_${trimmedUser}`,
-            district: data.district,
-            province: data.province,
-            bikeNumber: data.bikeNumber,
-            loginIp: netInfo.ip,
-            signedInAt: new Date().toISOString(),
-          },
-          userAccount: data,
-        };
-      } else {
-        // Record failed login attempt
-        await recordLoginLog({
-          username: trimmedUser,
-          role: data.role || 'client',
-          ip: netInfo.ip,
-          location: locationStr,
-          device: netInfo.device,
-          userAgent: netInfo.userAgent,
-          status: 'failed',
-          timestamp: new Date().toISOString(),
-          bikeId: data.bikeId,
-          bikeNumber: data.bikeNumber,
-          ownerName: data.ownerName,
-        });
-        throw new Error('Incorrect password. Please verify and try again.');
-      }
-    }
-  } catch (err: any) {
-    if (err.message && (err.message.includes('Incorrect password') || err.message.includes('suspended'))) {
-      throw err;
-    }
-    console.warn('Firestore user lookup notice, checking local cache:', err);
-  }
-
-  // 4. Check LocalStorage registered accounts
+  // 3. Check LocalStorage registered accounts first (Instant offline & cached login)
   const localAccounts = getLocalAccounts();
   const localAcc = localAccounts[trimmedUser];
   if (localAcc) {
@@ -1386,7 +1486,8 @@ export async function loginUser(username: string, password: string): Promise<{ s
     }
 
     if (localAcc.password === trimmedPass) {
-      await recordLoginLog({
+      // Record audit in background
+      recordLoginLog({
         username: trimmedUser,
         role: localAcc.role || 'client',
         ip: netInfo.ip,
@@ -1398,7 +1499,7 @@ export async function loginUser(username: string, password: string): Promise<{ s
         bikeId: localAcc.bikeId,
         bikeNumber: localAcc.bikeNumber,
         ownerName: localAcc.ownerName,
-      });
+      }).catch(console.warn);
 
       return {
         session: {
@@ -1414,7 +1515,7 @@ export async function loginUser(username: string, password: string): Promise<{ s
         userAccount: localAcc,
       };
     } else {
-      await recordLoginLog({
+      recordLoginLog({
         username: trimmedUser,
         role: localAcc.role || 'client',
         ip: netInfo.ip,
@@ -1426,26 +1527,95 @@ export async function loginUser(username: string, password: string): Promise<{ s
         bikeId: localAcc.bikeId,
         bikeNumber: localAcc.bikeNumber,
         ownerName: localAcc.ownerName,
-      });
+      }).catch(console.warn);
+
       throw new Error('Incorrect password. Please verify and try again.');
     }
   }
 
-  // Log unknown user attempt
+  // 4. Check Firestore users collection with a strict 2.5-second timeout
   try {
-    await recordLoginLog({
-      username: trimmedUser,
-      role: 'client',
-      ip: netInfo.ip,
-      location: locationStr,
-      device: netInfo.device,
-      userAgent: netInfo.userAgent,
-      status: 'failed',
-      timestamp: new Date().toISOString(),
-    });
-  } catch {}
+    const userDocRef = doc(db, 'users', trimmedUser);
+    const snap = await Promise.race([
+      getDoc(userDocRef),
+      new Promise<null>((res) => setTimeout(() => res(null), 2500)),
+    ]);
 
-  throw new Error('User not found. Please check your username or contact Admin Sachintha.');
+    if (snap && snap.exists()) {
+      const data = snap.data() as UserAccount;
+      if (data.status === 'suspended') {
+        throw new Error('This account has been suspended by the administrator.');
+      }
+
+      if (data.password === trimmedPass) {
+        saveLocalAccount(data);
+
+        // Record audit in background
+        recordLoginLog({
+          username: trimmedUser,
+          role: data.role || 'client',
+          ip: netInfo.ip,
+          location: locationStr,
+          device: netInfo.device,
+          userAgent: netInfo.userAgent,
+          status: 'success',
+          timestamp: new Date().toISOString(),
+          bikeId: data.bikeId || `bike_${trimmedUser}`,
+          bikeNumber: data.bikeNumber,
+          ownerName: data.ownerName,
+        }).catch(console.warn);
+
+        return {
+          session: {
+            role: data.role || 'client',
+            username: data.ownerName || data.username,
+            bikeId: data.bikeId || `bike_${trimmedUser}`,
+            district: data.district,
+            province: data.province,
+            bikeNumber: data.bikeNumber,
+            loginIp: netInfo.ip,
+            signedInAt: new Date().toISOString(),
+          },
+          userAccount: data,
+        };
+      } else {
+        recordLoginLog({
+          username: trimmedUser,
+          role: data.role || 'client',
+          ip: netInfo.ip,
+          location: locationStr,
+          device: netInfo.device,
+          userAgent: netInfo.userAgent,
+          status: 'failed',
+          timestamp: new Date().toISOString(),
+          bikeId: data.bikeId,
+          bikeNumber: data.bikeNumber,
+          ownerName: data.ownerName,
+        }).catch(console.warn);
+
+        throw new Error('Incorrect password. Please verify and try again.');
+      }
+    }
+  } catch (err: any) {
+    if (err.message && (err.message.includes('Incorrect password') || err.message.includes('suspended'))) {
+      throw err;
+    }
+    console.warn('Firestore user lookup notice:', err);
+  }
+
+  // Log unknown user attempt in background
+  recordLoginLog({
+    username: trimmedUser,
+    role: 'client',
+    ip: netInfo.ip,
+    location: locationStr,
+    device: netInfo.device,
+    userAgent: netInfo.userAgent,
+    status: 'failed',
+    timestamp: new Date().toISOString(),
+  }).catch(() => {});
+
+  throw new Error('User not found. Please check your username or register a new account.');
 }
 
 export async function updateUserAccount(

@@ -50,143 +50,16 @@ export function parseDeviceString(ua: string): string {
 let cachedNetworkInfo: ClientNetworkInfo | null = null;
 let lastFetchTime = 0;
 
-// Fetch client network info with fallback across reliable CORS-friendly APIs
+// Fetch client network info with fast fallback across reliable CORS-friendly APIs
 export async function fetchClientNetworkInfo(forceRefresh = false): Promise<ClientNetworkInfo> {
   const now = Date.now();
-  if (!forceRefresh && cachedNetworkInfo && now - lastFetchTime < 60000) {
+  if (!forceRefresh && cachedNetworkInfo && now - lastFetchTime < 120000) {
     return cachedNetworkInfo;
   }
 
   const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : 'Unknown';
   const device = parseDeviceString(userAgent);
 
-  // 1. Try ipwho.is (CORS friendly, returns real IPv4/IPv6, city, region, ISP, lat, lon)
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3500);
-
-    const res = await fetch('https://ipwho.is/', {
-      signal: controller.signal,
-    });
-    clearTimeout(timeoutId);
-
-    if (res.ok) {
-      const data = await res.json();
-      if (data.success && data.ip) {
-        const info: ClientNetworkInfo = {
-          ip: data.ip,
-          city: data.city || undefined,
-          region: data.region || undefined,
-          country: data.country || 'Sri Lanka',
-          isp: data.connection?.isp || data.connection?.org || undefined,
-          latitude: data.latitude,
-          longitude: data.longitude,
-          device,
-          userAgent,
-        };
-        cachedNetworkInfo = info;
-        lastFetchTime = now;
-        return info;
-      }
-    }
-  } catch {
-    // Proceed to next provider
-  }
-
-  // 2. Try freeipapi.com (Reliable, fast, high accuracy)
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000);
-
-    const res = await fetch('https://freeipapi.com/api/json', {
-      signal: controller.signal,
-    });
-    clearTimeout(timeoutId);
-
-    if (res.ok) {
-      const data = await res.json();
-      if (data.ipAddress) {
-        const info: ClientNetworkInfo = {
-          ip: data.ipAddress,
-          city: data.cityName && data.cityName !== '-' ? data.cityName : undefined,
-          region: data.regionName && data.regionName !== '-' ? data.regionName : undefined,
-          country: data.countryName || 'Sri Lanka',
-          latitude: data.latitude,
-          longitude: data.longitude,
-          device,
-          userAgent,
-        };
-        cachedNetworkInfo = info;
-        lastFetchTime = now;
-        return info;
-      }
-    }
-  } catch {
-    // Proceed to next provider
-  }
-
-  // 3. Try ipapi.co
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 2500);
-
-    const res = await fetch('https://ipapi.co/json/', {
-      signal: controller.signal,
-    });
-    clearTimeout(timeoutId);
-
-    if (res.ok) {
-      const data = await res.json();
-      if (data.ip) {
-        const info: ClientNetworkInfo = {
-          ip: data.ip,
-          city: data.city || undefined,
-          region: data.region || undefined,
-          country: data.country_name || 'Sri Lanka',
-          isp: data.org || undefined,
-          latitude: data.latitude,
-          longitude: data.longitude,
-          device,
-          userAgent,
-        };
-        cachedNetworkInfo = info;
-        lastFetchTime = now;
-        return info;
-      }
-    }
-  } catch {
-    // Proceed to ipify for raw IP
-  }
-
-  // 4. Try api64.ipify.org (Fetches exact real IPv4 or IPv6)
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 2500);
-
-    const res = await fetch('https://api64.ipify.org?format=json', {
-      signal: controller.signal,
-    });
-    clearTimeout(timeoutId);
-
-    if (res.ok) {
-      const data = await res.json();
-      if (data.ip) {
-        const info: ClientNetworkInfo = {
-          ip: data.ip,
-          country: 'Sri Lanka',
-          device,
-          userAgent,
-        };
-        cachedNetworkInfo = info;
-        lastFetchTime = now;
-        return info;
-      }
-    }
-  } catch {
-    // Fallback below
-  }
-
-  // Fallback if all network requests fail
   const fallbackInfo: ClientNetworkInfo = {
     ip: 'Connected (Online)',
     country: 'Sri Lanka',
@@ -194,9 +67,78 @@ export async function fetchClientNetworkInfo(forceRefresh = false): Promise<Clie
     userAgent,
   };
 
-  cachedNetworkInfo = fallbackInfo;
-  lastFetchTime = now;
-  return fallbackInfo;
+  // Run the network fetch wrapped in a strict 1200ms overall timeout so it never blocks login
+  const fetchTask = async (): Promise<ClientNetworkInfo> => {
+    // 1. Try ipwho.is (CORS friendly, returns real IPv4/IPv6, city, region, ISP, lat, lon)
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 1000);
+
+      const res = await fetch('https://ipwho.is/', {
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.ip) {
+          return {
+            ip: data.ip,
+            city: data.city || undefined,
+            region: data.region || undefined,
+            country: data.country || 'Sri Lanka',
+            isp: data.connection?.isp || data.connection?.org || undefined,
+            latitude: data.latitude,
+            longitude: data.longitude,
+            device,
+            userAgent,
+          };
+        }
+      }
+    } catch {
+      // Proceed to next provider
+    }
+
+    // 2. Try api.ipify.org (Ultra fast raw IP)
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 900);
+
+      const res = await fetch('https://api.ipify.org?format=json', {
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.ip) {
+          return {
+            ip: data.ip,
+            country: 'Sri Lanka',
+            device,
+            userAgent,
+          };
+        }
+      }
+    } catch {
+      // Proceed to next provider
+    }
+
+    return fallbackInfo;
+  };
+
+  const timeoutPromise = new Promise<ClientNetworkInfo>((resolve) => {
+    setTimeout(() => resolve(cachedNetworkInfo || fallbackInfo), 1200);
+  });
+
+  try {
+    const result = await Promise.race([fetchTask(), timeoutPromise]);
+    cachedNetworkInfo = result;
+    lastFetchTime = Date.now();
+    return result;
+  } catch {
+    return cachedNetworkInfo || fallbackInfo;
+  }
 }
 
 // Request real high-precision GPS device location from browser/mobile device
