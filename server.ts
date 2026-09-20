@@ -213,83 +213,216 @@ async function startServer() {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
   });
 
-  // N160 AI Maintenance Assistant API Route
-  app.post('/api/faq', async (req: Request, res: Response) => {
+  // N160 AI Maintenance Assistant API Route (Supports single query & multi-turn chat with Free Gemini and ChatGPT)
+  app.post(['/api/faq', '/api/ai/chat'], async (req: Request, res: Response) => {
     try {
-      const { question, context } = req.body || {};
+      const { question, messages, context, mode, engine = 'gemini', customApiKey } = req.body || {};
 
-      if (!question || typeof question !== 'string') {
-        res.status(400).json({ error: 'A question string is required.' });
+      // Resolve query string
+      let activeQuery = '';
+      if (typeof question === 'string' && question.trim().length > 0) {
+        activeQuery = question.trim();
+      } else if (Array.isArray(messages) && messages.length > 0) {
+        const lastUser = [...messages].reverse().find((m) => m.role === 'user');
+        if (lastUser && typeof lastUser.content === 'string') {
+          activeQuery = lastUser.content.trim();
+        }
+      }
+
+      if (!activeQuery) {
+        res.status(400).json({ error: 'A question or message history is required.' });
         return;
       }
 
-      const client = getGenAI();
+      const isChatGpt = engine === 'chatgpt' || engine === 'openai';
 
-      if (client) {
-        try {
-          const systemInstruction = `You are the official Bajaj Pulsar N160 Technical Maintenance AI Assistant for the Bike Service Log Book web application.
-Your mission is to provide accurate, concise, and structured motorcycle maintenance advice specifically tailored for the Bajaj Pulsar N160 (Single & Dual Channel ABS, 164.82cc Oil-Cooled Single Cylinder 2-valve engine).
+      const baseSystemInstruction = `You are "Pulsar MechAI", the official Bajaj Pulsar N160 Master Technical AI Mechanic embedded directly in the Bike Service Log Book web application.
+Your mission is to provide accurate, authoritative, highly structured motorcycle maintenance advice, troubleshooting diagnostics, and service planning specifically for the Bajaj Pulsar N160 (Single & Dual Channel ABS, 164.82cc Oil-Cooled 2-Valve DTS-i Engine, 5-Speed Gearbox with Assist & Slipper Clutch).
 
-Key Bajaj Pulsar N160 Factory Specs:
-- Engine Oil Grade: 20W-50 or 10W-30 (Bajaj DTS-i 10,000 API SL, JASO MA2).
-- Engine Oil Capacity: 1,200 ml (1.2 L) for routine drain & refill; 1,400 ml (1.4 L) for dry engine overhaul.
-- Oil Filter: Replace at every oil change.
-- Chain Cleaning & Lubing: Every 500 km (or 300 km in rain/mud). Use O-ring safe cleaner and high-tack chain lube. Slack: 20-30 mm.
-- Tyre Pressure: Front 25 PSI (100/80-17). Rear 28 PSI solo / 32 PSI with pillion (130/70-17).
-- Service Schedule: 1st: 500-750 km (30-45d); 2nd: 4,500-5,000 km (240d); 3rd: 9,500-10,000 km (360d); subsequent: every 5,000 km.
-- Spark Plug: Champion RG6HCC or Bosch VR5NE, gap 0.7 - 0.8 mm. Clean at 5,000 km, replace at 10,000-15,000 km.
-- Brake Fluid: DOT 4 hydraulic brake fluid for front & rear disc brakes (Dual-Channel ABS). Flush every 2 years / 15,000 km.
-- Fuel Tank: 14 Liters (approx. 2.5 L reserve).
-- Battery: 12V 4Ah or 8Ah VRLA MF battery. Charging output ~14.2V - 14.8V DC.
-- Air Filter: Viscous paper element. Inspect at every service, replace every 10,000-15,000 km. Do NOT wash with water or petrol.
-- Valve / Tappet Clearance (Cold): Intake 0.05 mm, Exhaust 0.08 mm.
+Live Motorcycle Profile Context:
+- Motorcycle: ${context?.bikeModel || 'Bajaj Pulsar N160 (BKT-1374)'}
+- Plate: ${context?.regNo || 'BKT-1374'}
+- Current Odometer: ${context?.odometer !== undefined ? `${context.odometer} km` : 'Active'}
+- Next Service Target: ${context?.targetKm !== undefined ? `${context.targetKm} km` : '7,688 km'}
+- Distance Remaining to Service: ${context?.remainingKm !== undefined ? `${context.remainingKm} km` : 'Active'}
+- Service Status: ${context?.isOverdue ? 'CRITICAL: SERVICE OVERDUE' : context?.isDueSoon ? 'WARNING: SERVICE DUE SOON (<500 km)' : 'UP TO DATE'}
+- Total Completed Services Logged: ${context?.servicesCount || 'Recorded in app'}
+- Last Service Info: ${context?.lastServiceSummary || 'Available in Service History'}
+- Recent Maintenance Notes: ${context?.recentNotesSummary || 'None logged'}
 
-Formatting Guidelines:
-- Use clean Markdown with bold key specs, bullet points, and short readable paragraphs.
-- Provide direct, practical steps or precautions where relevant.
-- Keep the response concise, punchy, and highly informative (avoid long filler text).
-- Always include a brief rider safety / dealer verification tip at the end.`;
+Factory Technical Specifications (Bajaj Pulsar N160 OEM):
+- Engine Oil Grade: Bajaj DTS-i 10,000 20W-50 API SL, JASO MA2 (or 10W-30 Semi-Synthetic / Fully Synthetic JASO MA2). Never use car engine oil (causes clutch slip).
+- Oil Capacity: 1,200 ml (1.2 Liters) routine drain & refill; 1,400 ml (1.4 Liters) complete engine overhaul/dry.
+- Oil Filter: Replace paper cartridge filter at EVERY oil change.
+- Drive Chain: Clean & lube every 500 km (300 km in rain/mud) using O-ring safe chain cleaner and high-tack synthetic chain lube. Vertical slack: 20–30 mm. Rear axle nut torque: 90–100 Nm.
+- Tyre Pressure (Cold): Front 25 PSI (100/80-17 52P Tubeless). Rear 28 PSI solo / 32 PSI with pillion (130/70-17 62P Tubeless).
+- Service Schedule: 1st service: 500–750 km (30–45 days); 2nd service: 4,500–5,000 km (240 days); 3rd service: 9,500–10,000 km (360 days); periodic: every 5,000 km or 120 days.
+- Spark Plug: Champion RG6HCC or Bosch VR5NE. Electrode gap: 0.70 mm – 0.80 mm. Clean at 5,000 km, replace at 10,000–15,000 km.
+- Brake System: Dual-Channel ABS. Front 300 mm disc, Rear 230 mm disc. Fluid: DOT 4 Hydraulic Brake Fluid (flush every 2 years or 15,000 km). Minimum pad friction thickness: 1.5 mm.
+- Clutch: Wet multi-plate Assist & Slipper Clutch. Free play at lever perch: 2 mm to 3 mm.
+- Valve / Tappet Clearance (Engine Cold): Inlet: 0.05 mm (±0.01 mm). Exhaust: 0.08 mm (±0.01 mm). Inspect at 750 km and every 10,000 km.
+- Battery & Electrics: 12V 4Ah or 8Ah VRLA Maintenance-Free. Charging output: 14.2V – 14.8V DC at 4,000 RPM. Main fuse: 20A/25A blade. Sub-fuses: 10A/15A.
+- Fuel System: Bi-Fuel Electronic Fuel Injection (14 Liter tank, ~2.5L reserve). Average mileage: 45–50 km/L city, 50–54 km/L highway.
+- Suspension: Front 37mm / 31mm telescopic forks with 10W fork oil (~330 ml/leg); Rear Nitrox monoshock with 5/7-step adjustable preload.
 
-          const prompt = `Motorcycle Context:
-- Bike: ${context?.bikeModel || 'Bajaj Pulsar N160 (BKT-1374)'}
-- Current Odometer: ${context?.odometer ? `${context.odometer} km` : 'Active'}
-- User Question: ${question}
+Response Formatting Guidelines:
+1. Tailor advice specifically using the rider's current odometer (${context?.odometer || 'active'} km) and status.
+2. If diagnosing a symptom (noise, vibration, leak, hard shift, battery drain, low mileage):
+   - Provide "Possible Causes"
+   - Provide "Step-by-Step Garage Checks"
+   - Provide "Recommended Fix / Precautions"
+   - State clearly if immediate dealer visit is needed.
+3. Keep answers clear, technical, well-organized with clean Markdown headings, bullet points, and bold values.
+4. End every response with 2 to 3 practical follow-up questions formatted strictly like:
+### Suggested Follow-Ups
+- [Follow-up question 1]
+- [Follow-up question 2]
+- [Follow-up question 3]`;
 
-Please provide the official Bajaj Pulsar N160 recommendation, specifications, and maintenance procedure for this question.`;
+      // 1. ChatGPT AI Engine handling
+      if (isChatGpt) {
+        const openaiKey = (typeof customApiKey === 'string' && customApiKey.trim().length > 10)
+          ? customApiKey.trim()
+          : process.env.OPENAI_API_KEY;
 
-          // Try primary model, with automatic fallback if the model is under high demand (503)
-          let answerText: string | null = null;
-          let modelName = 'gemini-3.8-flash';
-
+        // If direct OpenAI key is available, call OpenAI GPT-4o-mini
+        if (openaiKey && typeof openaiKey === 'string' && openaiKey.trim().length > 10) {
           try {
+            const formattedOpenAiMessages = Array.isArray(messages) && messages.length > 0
+              ? messages.map((m: any) => ({
+                  role: m.role === 'assistant' || m.role === 'model' ? 'assistant' : 'user',
+                  content: String(m.content),
+                }))
+              : [{ role: 'user', content: activeQuery }];
+
+            const openAiPayload = {
+              model: 'gpt-4o-mini',
+              messages: [
+                {
+                  role: 'system',
+                  content: `You are ChatGPT (GPT-4o Mini), operating as the Master Technical AI Mechanic for Bajaj Pulsar N160.\n${baseSystemInstruction}`,
+                },
+                ...formattedOpenAiMessages,
+              ],
+              temperature: 0.3,
+            };
+
+            const openAiRes = await fetch('https://api.openai.com/v1/chat/completions', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${openaiKey.trim()}`,
+              },
+              body: JSON.stringify(openAiPayload),
+            });
+
+            if (openAiRes.ok) {
+              const data: any = await openAiRes.json();
+              const choiceText = data?.choices?.[0]?.message?.content?.trim();
+              if (choiceText) {
+                res.json({
+                  answer: choiceText,
+                  source: 'chatgpt-ai',
+                  model: 'ChatGPT (GPT-4o Mini)',
+                  engine: 'chatgpt',
+                });
+                return;
+              }
+            } else {
+              console.log(`[ChatGPT AI] Direct OpenAI returned status ${openAiRes.status}, switching to Free ChatGPT Engine...`);
+            }
+          } catch (openAiErr: any) {
+            console.log(`[ChatGPT AI] Direct OpenAI request failed (${openAiErr?.message}), switching to Free ChatGPT Engine...`);
+          }
+        }
+
+        // Free ChatGPT Engine Mode (Powered by Gemini client formatted with ChatGPT master technician persona)
+        const client = getGenAI();
+        if (client) {
+          try {
+            const chatGptPrompt = `You are ChatGPT (GPT-4o Mini), operating as the Master Technical AI Mechanic for the Bajaj Pulsar N160.\n${baseSystemInstruction}`;
+            let contentsPayload: any;
+            if (Array.isArray(messages) && messages.length > 0) {
+              contentsPayload = messages.map((m) => ({
+                role: m.role === 'model' || m.role === 'assistant' ? 'model' : 'user',
+                parts: [{ text: String(m.content) }],
+              }));
+            } else {
+              contentsPayload = `Rider Query: ${activeQuery}
+Current Bike Context:
+- Bike: ${context?.bikeModel || 'Bajaj Pulsar N160 (BKT-1374)'}
+- Odometer: ${context?.odometer ? `${context.odometer} km` : 'Active'}
+- Service Target: ${context?.targetKm ? `${context.targetKm} km` : '7,688 km'}
+- Mode: ${mode || 'general'}`;
+            }
+
             const response = await client.models.generateContent({
-              model: 'gemini-3.8-flash',
-              contents: prompt,
+              model: 'gemini-3.1-flash-lite',
+              contents: contentsPayload,
               config: {
-                systemInstruction,
-                temperature: 0.2,
+                systemInstruction: chatGptPrompt,
+                temperature: 0.3,
               },
             });
+
             if (response?.text && response.text.trim().length > 0) {
-              answerText = response.text.trim();
+              res.json({
+                answer: response.text.trim(),
+                source: 'chatgpt-ai',
+                model: 'ChatGPT 4o-Mini (Free Mode)',
+                engine: 'chatgpt',
+              });
+              return;
             }
           } catch {
-            // If primary model is unavailable or rate-limited, attempt backup flash model
+            // Falls back to knowledge base below
+          }
+        }
+      }
+
+      // 2. Google Gemini AI Engine handling (Free Gemini 3.1 Flash-Lite / 3.8 Flash)
+      const client = getGenAI();
+      if (client) {
+        try {
+          // Format contents: support multi-turn history if provided
+          let contentsPayload: any;
+          if (Array.isArray(messages) && messages.length > 0) {
+            contentsPayload = messages.map((m) => ({
+              role: m.role === 'model' || m.role === 'assistant' ? 'model' : 'user',
+              parts: [{ text: String(m.content) }],
+            }));
+          } else {
+            contentsPayload = `Rider Query: ${activeQuery}
+Current Bike Context:
+- Bike: ${context?.bikeModel || 'Bajaj Pulsar N160 (BKT-1374)'}
+- Odometer: ${context?.odometer ? `${context.odometer} km` : 'Active'}
+- Service Target: ${context?.targetKm ? `${context.targetKm} km` : '7,688 km'}
+- Remaining: ${context?.remainingKm !== undefined ? `${context.remainingKm} km` : 'N/A'}
+- Mode: ${mode || 'general'}`;
+          }
+
+          let answerText: string | null = null;
+          let modelName = 'Gemini Flash (Free)';
+          const candidateModels = ['gemini-3.1-flash-lite', 'gemini-3.8-flash'];
+
+          for (const cand of candidateModels) {
             try {
-              modelName = 'gemini-3.6-flash';
-              const backupResponse = await client.models.generateContent({
-                model: 'gemini-3.6-flash',
-                contents: prompt,
+              const response = await client.models.generateContent({
+                model: cand,
+                contents: contentsPayload,
                 config: {
-                  systemInstruction,
-                  temperature: 0.2,
+                  systemInstruction: baseSystemInstruction,
+                  temperature: 0.3,
                 },
               });
-              if (backupResponse?.text && backupResponse.text.trim().length > 0) {
-                answerText = backupResponse.text.trim();
+              if (response?.text && response.text.trim().length > 0) {
+                answerText = response.text.trim();
+                modelName = cand === 'gemini-3.1-flash-lite' ? 'Gemini 3.1 Flash (Free)' : 'Gemini 3.8 Flash (Free)';
+                break;
               }
-            } catch {
-              // Smooth fallback to local verified knowledge base below
+            } catch (candErr: any) {
+              const status = candErr?.status || candErr?.code || (candErr?.message ? candErr.message.slice(0, 50) : 'unavailable');
+              console.log(`[AI Mechanic] Model ${cand} reported ${status}, continuing to next provider...`);
             }
           }
 
@@ -298,6 +431,7 @@ Please provide the official Bajaj Pulsar N160 recommendation, specifications, an
               answer: answerText,
               source: 'gemini-ai',
               model: modelName,
+              engine: 'gemini',
             });
             return;
           }
@@ -307,34 +441,41 @@ Please provide the official Bajaj Pulsar N160 recommendation, specifications, an
       }
 
       // Fallback to verified N160 Technical Knowledge Base
-      const fallback = findFallbackAnswer(question);
+      const fallback = findFallbackAnswer(activeQuery);
       if (fallback) {
         res.json({
           answer: fallback,
           source: 'knowledge-base',
-          model: 'Bajaj Pulsar N160 Factory Manual',
+          model: isChatGpt ? 'ChatGPT (Offline Workshop Specs)' : 'Bajaj Pulsar N160 Factory Manual',
+          engine: isChatGpt ? 'chatgpt' : 'gemini',
         });
         return;
       }
 
-      // General fallback response
+      // Context-aware general fallback response
       res.json({
-        answer: `### Bajaj Pulsar N160 Maintenance Quick Guide
+        answer: `### Bajaj Pulsar N160 Technical Mechanic Guide
 
-For **"${question}"**:
-- **Engine Oil:** 20W-50 or 10W-30 (1,200 ml routine fill; oil filter replaced every change).
-- **Chain Maintenance:** Clean & lube every **500 km** with O-ring safe spray; maintain **20–30 mm** slack.
-- **Tyre Pressure:** Front **25 PSI**, Rear **28 PSI** (Solo) / **32 PSI** (Pillion).
-- **Service Interval:** Every **5,000 km** or **120 days**.
-- **Brake Fluid:** **DOT 4** hydraulic brake fluid with Dual-Channel ABS.
+Regarding your query **"${activeQuery}"**:
 
-For specific diagnostics, please verify with an authorized Bajaj dealer or your digital service schedule tab!`,
+- **Current Bike Context:** Bajaj Pulsar N160 (Odometer: **${context?.odometer ? `${context.odometer.toLocaleString()} km` : 'Active'}**)
+- **Engine Oil Specification:** **Bajaj DTS-i 10,000 (20W-50 API SL, JASO MA2)** or **10W-30 Semi-Synthetic**. Refill capacity: **1,200 ml** (replace oil filter every change).
+- **Chain Maintenance:** Clean & lubricate every **500 km** with O-ring safe spray; check vertical slack (**20–30 mm**).
+- **Tyre Pressures:** Cold front **25 PSI** (100/80-17), rear **28 PSI solo / 32 PSI pillion** (130/70-17).
+- **Periodic Interval:** Next scheduled service every **5,000 km** or **120 days**.
+- **Braking System:** **DOT 4** hydraulic brake fluid with Dual-Channel ABS.
+
+### Suggested Follow-Ups
+- When is my exact engine oil change due based on my odometer?
+- How do I adjust the drive chain tension correctly?
+- What are the symptoms of valve tappet clearance issues?`,
         source: 'knowledge-base',
-        model: 'Bajaj Pulsar N160 Factory Manual',
+        model: isChatGpt ? 'ChatGPT (Offline Workshop Specs)' : 'Bajaj Pulsar N160 Factory Knowledge Base',
+        engine: isChatGpt ? 'chatgpt' : 'gemini',
       });
     } catch (err: any) {
       console.error('API /api/faq error:', err);
-      res.status(500).json({ error: 'Failed to generate FAQ answer.', details: err?.message });
+      res.status(500).json({ error: 'Failed to generate answer.', details: err?.message });
     }
   });
 

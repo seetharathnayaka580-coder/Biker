@@ -44,6 +44,7 @@ interface HomeTabProps {
   onOpenScheduleGuide: () => void;
   onOpenPrint: () => void;
   onOpenThresholdAlert?: () => void;
+  onOpenQuickFaq?: (question?: string) => void;
 }
 
 export type CardColorTheme = 'cyan' | 'amber' | 'emerald' | 'red' | 'purple';
@@ -160,6 +161,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
   onOpenScheduleGuide,
   onOpenPrint,
   onOpenThresholdAlert,
+  onOpenQuickFaq,
 }) => {
   const currentTarget = state.targets[0] || 7688;
   const remainingKm = currentTarget - state.odometer;
@@ -716,6 +718,90 @@ export const HomeTab: React.FC<HomeTabProps> = ({
           </button>
         </div>
       </section>
+
+      {/* AI MASTER MECHANIC DIAGNOSTIC CENTER BANNER */}
+      {onOpenQuickFaq && (
+        <section className="bg-gradient-to-r from-[#111726] via-[#0c121e] to-[#0a0e18] border border-amber-500/40 hover:border-amber-400/80 rounded-2xl p-4 sm:p-5 shadow-xl relative overflow-hidden transition-all group">
+          {/* Ambient Glow */}
+          <div className="absolute top-0 right-0 w-64 h-full bg-gradient-to-l from-amber-500/15 via-transparent to-transparent pointer-events-none" />
+          
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-start sm:items-center gap-3.5">
+              <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-500 via-yellow-400 to-amber-600 p-[2px] shadow-[0_0_20px_rgba(245,158,11,0.3)] shrink-0">
+                <div className="w-full h-full rounded-[14px] bg-[#0c101a] flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-amber-400 group-hover:rotate-12 transition-transform" />
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="font-display font-black text-sm sm:text-base text-white tracking-wide">
+                    Pulsar MechAI Diagnostic Center
+                  </h3>
+                  <span className="text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/35">
+                    Gemini Flash AI
+                  </span>
+                  <span className="text-[9px] font-semibold text-emerald-400 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    Online Workshop Assistant
+                  </span>
+                </div>
+                <p className="text-xs text-zinc-400 mt-1 max-w-2xl leading-relaxed">
+                  Instant sound & vibration diagnostics, hands-free garage voice dictation, service log health scores, and factory Pulsar N160 technical procedures.
+                </p>
+              </div>
+            </div>
+
+            {/* Launch Button */}
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => onOpenQuickFaq()}
+                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-zinc-950 font-display font-black text-xs uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-amber-500/20 transition-all cursor-pointer active:scale-95"
+              >
+                <Sparkles className="w-3.5 h-3.5 fill-zinc-950" />
+                <span>Open AI Mechanic</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Quick Prompt Chips */}
+          <div className="mt-3.5 pt-3 border-t border-zinc-800/80 flex items-center gap-2 overflow-x-auto no-scrollbar">
+            <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider whitespace-nowrap">
+              Quick Diagnosis:
+            </span>
+            <button
+              type="button"
+              onClick={() => onOpenQuickFaq('My engine has a ticking sound at idle. Is it valve tappet or cam chain tensioner?')}
+              className="px-2.5 py-1 rounded-lg text-[11px] bg-[#161c2b] hover:bg-amber-500/20 border border-zinc-700 hover:border-amber-400 text-zinc-300 hover:text-white transition-all whitespace-nowrap cursor-pointer"
+            >
+              🩺 Engine Ticking Noise
+            </button>
+            <button
+              type="button"
+              onClick={() => onOpenQuickFaq('When is my next engine oil and filter change due based on my odometer?')}
+              className="px-2.5 py-1 rounded-lg text-[11px] bg-[#161c2b] hover:bg-amber-500/20 border border-zinc-700 hover:border-amber-400 text-zinc-300 hover:text-white transition-all whitespace-nowrap cursor-pointer"
+            >
+              🛢️ Oil Change Checklist
+            </button>
+            <button
+              type="button"
+              onClick={() => onOpenQuickFaq('How to inspect drive chain slack and adjust rear axle alignment?')}
+              className="px-2.5 py-1 rounded-lg text-[11px] bg-[#161c2b] hover:bg-amber-500/20 border border-zinc-700 hover:border-amber-400 text-zinc-300 hover:text-white transition-all whitespace-nowrap cursor-pointer"
+            >
+              ⚙️ Chain Slack & Alignment
+            </button>
+            <button
+              type="button"
+              onClick={() => onOpenQuickFaq('My front brake feels soft/spongy. How to bleed DOT 4 fluid with Dual Channel ABS?')}
+              className="px-2.5 py-1 rounded-lg text-[11px] bg-[#161c2b] hover:bg-amber-500/20 border border-zinc-700 hover:border-amber-400 text-zinc-300 hover:text-white transition-all whitespace-nowrap cursor-pointer"
+            >
+              🛑 Spongy Brakes & ABS
+            </button>
+          </div>
+        </section>
+      )}
 
       {/* 3. UPCOMING SERVICE STATUS & COUNTDOWN */}
       <section className="grid grid-cols-1 lg:grid-cols-12 gap-5">

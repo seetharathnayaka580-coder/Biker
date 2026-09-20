@@ -330,10 +330,10 @@ export const Header: React.FC<HeaderProps> = ({
                 type="button"
                 onClick={onOpenQuickFaq}
                 className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold text-amber-300 bg-gradient-to-r from-amber-500/20 to-yellow-500/15 hover:from-amber-500/30 hover:to-yellow-500/25 border border-amber-500/40 hover:border-amber-400 transition-all cursor-pointer shadow-sm active:scale-95 group"
-                title="AI Quick FAQ: Instant answers to N160 maintenance questions (Oil grades, chain cleaning intervals, tyre pressure, etc.)"
+                title="Pulsar MechAI: Powered by Free Google Gemini and ChatGPT for instant diagnostics, service log analysis, and OEM specs"
               >
                 <Sparkles className="w-3.5 h-3.5 text-amber-400 fill-amber-400/25 group-hover:rotate-12 transition-transform shrink-0" />
-                <span>Quick FAQ</span>
+                <span>AI Mechanic</span>
                 <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-amber-400/25 text-amber-200 border border-amber-400/35 uppercase tracking-widest hidden sm:inline">
                   AI
                 </span>

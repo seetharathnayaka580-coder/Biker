@@ -15,6 +15,7 @@ import { ClearDataModal } from './components/ClearDataModal';
 import { UserProfileModal } from './components/UserProfileModal';
 import { ServiceThresholdAlertModal } from './components/ServiceThresholdAlertModal';
 import { QuickFaqModal } from './components/QuickFaqModal';
+import { FloatingAiButton } from './components/FloatingAiButton';
 import { AppState, AuthSession, MaintenanceNote, ServiceRecord, VehicleDetails } from './types';
 import { loadState, saveState, calculateServiceStats } from './utils/formatters';
 import {
@@ -471,6 +472,10 @@ export default function App() {
             onOpenScheduleGuide={() => setShowScheduleModal(true)}
             onOpenPrint={() => setShowPrintModal(true)}
             onOpenThresholdAlert={() => setShowAlertModal(true)}
+            onOpenQuickFaq={(question) => {
+              setFaqInitialQuestion(question || null);
+              setShowFaqModal(true);
+            }}
           />
         )}
 
@@ -619,6 +624,17 @@ export default function App() {
         />
       )}
 
+      {/* Floating 1-Tap AI Mechanic Launcher Button */}
+      <FloatingAiButton
+        onClick={() => {
+          setFaqInitialQuestion(null);
+          setShowFaqModal(true);
+        }}
+        isOverdue={stats.isOverdue}
+        isDueSoon={stats.isDueSoon}
+        remainingKm={stats.remaining}
+      />
+
       {showFaqModal && (
         <QuickFaqModal
           isOpen={showFaqModal}
@@ -632,6 +648,7 @@ export default function App() {
             setShowFaqModal(false);
             setShowScheduleModal(true);
           }}
+          onAddNote={handleAddNote}
         />
       )}
     </div>
