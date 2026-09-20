@@ -19,6 +19,12 @@ import {
   MessageCircle,
   Send,
   Phone,
+  Crown,
+  Star,
+  BadgeCheck,
+  X,
+  ExternalLink,
+  ShieldCheck,
 } from 'lucide-react';
 import { AuthSession, VehicleDetails } from '../types';
 import { loginUser, registerAdminUser, loginWithGoogle } from '../lib/firebase';
@@ -28,6 +34,7 @@ interface LoginPageProps {
   onLoginSuccess: (session: AuthSession) => void;
   vehicle?: VehicleDetails;
   onOpenInstall?: () => void;
+  onUpdateVehicle?: (vehicle: VehicleDetails) => void;
 }
 
 // Crisp mechanical motorcycle ignition relay switch audio feedback using Web Audio API
@@ -58,13 +65,16 @@ const playClickSound = (isTurningOn: boolean) => {
   }
 };
 
-export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, onOpenInstall }) => {
+export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, onOpenInstall, onUpdateVehicle }) => {
   // Mode: Sign In or Sign Up
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
 
   // Lamp state (Turned on by default, can be toggled via the hanging cord)
   const [isLampOn, setIsLampOn] = useState(true);
   const [isCordPulled, setIsCordPulled] = useState(false);
+
+  // Photo for Creator Pathum Sachintha
+  const currentPhoto = vehicle?.ownerPhotoUrl || (typeof window !== 'undefined' ? localStorage.getItem('pathum_photo') : '') || '/pathum_photo.svg';
 
   // Sign In form state
   const [username, setUsername] = useState('');
@@ -83,6 +93,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, o
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
 
   // Filter districts dynamically based on selected province in Sign Up
   const currentDistricts = useMemo(() => {
@@ -687,40 +698,189 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, vehicle, o
           )}
         </div>
 
-        {/* App Owner & Direct Support Access */}
-        <div className="mt-3 p-3.5 rounded-2xl bg-[#090d16]/90 border border-emerald-500/30 backdrop-blur-md space-y-2">
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-[11px] font-bold text-zinc-300 flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              App Owner & Support:
-            </span>
-            <span className="text-[10px] font-mono text-emerald-300 font-semibold">
-              Sachintha Pathum
-            </span>
+        {/* App Creator & Executive Direct Support Access Card (Compact Small Card) */}
+        <div className="mt-2.5 p-2.5 sm:p-3 rounded-2xl bg-gradient-to-b from-[#141b29]/95 via-[#0e1422]/95 to-[#090d16]/95 border border-amber-500/35 hover:border-amber-400/50 shadow-lg backdrop-blur-xl relative overflow-hidden transition-all duration-300 space-y-2">
+          {/* Subtle ambient lighting glows */}
+          <div className="absolute -top-8 -right-8 w-20 h-20 bg-amber-500/15 rounded-full blur-xl pointer-events-none" />
+          <div className="absolute -bottom-6 -left-6 w-16 h-16 bg-emerald-500/15 rounded-full blur-xl pointer-events-none" />
+
+          {/* Top Row: Owner Profile & Status */}
+          <div className="flex items-center justify-between gap-2 relative z-10">
+            <div className="flex items-center gap-2.5 min-w-0">
+              {/* Photo with golden rim */}
+              <div className="relative shrink-0">
+                <div className="w-10 h-10 rounded-full border-2 border-amber-400/70 p-[1px] shadow-[0_0_12px_rgba(245,158,11,0.35)] overflow-hidden bg-[#0c101a]">
+                  <img
+                    src={currentPhoto}
+                    alt="Pathum Sachintha"
+                    className="w-full h-full object-cover rounded-full"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src = '/pathum_photo.svg';
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="font-display font-black text-xs sm:text-sm text-white tracking-wide truncate">
+                    Pathum Sachintha
+                  </span>
+                  <BadgeCheck className="w-3.5 h-3.5 text-sky-400 fill-sky-400/20 shrink-0" />
+                </div>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                  <span className="text-[10px] font-mono text-zinc-400 truncate">
+                    App Creator & System Architect
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 pt-1">
+          {/* WhatsApp & Telegram Action Buttons */}
+          <div className="grid grid-cols-2 gap-2 relative z-10 pt-0.5">
+            {/* WhatsApp Button */}
             <a
-              href="https://wa.me/94763961123?text=Hi%20Sachintha,%20I'm%20contacting%20you%20regarding%20the%20Bike%20Service%20Log%20Book%20login."
+              href="https://wa.me/94763961123?text=Hi%20Pathum%20Sachintha,%20I'm%20contacting%20you%20regarding%20the%20Bike%20Service%20Log%20Book."
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-1.5 py-1.5 px-2.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-xs font-semibold transition-all"
+              className="flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-500 hover:to-teal-500 border border-emerald-400/60 hover:border-amber-300 text-white text-xs font-bold shadow-[0_2px_12px_rgba(16,185,129,0.3)] hover:shadow-[0_2px_18px_rgba(16,185,129,0.5)] transition-all group active:scale-95"
+              title="Contact Pathum Sachintha on WhatsApp"
             >
-              <MessageCircle className="w-3.5 h-3.5 fill-emerald-400/40" />
-              <span>WhatsApp (+94 763961123)</span>
+              <MessageCircle className="w-3.5 h-3.5 fill-white group-hover:scale-110 transition-transform shrink-0" />
+              <span className="font-display tracking-wider">WhatsApp</span>
             </a>
 
+            {/* Telegram Button */}
             <a
               href="https://t.me/X_x_x_xzZ"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-1.5 py-1.5 px-2.5 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/30 text-sky-300 text-xs font-semibold transition-all"
+              className="flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-600 hover:from-sky-500 hover:to-blue-500 border border-sky-400/60 hover:border-amber-300 text-white text-xs font-bold shadow-[0_2px_12px_rgba(14,165,233,0.3)] hover:shadow-[0_2px_18px_rgba(14,165,233,0.5)] transition-all group active:scale-95"
+              title="Contact Pathum Sachintha on Telegram"
             >
-              <Send className="w-3.5 h-3.5 fill-sky-400/40" />
-              <span>Telegram (@X_x_x_xzZ)</span>
+              <Send className="w-3.5 h-3.5 fill-white group-hover:scale-110 transition-transform shrink-0" />
+              <span className="font-display tracking-wider">Telegram</span>
             </a>
           </div>
         </div>
+
+        {/* Premium Edition Showcase Modal */}
+        <AnimatePresence>
+          {showPremiumModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.94, y: 15 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.94, y: 15 }}
+                className="w-full max-w-md bg-gradient-to-b from-[#151c2c] via-[#0f1422] to-[#0a0e18] border border-amber-500/40 rounded-3xl p-5 shadow-[0_25px_70px_rgba(0,0,0,0.85)] relative overflow-hidden text-white"
+              >
+                {/* Decorative background ambient glows */}
+                <div className="absolute -top-16 -right-16 w-40 h-40 bg-amber-500/20 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute -bottom-16 -left-16 w-40 h-40 bg-yellow-500/15 rounded-full blur-3xl pointer-events-none" />
+
+                {/* Modal Close Button */}
+                <button
+                  type="button"
+                  onClick={() => setShowPremiumModal(false)}
+                  className="absolute top-4 right-4 text-zinc-400 hover:text-white p-1.5 rounded-xl bg-zinc-800/70 hover:bg-zinc-700/70 border border-zinc-700/60 transition-all cursor-pointer z-10"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+
+                {/* Modal Header */}
+                <div className="flex items-center gap-3 mb-4 relative z-10">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 via-yellow-400 to-amber-600 p-0.5 shadow-[0_0_20px_rgba(245,158,11,0.5)] shrink-0">
+                    <div className="w-full h-full rounded-[14px] bg-[#0c101a] flex items-center justify-center">
+                      <Crown className="w-6 h-6 text-amber-400 fill-amber-400" />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-display font-black text-lg text-white tracking-wide">
+                        Premium Pro Edition
+                      </h3>
+                      <span className="text-[10px] font-mono font-black uppercase px-2 py-0.5 rounded-full bg-amber-500/25 text-amber-300 border border-amber-500/40">
+                        VIP
+                      </span>
+                    </div>
+                    <p className="text-xs text-zinc-400 mt-0.5">
+                      Curated by Creator Pathum Sachintha for serious riders
+                    </p>
+                  </div>
+                </div>
+
+                {/* Feature Highlights Grid */}
+                <div className="space-y-2.5 my-4 relative z-10">
+                  <div className="p-2.5 rounded-xl bg-zinc-900/85 border border-zinc-800/80 flex items-start gap-3">
+                    <div className="p-1.5 rounded-lg bg-amber-500/15 text-amber-400 shrink-0 mt-0.5">
+                      <Bike className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-zinc-200">Unlimited Fleet & Multi-Bike Storage</h4>
+                      <p className="text-[11px] text-zinc-400 leading-snug">Track unlimited motorbikes with instant switching, custom registration numbers, and individual logs.</p>
+                    </div>
+                  </div>
+
+                  <div className="p-2.5 rounded-xl bg-zinc-900/85 border border-zinc-800/80 flex items-start gap-3">
+                    <div className="p-1.5 rounded-lg bg-emerald-500/15 text-emerald-400 shrink-0 mt-0.5">
+                      <ShieldCheck className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-zinc-200">Bajaj Digital Certificate Verification</h4>
+                      <p className="text-[11px] text-zinc-400 leading-snug">Tamper-proof digital service logbook with certified QR stamps and exportable PDF records.</p>
+                    </div>
+                  </div>
+
+                  <div className="p-2.5 rounded-xl bg-zinc-900/85 border border-zinc-800/80 flex items-start gap-3">
+                    <div className="p-1.5 rounded-lg bg-sky-500/15 text-sky-400 shrink-0 mt-0.5">
+                      <Zap className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-zinc-200">Real-Time Cloud Synchronization</h4>
+                      <p className="text-[11px] text-zinc-400 leading-snug">Continuous automatic cloud backups to Google Firebase Firestore with cross-device sync.</p>
+                    </div>
+                  </div>
+
+                  <div className="p-2.5 rounded-xl bg-zinc-900/85 border border-zinc-800/80 flex items-start gap-3">
+                    <div className="p-1.5 rounded-lg bg-purple-500/15 text-purple-400 shrink-0 mt-0.5">
+                      <Crown className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-zinc-200">24/7 Priority Support by Pathum Sachintha</h4>
+                      <p className="text-[11px] text-zinc-400 leading-snug">Direct contact line for custom requests, system support, maintenance consulting, and VIP updates.</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Direct Action Buttons */}
+                <div className="space-y-2 pt-2 relative z-10">
+                  <a
+                    href="https://wa.me/94763961123?text=Hi%20Pathum%20Sachintha,%20I'm%20interested%20in%20activating%20the%20Premium%20Pro%20Edition%20of%20the%20Bike%20Service%20Log%20Book!"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-display font-black text-xs tracking-wider uppercase shadow-[0_4px_20px_rgba(16,185,129,0.4)] flex items-center justify-center gap-2 transition-all cursor-pointer"
+                  >
+                    <MessageCircle className="w-4 h-4 fill-white" />
+                    <span>Contact Pathum Sachintha on WhatsApp</span>
+                    <ExternalLink className="w-3.5 h-3.5 ml-0.5" />
+                  </a>
+
+                  <a
+                    href="https://t.me/X_x_x_xzZ"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-2.5 px-4 rounded-xl bg-[#182233] hover:bg-[#1e2a40] border border-sky-500/30 text-sky-300 font-display font-bold text-xs tracking-wider uppercase flex items-center justify-center gap-2 transition-all cursor-pointer"
+                  >
+                    <Send className="w-3.5 h-3.5 fill-sky-400/40" />
+                    <span>Chat on Telegram (@X_x_x_xzZ)</span>
+                  </a>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
 
         {/* Footer info badge & Chrome App Install Shortcut */}
         <div className="flex flex-col items-center justify-center gap-2.5 mt-3">

@@ -48,6 +48,7 @@ interface HeaderProps {
   onOpenInstall?: () => void;
   onOpenProfile?: () => void;
   onOpenThresholdAlert?: () => void;
+  onOpenQuickFaq?: () => void;
   syncStatus: 'synced' | 'syncing' | 'offline' | 'error';
   stats: {
     remaining: number;
@@ -71,6 +72,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenInstall,
   onOpenProfile,
   onOpenThresholdAlert,
+  onOpenQuickFaq,
   syncStatus,
   stats,
 }) => {
@@ -250,11 +252,14 @@ export const Header: React.FC<HeaderProps> = ({
                 )}
               </div>
               <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                {state.vehicle.ownerPhotoUrl && (
+                {(state.vehicle.ownerPhotoUrl || isSachi) && (
                   <img
-                    src={state.vehicle.ownerPhotoUrl}
+                    src={state.vehicle.ownerPhotoUrl || '/pathum_photo.svg'}
                     alt={state.vehicle.owner}
-                    className="w-4 h-4 rounded-full object-cover border border-zinc-600 shrink-0"
+                    className="w-5 h-5 rounded-full object-cover border border-amber-500/50 shadow-sm shrink-0"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src = '/pathum_photo.svg';
+                    }}
                   />
                 )}
                 <p className="text-[11px] text-zinc-400 font-medium">
@@ -317,6 +322,21 @@ export const Header: React.FC<HeaderProps> = ({
               >
                 <Download className="w-3.5 h-3.5 text-zinc-400" />
                 <span className="hidden sm:inline">Install App</span>
+              </button>
+            )}
+
+            {onOpenQuickFaq && (
+              <button
+                type="button"
+                onClick={onOpenQuickFaq}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold text-amber-300 bg-gradient-to-r from-amber-500/20 to-yellow-500/15 hover:from-amber-500/30 hover:to-yellow-500/25 border border-amber-500/40 hover:border-amber-400 transition-all cursor-pointer shadow-sm active:scale-95 group"
+                title="AI Quick FAQ: Instant answers to N160 maintenance questions (Oil grades, chain cleaning intervals, tyre pressure, etc.)"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-400 fill-amber-400/25 group-hover:rotate-12 transition-transform shrink-0" />
+                <span>Quick FAQ</span>
+                <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-amber-400/25 text-amber-200 border border-amber-400/35 uppercase tracking-widest hidden sm:inline">
+                  AI
+                </span>
               </button>
             )}
 

@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradient -->
+    <radialGradient id="bgGrad" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#1e2638" />
+      <stop offset="60%" stop-color="#0f1422" />
+      <stop offset="100%" stop-color="#070a12" />
+    </radialGradient>
+
+    <!-- Warm Amber Rim Light -->
+    <radialGradient id="rimGlow" cx="75%" cy="30%" r="50%">
+      <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.4" />
+      <stop offset="100%" stop-color="#f59e0b" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Skin Tones -->
+    <linearGradient id="skinGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#d49b72" />
+      <stop offset="50%" stop-color="#be8058" />
+      <stop offset="100%" stop-color="#9d623d" />
+    </linearGradient>
+
+    <!-- Hair Color -->
+    <linearGradient id="hairGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#2a2428" />
+      <stop offset="100%" stop-color="#120f14" />
+    </linearGradient>
+
+    <!-- Jacket Gradient -->
+    <linearGradient id="jacketGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#242b38" />
+      <stop offset="40%" stop-color="#181d27" />
+      <stop offset="100%" stop-color="#0d1017" />
+    </linearGradient>
+
+    <!-- Gold Accent Ring -->
+    <linearGradient id="goldRing" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fde047" />
+      <stop offset="50%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#b45309" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background Circle -->
+  <circle cx="128" cy="128" r="126" fill="url(#bgGrad)" />
+  <circle cx="128" cy="128" r="126" fill="url(#rimGlow)" />
+
+  <!-- Outer Border Ring -->
+  <circle cx="128" cy="128" r="124" fill="none" stroke="url(#goldRing)" stroke-width="3" />
+
+  <!-- Biker Jacket / Torso -->
+  <path d="M 32 248 C 45 195, 75 170, 102 165 L 128 190 L 154 165 C 181 170, 211 195, 224 248 Z" fill="url(#jacketGrad)" stroke="#384357" stroke-width="1.5" />
+  <!-- Jacket Collar details -->
+  <path d="M 85 178 L 108 198 L 128 190 L 148 198 L 171 178" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-opacity="0.8" />
+  <path d="M 128 190 L 128 256" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4,2" />
+
+  <!-- Charcoal Inner Shirt -->
+  <polygon points="105,170 128,198 151,170 128,162" fill="#1e222d" />
+
+  <!-- Neck -->
+  <path d="M 112 142 L 112 172 C 112 182, 144 182, 144 172 L 144 142 Z" fill="#b57850" />
+
+  <!-- Head / Face -->
+  <ellipse cx="128" cy="122" rx="44" ry="52" fill="url(#skinGrad)" />
+
+  <!-- Ears -->
+  <ellipse cx="84" cy="124" rx="7" ry="12" fill="#be8058" />
+  <ellipse cx="172" cy="124" rx="7" ry="12" fill="#be8058" />
+
+  <!-- Stylish Modern Haircut (Fade sides, textured top) -->
+  <path d="M 84 116 C 82 82, 98 62, 128 62 C 158 62, 174 82, 172 116 C 166 98, 155 86, 128 86 C 101 86, 90 98, 84 116 Z" fill="url(#hairGrad)" />
+  <path d="M 96 74 Q 128 56 160 74 Q 148 64 128 64 Q 108 64 96 74 Z" fill="#3a333a" />
+
+  <!-- Eyebrows -->
+  <path d="M 98 108 Q 112 105 120 109" stroke="#181318" stroke-width="3" stroke-linecap="round" fill="none" />
+  <path d="M 136 109 Q 144 105 158 108" stroke="#181318" stroke-width="3" stroke-linecap="round" fill="none" />
+
+  <!-- Eyes -->
+  <ellipse cx="110" cy="118" rx="5.5" ry="3.5" fill="#1b171c" />
+  <ellipse cx="146" cy="118" rx="5.5" ry="3.5" fill="#1b171c" />
+  <circle cx="111.5" cy="117" r="1.2" fill="#ffffff" />
+  <circle cx="147.5" cy="117" r="1.2" fill="#ffffff" />
+
+  <!-- Nose -->
+  <path d="M 128 116 L 125 133 L 131 133" stroke="#8c5332" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+
+  <!-- Confident Smile -->
+  <path d="M 112 147 Q 128 160 144 147" stroke="#7a3f24" stroke-width="2.5" stroke-linecap="round" fill="none" />
+
+  <!-- Subtle Trim / Goatee -->
+  <path d="M 122 163 Q 128 166 134 163" stroke="#251f24" stroke-width="1.8" stroke-linecap="round" fill="none" />
+
+  <!-- Verified VIP Crest Badge at Bottom Right -->
+  <g transform="translate(178, 178)">
+    <circle cx="28" cy="28" r="24" fill="#0c101a" stroke="#f59e0b" stroke-width="2.5" />
+    <path d="M 28 14 L 31.5 21.5 L 39.5 22.5 L 33.5 28 L 35.5 36 L 28 32 L 20.5 36 L 22.5 28 L 16.5 22.5 L 24.5 21.5 Z" fill="#f59e0b" />
+  </g>
+</svg>

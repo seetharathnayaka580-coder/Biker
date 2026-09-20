@@ -14,6 +14,7 @@ import { InstallAppModal } from './components/InstallAppModal';
 import { ClearDataModal } from './components/ClearDataModal';
 import { UserProfileModal } from './components/UserProfileModal';
 import { ServiceThresholdAlertModal } from './components/ServiceThresholdAlertModal';
+import { QuickFaqModal } from './components/QuickFaqModal';
 import { AppState, AuthSession, MaintenanceNote, ServiceRecord, VehicleDetails } from './types';
 import { loadState, saveState, calculateServiceStats } from './utils/formatters';
 import {
@@ -69,6 +70,8 @@ export default function App() {
   const [showClearModal, setShowClearModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showAlertModal, setShowAlertModal] = useState(false);
+  const [showFaqModal, setShowFaqModal] = useState(false);
+  const [faqInitialQuestion, setFaqInitialQuestion] = useState<string | null>(null);
 
   // App Opening Loading Splash Screen state
   const [showSplash, setShowSplash] = useState(true);
@@ -202,6 +205,19 @@ export default function App() {
     }
   }, [showSplash, authSession, state.odometer, state.targets, state.vehicle.model, state.vehicle.regNo]);
 
+  // Handlers with Optimistic UI + Cloud Firestore Persistence
+  const handleUpdateVehicle = async (vehicle: VehicleDetails) => {
+    try {
+      setState((prev) => ({ ...prev, vehicle }));
+      setSyncStatus('syncing');
+      await saveVehicleToCloud(vehicle, activeBikeId);
+      setSyncStatus('synced');
+    } catch (e) {
+      console.warn('Could not persist vehicle to Firestore:', e);
+      setSyncStatus('offline');
+    }
+  };
+
   // If opening splash screen is active, show the animated motorcycle boot screen
   if (showSplash) {
     return (
@@ -221,6 +237,7 @@ export default function App() {
           onLoginSuccess={handleLoginSuccess}
           vehicle={state.vehicle}
           onOpenInstall={() => setShowInstallModal(true)}
+          onUpdateVehicle={handleUpdateVehicle}
         />
         <InstallAppModal
           isOpen={showInstallModal}
@@ -230,20 +247,6 @@ export default function App() {
       </>
     );
   }
-
-  // Handlers with Optimistic UI + Cloud Firestore Persistence
-  const handleUpdateVehicle = async (vehicle: VehicleDetails) => {
-    if (!isAdmin) return;
-    try {
-      setState((prev) => ({ ...prev, vehicle }));
-      setSyncStatus('syncing');
-      await saveVehicleToCloud(vehicle, activeBikeId);
-      setSyncStatus('synced');
-    } catch (e) {
-      console.warn('Could not persist vehicle to Firestore:', e);
-      setSyncStatus('offline');
-    }
-  };
 
   const handleUpdateOdometer = async (newOdo: number) => {
     if (!isAdmin) return;
@@ -446,6 +449,7 @@ export default function App() {
         onOpenInstall={() => setShowInstallModal(true)}
         onOpenProfile={() => setShowProfileModal(true)}
         onOpenThresholdAlert={() => setShowAlertModal(true)}
+        onOpenQuickFaq={() => setShowFaqModal(true)}
         onExportData={handleExportData}
         onImportData={handleImportData}
         onResetToDefaults={handleResetToDefaults}
@@ -551,6 +555,11 @@ export default function App() {
         <ScheduleGuideModal
           currentOdo={state.odometer}
           onClose={() => setShowScheduleModal(false)}
+          onAskAi={(question) => {
+            setShowScheduleModal(false);
+            setFaqInitialQuestion(question);
+            setShowFaqModal(true);
+          }}
         />
       )}
 
@@ -606,6 +615,22 @@ export default function App() {
           onOpenDealers={() => {
             setShowAlertModal(false);
             setActiveTab('dealers');
+          }}
+        />
+      )}
+
+      {showFaqModal && (
+        <QuickFaqModal
+          isOpen={showFaqModal}
+          onClose={() => {
+            setShowFaqModal(false);
+            setFaqInitialQuestion(null);
+          }}
+          state={state}
+          initialQuestion={faqInitialQuestion}
+          onNavigateToSchedule={() => {
+            setShowFaqModal(false);
+            setShowScheduleModal(true);
           }}
         />
       )}

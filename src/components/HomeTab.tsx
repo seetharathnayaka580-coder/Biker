@@ -544,21 +544,33 @@ export const HomeTab: React.FC<HomeTabProps> = ({
 
             {/* Quick Owner & Reg Strip */}
             <div className="flex items-center justify-between p-3 rounded-xl bg-[#0f121a] border border-[#222838] text-xs shadow-inner">
-              <div>
-                <span className="text-[10px] text-zinc-400 block uppercase font-medium">REGISTERED OWNER</span>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className="font-semibold text-white">{state.vehicle.owner}</span>
-                  {(state.vehicle.owner?.toLowerCase().includes('sachintha') || state.vehicle.owner?.toLowerCase().includes('sachi') || state.vehicle.regNo === 'BKT-1374') ? (
-                    <span className="inline-flex items-center gap-1 text-[9px] font-black px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 text-zinc-950 border border-yellow-200 shadow-sm uppercase tracking-wider">
-                      <Crown className="w-2.5 h-2.5 text-zinc-950 fill-zinc-950" />
-                      PREMIUM
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300 border border-zinc-700 shadow-sm uppercase tracking-wider">
-                      <User className="w-2.5 h-2.5 text-zinc-400" />
-                      CLIENT
-                    </span>
-                  )}
+              <div className="flex items-center gap-2.5 min-w-0">
+                {(state.vehicle.ownerPhotoUrl || state.vehicle.owner?.toLowerCase().includes('sachintha')) && (
+                  <img
+                    src={state.vehicle.ownerPhotoUrl || '/pathum_photo.svg'}
+                    alt={state.vehicle.owner}
+                    className="w-8 h-8 rounded-full object-cover border border-amber-500/40 shadow-sm shrink-0"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src = '/pathum_photo.svg';
+                    }}
+                  />
+                )}
+                <div className="min-w-0">
+                  <span className="text-[10px] text-zinc-400 block uppercase font-medium">REGISTERED OWNER</span>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span className="font-semibold text-white truncate">{state.vehicle.owner}</span>
+                    {(state.vehicle.owner?.toLowerCase().includes('sachintha') || state.vehicle.owner?.toLowerCase().includes('sachi') || state.vehicle.regNo === 'BKT-1374') ? (
+                      <span className="inline-flex items-center gap-1 text-[9px] font-black px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 text-zinc-950 border border-yellow-200 shadow-sm uppercase tracking-wider shrink-0">
+                        <Crown className="w-2.5 h-2.5 text-zinc-950 fill-zinc-950" />
+                        PREMIUM
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300 border border-zinc-700 shadow-sm uppercase tracking-wider shrink-0">
+                        <User className="w-2.5 h-2.5 text-zinc-400" />
+                        CLIENT
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
               <div className="text-right">

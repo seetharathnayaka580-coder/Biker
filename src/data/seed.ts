@@ -4,6 +4,7 @@ export const SEED_STATE: AppState = {
   bikeId: "BKT-1374",
   vehicle: {
     owner: "Pathum Sachintha",
+    ownerPhotoUrl: "/pathum_photo.svg",
     model: "Pulsar N160 USD DC ABS",
     colour: "Brooklyn Black",
     regNo: "BKT-1374",

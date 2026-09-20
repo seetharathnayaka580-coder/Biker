@@ -1,10 +1,11 @@
 import React from 'react';
-import { X, CheckCircle2, Clock, Wrench, Droplets } from 'lucide-react';
+import { X, CheckCircle2, Clock, Wrench, Droplets, Sparkles, HelpCircle } from 'lucide-react';
 import { fmtKm } from '../utils/formatters';
 
 interface ScheduleGuideModalProps {
   currentOdo: number;
   onClose: () => void;
+  onAskAi?: (question: string) => void;
 }
 
 interface Milestone {
@@ -15,7 +16,7 @@ interface Milestone {
   keyTasks: string[];
 }
 
-export const ScheduleGuideModal: React.FC<ScheduleGuideModalProps> = ({ currentOdo, onClose }) => {
+export const ScheduleGuideModal: React.FC<ScheduleGuideModalProps> = ({ currentOdo, onClose, onAskAi }) => {
   const milestones: Milestone[] = [
     {
       service: '1st Service',
@@ -142,9 +143,9 @@ export const ScheduleGuideModal: React.FC<ScheduleGuideModalProps> = ({ currentO
                     </div>
                   </div>
 
-                  <div className="text-right sm:self-center shrink-0">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 shrink-0">
                     <span
-                      className={`text-xs font-mono font-bold uppercase ${
+                      className={`text-xs font-mono font-bold uppercase text-right ${
                         m.status === 'completed'
                           ? 'text-emerald-400'
                           : m.status === 'upcoming'
@@ -154,6 +155,21 @@ export const ScheduleGuideModal: React.FC<ScheduleGuideModalProps> = ({ currentO
                     >
                       {m.status === 'completed' ? 'Done' : m.status === 'upcoming' ? 'In Progress' : 'Pending'}
                     </span>
+                    {onAskAi && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          onAskAi(
+                            `What are the mandatory inspection items, replacement parts, and cost estimates for Bajaj Pulsar N160 ${m.service} at ${m.recommendedKm} km?`
+                          )
+                        }
+                        className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/35 hover:border-amber-400 flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
+                        title={`Ask AI about ${m.service}`}
+                      >
+                        <Sparkles className="w-3 h-3 text-amber-400" />
+                        <span>Ask AI</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -162,34 +178,112 @@ export const ScheduleGuideModal: React.FC<ScheduleGuideModalProps> = ({ currentO
 
           {/* Component Replacement Lifecycles */}
           <div className="p-4 rounded-xl bg-[#12151b] border border-[#232835]">
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-zinc-300 mb-3 flex items-center gap-1.5">
-              <Droplets className="w-4 h-4 text-amber-400" />
-              Essential Consumables & Periodic Lifecycles
-            </h4>
+            <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
+                <Droplets className="w-4 h-4 text-amber-400" />
+                Essential Consumables & Periodic Lifecycles
+              </h4>
+              <span className="text-[11px] text-zinc-500 flex items-center gap-1">
+                <Sparkles className="w-3 h-3 text-amber-400" />
+                Tap 'Ask AI' on any part for instant specs
+              </span>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-              <div className="p-2.5 rounded-lg bg-[#181c24] border border-[#262c37]">
-                <span className="font-bold text-amber-300 block mb-0.5">Engine Oil & Filter</span>
-                <span className="text-zinc-400 text-[11px]">
-                  Replace oil every 2,500 km or 4 months. Oil filter every 5,000 km. Capacity: ~1.2L - 1.3L.
-                </span>
+              <div className="p-3 rounded-xl bg-[#181c24] border border-[#262c37] flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between gap-1 mb-1">
+                    <span className="font-bold text-amber-300">Engine Oil & Filter</span>
+                    {onAskAi && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          onAskAi(
+                            'What is the recommended engine oil grade, viscosity, and replacement capacity for Pulsar N160?'
+                          )
+                        }
+                        className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 flex items-center gap-1 cursor-pointer transition-colors"
+                      >
+                        <Sparkles className="w-2.5 h-2.5" />
+                        Ask AI
+                      </button>
+                    )}
+                  </div>
+                  <span className="text-zinc-400 text-[11px]">
+                    Replace oil every 2,500 - 5,000 km. Oil filter every 5,000 km. Capacity: ~1.2L.
+                  </span>
+                </div>
               </div>
-              <div className="p-2.5 rounded-lg bg-[#181c24] border border-[#262c37]">
-                <span className="font-bold text-amber-300 block mb-0.5">Drive Chain Care</span>
-                <span className="text-zinc-400 text-[11px]">
-                  Clean & lubricate every 500 km. Check chain slack (25-35 mm) regularly.
-                </span>
+              <div className="p-3 rounded-xl bg-[#181c24] border border-[#262c37] flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between gap-1 mb-1">
+                    <span className="font-bold text-amber-300">Drive Chain Care</span>
+                    {onAskAi && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          onAskAi(
+                            'What is the recommended drive chain cleaning and lubrication interval, proper cleaner, and slack for Pulsar N160?'
+                          )
+                        }
+                        className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 flex items-center gap-1 cursor-pointer transition-colors"
+                      >
+                        <Sparkles className="w-2.5 h-2.5" />
+                        Ask AI
+                      </button>
+                    )}
+                  </div>
+                  <span className="text-zinc-400 text-[11px]">
+                    Clean & lubricate every 500 km. Check chain slack (20-30 mm) regularly.
+                  </span>
+                </div>
               </div>
-              <div className="p-2.5 rounded-lg bg-[#181c24] border border-[#262c37]">
-                <span className="font-bold text-amber-300 block mb-0.5">Spark Plug & Air Filter</span>
-                <span className="text-zinc-400 text-[11px]">
-                  Clean air filter every service; replace at 10,000 km. Replace Champion spark plug at 10,000 km.
-                </span>
+              <div className="p-3 rounded-xl bg-[#181c24] border border-[#262c37] flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between gap-1 mb-1">
+                    <span className="font-bold text-amber-300">Spark Plug & Air Filter</span>
+                    {onAskAi && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          onAskAi(
+                            'What is the OEM spark plug type, electrode gap, and air filter maintenance for Pulsar N160?'
+                          )
+                        }
+                        className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 flex items-center gap-1 cursor-pointer transition-colors"
+                      >
+                        <Sparkles className="w-2.5 h-2.5" />
+                        Ask AI
+                      </button>
+                    )}
+                  </div>
+                  <span className="text-zinc-400 text-[11px]">
+                    Clean air filter every service; replace at 10,000 km. Replace Champion spark plug at 10,000 km.
+                  </span>
+                </div>
               </div>
-              <div className="p-2.5 rounded-lg bg-[#181c24] border border-[#262c37]">
-                <span className="font-bold text-amber-300 block mb-0.5">Brake Pads & Fluid (DOT 4)</span>
-                <span className="text-zinc-400 text-[11px]">
-                  Inspect pads thickness (&gt;1.5mm) every service. Flush DOT 4 brake fluid every 20,000 km / 2 yrs.
-                </span>
+              <div className="p-3 rounded-xl bg-[#181c24] border border-[#262c37] flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between gap-1 mb-1">
+                    <span className="font-bold text-amber-300">Brake Pads & Fluid (DOT 4)</span>
+                    {onAskAi && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          onAskAi(
+                            'What brake fluid does Pulsar N160 Dual-Channel ABS use and what is the minimum brake pad thickness?'
+                          )
+                        }
+                        className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 flex items-center gap-1 cursor-pointer transition-colors"
+                      >
+                        <Sparkles className="w-2.5 h-2.5" />
+                        Ask AI
+                      </button>
+                    )}
+                  </div>
+                  <span className="text-zinc-400 text-[11px]">
+                    Inspect pads thickness (&gt;1.5mm) every service. Flush DOT 4 brake fluid every 20,000 km / 2 yrs.
+                  </span>
+                </div>
               </div>
             </div>
           </div>
