@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { History, Lock, Trash2, Calendar, MapPin, Search, CheckCircle, Tag, DollarSign } from 'lucide-react';
+import { History, Lock, Trash2, Calendar, MapPin, Search, CheckCircle, Tag, DollarSign, ArrowRight } from 'lucide-react';
 import { fmtDate, fmtKm } from '../utils/formatters';
 import { ServiceRecord } from '../types';
 
@@ -7,12 +7,14 @@ interface ServiceTimelineProps {
   services: ServiceRecord[];
   isAdmin?: boolean;
   onDeleteService: (id: string) => void;
+  onNavigateToCosts?: () => void;
 }
 
 export const ServiceTimeline: React.FC<ServiceTimelineProps> = ({
   services,
   isAdmin = true,
   onDeleteService,
+  onNavigateToCosts,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortAsc, setSortAsc] = useState(false);
@@ -105,9 +107,12 @@ export const ServiceTimeline: React.FC<ServiceTimelineProps> = ({
                   </span>
 
                   {service.cost ? (
-                    <span className="font-mono text-emerald-400 font-bold flex items-center gap-0.5 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md">
-                      <DollarSign className="w-3 h-3" />
-                      {service.cost.toLocaleString()} LKR
+                    <span
+                      className="font-mono text-emerald-400 font-bold flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-lg text-xs"
+                      title="Total Service Record Cost"
+                    >
+                      <DollarSign className="w-3.5 h-3.5" />
+                      <span>Total: {service.cost.toLocaleString()} LKR</span>
                     </span>
                   ) : null}
                 </div>
@@ -126,12 +131,24 @@ export const ServiceTimeline: React.FC<ServiceTimelineProps> = ({
                 </p>
               )}
 
-              {/* Parts replaced chips */}
+              {/* Parts replaced chips (Display only item names on service record) */}
               {service.partsReplaced && service.partsReplaced.length > 0 && (
                 <div className="mb-3">
-                  <div className="text-[10px] uppercase font-semibold text-zinc-400 mb-1 flex items-center gap-1">
-                    <Tag className="w-3 h-3 text-cyan-400" />
-                    Parts Replaced & Tasks
+                  <div className="text-[10px] uppercase font-semibold text-zinc-400 mb-1.5 flex items-center justify-between">
+                    <span className="flex items-center gap-1">
+                      <Tag className="w-3 h-3 text-cyan-400" />
+                      Parts Replaced & Consumables
+                    </span>
+                    {onNavigateToCosts && (
+                      <button
+                        type="button"
+                        onClick={onNavigateToCosts}
+                        className="text-[10px] font-semibold text-cyan-400 hover:text-cyan-300 flex items-center gap-1 cursor-pointer transition-colors"
+                      >
+                        <span>View Itemized Costs</span>
+                        <ArrowRight className="w-3 h-3" />
+                      </button>
+                    )}
                   </div>
                   <div className="flex flex-wrap gap-1.5">
                     {service.partsReplaced.map((part, idx) => (

@@ -12,6 +12,7 @@ interface ServiceTabProps {
   onAddService: (newService: ServiceRecord) => void;
   onDeleteService: (id: string) => void;
   onOpenScheduleGuide: () => void;
+  onNavigateToCosts?: () => void;
 }
 
 export const ServiceTab: React.FC<ServiceTabProps> = ({
@@ -22,6 +23,7 @@ export const ServiceTab: React.FC<ServiceTabProps> = ({
   onAddService,
   onDeleteService,
   onOpenScheduleGuide,
+  onNavigateToCosts,
 }) => {
   return (
     <div className="space-y-6">
@@ -54,6 +56,7 @@ export const ServiceTab: React.FC<ServiceTabProps> = ({
         services={state.services}
         isAdmin={isAdmin}
         onDeleteService={onDeleteService}
+        onNavigateToCosts={onNavigateToCosts}
       />
     </div>
   );

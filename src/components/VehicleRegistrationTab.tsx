@@ -43,6 +43,7 @@ interface VehicleRegistrationTabProps {
   isAdmin: boolean;
   onUpdateVehicle: (updated: VehicleDetails) => void;
   onOpenPrintBooklet: () => void;
+  onOpenUserManual?: () => void;
   onClearAllData?: () => void;
   initialEditMode?: boolean;
 }
@@ -52,6 +53,7 @@ export const VehicleRegistrationTab: React.FC<VehicleRegistrationTabProps> = ({
   isAdmin,
   onUpdateVehicle,
   onOpenPrintBooklet,
+  onOpenUserManual,
   onClearAllData,
   initialEditMode = false,
 }) => {
@@ -1019,15 +1021,25 @@ export const VehicleRegistrationTab: React.FC<VehicleRegistrationTabProps> = ({
             </div>
           </div>
 
-          <div className="pt-3 border-t border-[#222734]">
+          <div className="pt-3 border-t border-[#222734] flex flex-col sm:flex-row gap-2.5">
             <button
               type="button"
               onClick={onOpenPrintBooklet}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs transition-colors shadow-lg cursor-pointer"
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs transition-colors shadow-lg cursor-pointer"
             >
               <Printer className="w-4 h-4" />
               <span>Print Official Vehicle & Owner Document</span>
             </button>
+            {onOpenUserManual && (
+              <button
+                type="button"
+                onClick={onOpenUserManual}
+                className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#1d222e] hover:bg-[#252b3b] border border-amber-500/40 hover:border-amber-400 text-amber-300 font-bold text-xs transition-colors shadow cursor-pointer"
+              >
+                <BookOpen className="w-4 h-4 text-amber-400" />
+                <span>N160 Manual</span>
+              </button>
+            )}
           </div>
         </div>
       </div>

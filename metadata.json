@@ -1,6 +1,6 @@
 {
   "name": "Bike Service Log Book",
-  "description": "Digital maintenance record, Google Maps service locator, and service log book for Pulsar N160 (BKT-1374) with owner dashboard, manager accounts, client credential inspection, and live login IP auditing.",
+  "description": "Digital maintenance record, maintenance cost management with LKR tracking, Google Maps service locator, and service log book for Pulsar N160 (BKT-1374) with owner dashboard, manager accounts, client credential inspection, and live login IP auditing.",
   "requestFramePermissions": ["geolocation", "microphone"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

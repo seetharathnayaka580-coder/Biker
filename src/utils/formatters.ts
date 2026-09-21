@@ -36,6 +36,11 @@ export function fmtKm(n?: number | null): string {
   return `${Number(n).toLocaleString('en-US')} km`;
 }
 
+export function fmtLkr(amount?: number | null): string {
+  if (amount === undefined || amount === null || isNaN(amount)) return 'Rs. 0';
+  return `Rs. ${Math.round(amount).toLocaleString('en-LK')}`;
+}
+
 export function loadState(bikeId: string = 'BKT-1374'): AppState {
   const defaultState = getSeedStateForBike(bikeId);
   try {
@@ -50,6 +55,9 @@ export function loadState(bikeId: string = 'BKT-1374'): AppState {
     if (!parsed.targets || !parsed.targets.length) parsed.targets = [...(defaultState.targets || [2500])];
     if (!parsed.services) parsed.services = [];
     if (!parsed.notes) parsed.notes = [];
+    if (!parsed.expenses || !Array.isArray(parsed.expenses)) {
+      parsed.expenses = defaultState.expenses ? [...defaultState.expenses] : [];
+    }
     parsed.vehicle = { ...defaultState.vehicle, ...(parsed.vehicle || {}) };
 
     // If it's Sachi's primary bike BKT-1374, preserve the verified seed services
@@ -66,10 +74,16 @@ export function loadState(bikeId: string = 'BKT-1374'): AppState {
             km: seedSvc.km,
             dealer: seedSvc.dealer,
             note: seedSvc.note,
+            cost: parsed.services[existingIndex].cost || seedSvc.cost,
             locked: true,
           };
         }
       });
+
+      // Also ensure default seed expenses are populated if empty
+      if (!parsed.expenses || parsed.expenses.length === 0) {
+        parsed.expenses = [...(SEED_STATE.expenses || [])];
+      }
     }
 
     return parsed;

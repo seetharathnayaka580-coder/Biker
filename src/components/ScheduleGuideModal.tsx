@@ -1,11 +1,12 @@
 import React from 'react';
-import { X, CheckCircle2, Clock, Wrench, Droplets, Sparkles, HelpCircle } from 'lucide-react';
+import { X, CheckCircle2, Clock, Wrench, Droplets, Sparkles, HelpCircle, BookOpen } from 'lucide-react';
 import { fmtKm } from '../utils/formatters';
 
 interface ScheduleGuideModalProps {
   currentOdo: number;
   onClose: () => void;
   onAskAi?: (question: string) => void;
+  onOpenUserManual?: () => void;
 }
 
 interface Milestone {
@@ -16,7 +17,7 @@ interface Milestone {
   keyTasks: string[];
 }
 
-export const ScheduleGuideModal: React.FC<ScheduleGuideModalProps> = ({ currentOdo, onClose, onAskAi }) => {
+export const ScheduleGuideModal: React.FC<ScheduleGuideModalProps> = ({ currentOdo, onClose, onAskAi, onOpenUserManual }) => {
   const milestones: Milestone[] = [
     {
       service: '1st Service',
@@ -290,7 +291,23 @@ export const ScheduleGuideModal: React.FC<ScheduleGuideModalProps> = ({ currentO
         </div>
 
         {/* Footer */}
-        <div className="bg-[#13151b] px-5 py-3 border-t border-[#252a35] flex justify-end">
+        <div className="bg-[#13151b] px-5 py-3 border-t border-[#252a35] flex items-center justify-between gap-2">
+          {onOpenUserManual ? (
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                onOpenUserManual();
+              }}
+              className="px-3 py-1.5 rounded-xl text-xs font-bold text-amber-300 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/35 hover:border-amber-400 flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
+            >
+              <BookOpen className="w-3.5 h-3.5 text-amber-400" />
+              <span>Open N160 User Manual</span>
+            </button>
+          ) : (
+            <div />
+          )}
+
           <button
             onClick={onClose}
             className="px-4 py-1.5 rounded-xl text-xs font-semibold bg-zinc-800 hover:bg-zinc-700 text-white transition-colors cursor-pointer"

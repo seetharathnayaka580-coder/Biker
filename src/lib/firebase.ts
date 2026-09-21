@@ -25,7 +25,7 @@ import {
   User,
 } from 'firebase/auth';
 import firebaseConfigJson from '../../firebase-applet-config.json';
-import { AppState, AuthSession, LoginLog, MaintenanceNote, ServiceRecord, UserAccount, UserRole, VehicleDetails } from '../types';
+import { AppState, AuthSession, LoginLog, MaintenanceExpense, MaintenanceNote, ServiceRecord, UserAccount, UserRole, VehicleDetails } from '../types';
 import { SEED_STATE, getSeedStateForBike } from '../data/seed';
 import { fetchClientNetworkInfo, ClientNetworkInfo } from '../utils/ipTracker';
 import { loadState, saveState } from '../utils/formatters';
@@ -218,6 +218,7 @@ export function subscribeToBike(
   const bikeDocRef = doc(db, 'bikes', bikeId);
   const servicesColRef = collection(db, 'bikes', bikeId, 'services');
   const notesColRef = collection(db, 'bikes', bikeId, 'notes');
+  const expensesColRef = collection(db, 'bikes', bikeId, 'expenses');
 
   const localState = loadState(bikeId);
   const isPrimarySachiBike = bikeId === 'BKT-1374';
@@ -228,6 +229,7 @@ export function subscribeToBike(
   let currentInterval: number = localState.serviceInterval;
   let currentServices: ServiceRecord[] = [...localState.services];
   let currentNotes: MaintenanceNote[] = [...localState.notes];
+  let currentExpenses: MaintenanceExpense[] = [...(localState.expenses || [])];
   let hasReceivedMainDoc = false;
 
   const emit = () => {
@@ -255,6 +257,7 @@ export function subscribeToBike(
       serviceInterval: currentInterval,
       services: finalServices,
       notes: currentNotes,
+      expenses: currentExpenses,
     });
   };
 
@@ -373,10 +376,44 @@ export function subscribeToBike(
     }
   );
 
+  // 4. Listen to expenses subcollection
+  const unsubExpenses = onSnapshot(
+    expensesColRef,
+    (snapshot) => {
+      const list: MaintenanceExpense[] = [];
+      snapshot.forEach((docSnap) => {
+        const item = docSnap.data();
+        list.push({
+          id: docSnap.id,
+          title: item.title || 'Maintenance Expense',
+          amount: Number(item.amount) || 0,
+          category: item.category || 'service',
+          date: item.date || '',
+          km: item.km !== undefined && item.km !== null ? Number(item.km) : null,
+          vendor: item.vendor || '',
+          invoiceNo: item.invoiceNo || '',
+          paymentMethod: item.paymentMethod || 'cash',
+          note: item.note || '',
+          serviceId: item.serviceId,
+          createdAt: item.createdAt,
+          updatedAt: item.updatedAt,
+        });
+      });
+      // Sort expenses by date desc
+      currentExpenses = list.sort((a, b) => b.date.localeCompare(a.date));
+      if (hasReceivedMainDoc) emit();
+    },
+    (err) => {
+      console.error('Error listening to expenses subcollection:', err);
+      if (onError) onError(err);
+    }
+  );
+
   return () => {
     unsubDoc();
     unsubServices();
     unsubNotes();
+    unsubExpenses();
   };
 }
 
@@ -421,6 +458,20 @@ export async function initializeFirestoreSeed(bikeId: string = DEFAULT_BIKE_ID):
           })
         );
       }
+
+      // Seed expenses if any
+      if (seed.expenses && seed.expenses.length > 0) {
+        for (const exp of seed.expenses) {
+          const expRef = doc(db, 'bikes', bikeId, 'expenses', exp.id);
+          await setDoc(
+            expRef,
+            sanitizeForFirestore({
+              ...exp,
+              createdAt: new Date().toISOString(),
+            })
+          );
+        }
+      }
     }
   } catch (err) {
     console.warn('Firestore seed notice (offline/transient):', err);
@@ -446,7 +497,14 @@ export async function clearAllBikeDataFromCloud(bikeId: string = DEFAULT_BIKE_ID
       batch.delete(docSnap.ref);
     });
 
-    // 3. Reset main bike document odometer to 0 and targets to 2500
+    // 3. Delete all expenses in subcollection
+    const expensesColRef = collection(db, 'bikes', bikeId, 'expenses');
+    const expensesSnap = await getDocs(expensesColRef);
+    expensesSnap.forEach((docSnap) => {
+      batch.delete(docSnap.ref);
+    });
+
+    // 4. Reset main bike document odometer to 0 and targets to 2500
     const bikeDocRef = doc(db, 'bikes', bikeId);
     batch.update(bikeDocRef, {
       odometer: 0,
@@ -612,6 +670,46 @@ export async function deleteNoteFromCloud(noteId: string, bikeId: string = DEFAU
     await deleteDoc(noteDocRef);
   } catch (err) {
     console.warn('Firestore delete note notice (cached locally):', err);
+  }
+}
+
+export async function addExpenseToCloud(expense: MaintenanceExpense, bikeId: string = DEFAULT_BIKE_ID): Promise<void> {
+  try {
+    const expDocRef = doc(db, 'bikes', bikeId, 'expenses', expense.id);
+    await setDoc(
+      expDocRef,
+      sanitizeForFirestore({
+        ...expense,
+        createdAt: expense.createdAt || new Date().toISOString(),
+      })
+    );
+  } catch (err) {
+    console.warn('Firestore add expense notice (cached locally):', err);
+  }
+}
+
+export async function updateExpenseInCloud(expense: MaintenanceExpense, bikeId: string = DEFAULT_BIKE_ID): Promise<void> {
+  try {
+    const expDocRef = doc(db, 'bikes', bikeId, 'expenses', expense.id);
+    await setDoc(
+      expDocRef,
+      sanitizeForFirestore({
+        ...expense,
+        updatedAt: new Date().toISOString(),
+      }),
+      { merge: true }
+    );
+  } catch (err) {
+    console.warn('Firestore update expense notice (cached locally):', err);
+  }
+}
+
+export async function deleteExpenseFromCloud(expenseId: string, bikeId: string = DEFAULT_BIKE_ID): Promise<void> {
+  try {
+    const expDocRef = doc(db, 'bikes', bikeId, 'expenses', expenseId);
+    await deleteDoc(expDocRef);
+  } catch (err) {
+    console.warn('Firestore delete expense notice (cached locally):', err);
   }
 }
 

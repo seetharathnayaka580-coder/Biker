@@ -73,6 +73,13 @@
         "dealer": { "type": "string", "description": "Authorized dealer or workshop name" },
         "note": { "type": "string", "description": "Work performed, remarks, parts changed" },
         "cost": { "type": "number", "description": "Total cost of service in currency units" },
+        "serviceFee": { "type": "number", "description": "Cost of the service labour fee itself" },
+        "partsCost": { "type": "number", "description": "Total cost of the individual parts used" },
+        "items": {
+          "type": "array",
+          "items": { "type": "object" },
+          "description": "Itemized list of individual parts and service charges with respective costs"
+        },
         "partsReplaced": { "type": "array", "items": { "type": "string" }, "description": "List of parts or consumables replaced" },
         "locked": { "type": "boolean", "description": "Whether this record is a locked verified entry" },
         "createdAt": { "type": "string", "description": "Creation timestamp" }
@@ -92,6 +99,26 @@
         "createdAt": { "type": "string", "description": "Creation timestamp" }
       },
       "required": ["text", "date"]
+    },
+    "bikes/{bikeId}/expenses": {
+      "title": "Maintenance Expense",
+      "description": "Financial cost item, invoice, or spare part purchase associated with vehicle maintenance",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique expense record ID" },
+        "title": { "type": "string", "description": "Expense title or item description" },
+        "amount": { "type": "number", "description": "Total expense amount in currency units (e.g. LKR)" },
+        "category": { "type": "string", "description": "Expense category (service, oil_fluids, spares_parts, chain_sprocket, tyres_wheels, wash_detail, electrical, labour_fee, statutory, accessories)" },
+        "date": { "type": "string", "description": "Date formatted YYYY-MM-DD" },
+        "km": { "type": "number", "description": "Odometer reading at time of expense" },
+        "vendor": { "type": "string", "description": "Vendor, garage, or retailer name" },
+        "invoiceNo": { "type": "string", "description": "Optional receipt or bill reference number" },
+        "paymentMethod": { "type": "string", "enum": ["cash", "card", "online", "other"], "description": "Method of payment" },
+        "note": { "type": "string", "description": "Detailed remarks, item breakdown, or notes" },
+        "serviceId": { "type": "string", "description": "Optional linked service record ID" },
+        "createdAt": { "type": "string", "description": "Creation timestamp" }
+      },
+      "required": ["title", "amount", "category", "date"]
     }
   }
 }

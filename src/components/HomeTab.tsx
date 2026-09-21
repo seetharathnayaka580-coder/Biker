@@ -32,6 +32,7 @@ import {
   Send,
   Phone,
   Bell,
+  DollarSign,
 } from 'lucide-react';
 import { AppState, VehicleDetails } from '../types';
 import { fmtKm } from '../utils/formatters';
@@ -40,8 +41,9 @@ interface HomeTabProps {
   state: AppState;
   isAdmin: boolean;
   onUpdateVehicle?: (updated: VehicleDetails) => void;
-  onNavigateToTab: (tab: 'home' | 'vehicle' | 'service' | 'notes' | 'dealers') => void;
+  onNavigateToTab: (tab: 'home' | 'vehicle' | 'service' | 'costs' | 'notes' | 'dealers') => void;
   onOpenScheduleGuide: () => void;
+  onOpenUserManual?: () => void;
   onOpenPrint: () => void;
   onOpenThresholdAlert?: () => void;
   onOpenQuickFaq?: (question?: string) => void;
@@ -159,6 +161,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
   onUpdateVehicle,
   onNavigateToTab,
   onOpenScheduleGuide,
+  onOpenUserManual,
   onOpenPrint,
   onOpenThresholdAlert,
   onOpenQuickFaq,
@@ -595,8 +598,8 @@ export const HomeTab: React.FC<HomeTabProps> = ({
           <span className="text-[10px] text-zinc-500 font-mono">Tap to Jump to Module</span>
         </div>
 
-        {/* 5 Distinct Category Action Buttons */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        {/* 6 Distinct Category Action Buttons */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           {/* Category 1: Vehicle Details - Golden Amber */}
           <button
             type="button"
@@ -697,11 +700,11 @@ export const HomeTab: React.FC<HomeTabProps> = ({
           <button
             type="button"
             onClick={onOpenScheduleGuide}
-            className="flex flex-col items-start justify-between p-3.5 rounded-2xl bg-gradient-to-br from-[#121622] to-[#0a0d14] border border-zinc-700/60 hover:border-zinc-500 hover:shadow-[0_0_20px_rgba(255,255,255,0.05)] transition-all cursor-pointer text-left group active:scale-95 col-span-2 sm:col-span-1"
+            className="flex flex-col items-start justify-between p-3.5 rounded-2xl bg-gradient-to-br from-[#121622] to-[#0a0d14] border border-zinc-700/60 hover:border-zinc-500 hover:shadow-[0_0_20px_rgba(255,255,255,0.05)] transition-all cursor-pointer text-left group active:scale-95"
           >
             <div className="flex items-center justify-between w-full mb-3">
               <div className="w-8 h-8 rounded-xl bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-300 group-hover:scale-110 group-hover:bg-zinc-700 group-hover:text-white transition-all">
-                <BookOpen className="w-4 h-4" />
+                <Wrench className="w-4 h-4" />
               </div>
               <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-zinc-800 text-zinc-300 font-bold border border-zinc-700">
                 OEM Specs
@@ -713,6 +716,30 @@ export const HomeTab: React.FC<HomeTabProps> = ({
               </span>
               <span className="text-[10px] text-zinc-400 block mt-0.5">
                 Factory service steps
+              </span>
+            </div>
+          </button>
+
+          {/* Category 6: N160 User Manual - Cyber Amber & Gold */}
+          <button
+            type="button"
+            onClick={onOpenUserManual || onOpenScheduleGuide}
+            className="flex flex-col items-start justify-between p-3.5 rounded-2xl bg-gradient-to-br from-[#1c1505] to-[#0d0901] border border-amber-500/50 hover:border-amber-400 hover:shadow-[0_0_20px_rgba(245,158,11,0.3)] transition-all cursor-pointer text-left group active:scale-95"
+          >
+            <div className="flex items-center justify-between w-full mb-3">
+              <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-400/50 flex items-center justify-center text-amber-400 group-hover:scale-110 group-hover:bg-amber-500 group-hover:text-zinc-950 transition-all">
+                <BookOpen className="w-4 h-4" />
+              </div>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 font-bold border border-amber-500/40">
+                Handbook
+              </span>
+            </div>
+            <div>
+              <span className="text-xs font-bold text-white block group-hover:text-amber-300 transition-colors">
+                N160 Manual
+              </span>
+              <span className="text-[10px] text-zinc-400 block mt-0.5">
+                Rider guide & specs
               </span>
             </div>
           </button>
@@ -1065,6 +1092,16 @@ export const HomeTab: React.FC<HomeTabProps> = ({
             >
               <Gauge className="w-4 h-4 text-cyan-400" />
               <span>Digital Cockpit</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onNavigateToTab('costs')}
+              className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[#081812] hover:bg-[#0f241a] active:scale-95 text-emerald-300 hover:text-emerald-200 border border-emerald-500/40 hover:border-emerald-400 font-bold text-xs transition-all cursor-pointer shadow-sm"
+              title="Maintenance Cost Management & LKR Expenses Tracker"
+            >
+              <DollarSign className="w-4 h-4 text-emerald-400" />
+              <span>Cost Tracker</span>
             </button>
 
             <button

@@ -19,7 +19,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { ordinalSuffix, uid } from '../utils/formatters';
-import { ServiceRecord } from '../types';
+import { ServiceRecord, ServiceItemCost, ExpenseCategory } from '../types';
 
 interface ServiceLoggerProps {
   currentOdometer: number;
@@ -43,13 +43,47 @@ const DEFAULT_DEALERS = [
 const COMMON_PARTS = [
   'Engine Oil (Bajaj DTS-i 20W50 1.35L)',
   'Oil Filter (Genuine Bajaj)',
-  'Air Filter Clean / Replace',
   'Drive Chain Clean & Lubricate',
+  'Air Filter Clean / Replace',
   'Chain Slack Adjusted',
   'Brake Pads Clean / Inspect',
   'Spark Plug Clean / Check',
   'General Bike Wash & Polish',
 ];
+
+const DEFAULT_PART_PRICES: Record<string, string> = {
+  'Engine Oil (Bajaj DTS-i 20W50 1.35L)': '2800',
+  'Oil Filter (Genuine Bajaj)': '750',
+  'Drive Chain Clean & Lubricate': '800',
+  'Air Filter Clean / Replace': '1200',
+  'Chain Slack Adjusted': '300',
+  'Brake Pads Clean / Inspect': '500',
+  'Spark Plug Clean / Check': '600',
+  'General Bike Wash & Polish': '800',
+};
+
+function detectPartCategory(name: string): ExpenseCategory {
+  const lower = name.toLowerCase();
+  if (lower.includes('oil') || lower.includes('fluid') || lower.includes('coolant')) {
+    return 'oil_fluids';
+  }
+  if (lower.includes('chain') || lower.includes('sprocket')) {
+    return 'chain_sprocket';
+  }
+  if (lower.includes('tyre') || lower.includes('tire') || lower.includes('wheel')) {
+    return 'tyres_wheels';
+  }
+  if (lower.includes('wash') || lower.includes('polish') || lower.includes('detail')) {
+    return 'wash_detail';
+  }
+  if (lower.includes('plug') || lower.includes('battery') || lower.includes('fuse') || lower.includes('electrical')) {
+    return 'electrical';
+  }
+  if (lower.includes('labour') || lower.includes('labor') || lower.includes('service charge') || lower.includes('fee')) {
+    return 'labour_fee';
+  }
+  return 'spares_parts';
+}
 
 const STORAGE_KEY_DEALERS = 'n160_custom_dealers_list';
 
@@ -66,13 +100,21 @@ export const ServiceLogger: React.FC<ServiceLoggerProps> = ({
   const [km, setKm] = useState(currentOdometer.toString());
   const [dealer, setDealer] = useState('M.V. Electronic & D.S. Motors (Matara)');
   const [note, setNote] = useState('');
-  const [cost, setCost] = useState('');
+  
+  // Separate Service / Labour fee and individual parts costs
+  const [serviceFee, setServiceFee] = useState('1200');
   const [parts, setParts] = useState<string[]>([
     'Engine Oil (Bajaj DTS-i 20W50 1.35L)',
     'Oil Filter (Genuine Bajaj)',
     'Drive Chain Clean & Lubricate',
   ]);
+  const [partCosts, setPartCosts] = useState<Record<string, string>>({
+    'Engine Oil (Bajaj DTS-i 20W50 1.35L)': '2800',
+    'Oil Filter (Genuine Bajaj)': '750',
+    'Drive Chain Clean & Lubricate': '800',
+  });
   const [customPart, setCustomPart] = useState('');
+  const [customPartCost, setCustomPartCost] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
 
   // Dealer selection & add options
@@ -111,13 +153,32 @@ export const ServiceLogger: React.FC<ServiceLoggerProps> = ({
       setParts(parts.filter((p) => p !== item));
     } else {
       setParts([...parts, item]);
+      if (!partCosts[item]) {
+        setPartCosts((prev) => ({
+          ...prev,
+          [item]: DEFAULT_PART_PRICES[item] || '800',
+        }));
+      }
     }
   };
 
+  const handleUpdatePartCost = (item: string, costStr: string) => {
+    setPartCosts((prev) => ({
+      ...prev,
+      [item]: costStr,
+    }));
+  };
+
   const handleAddCustomPart = () => {
-    if (customPart.trim() && !parts.includes(customPart.trim())) {
-      setParts([...parts, customPart.trim()]);
+    const trimmed = customPart.trim();
+    if (trimmed && !parts.includes(trimmed)) {
+      setParts([...parts, trimmed]);
+      setPartCosts((prev) => ({
+        ...prev,
+        [trimmed]: customPartCost.trim() || '1000',
+      }));
       setCustomPart('');
+      setCustomPartCost('');
     }
   };
 
@@ -155,12 +216,38 @@ export const ServiceLogger: React.FC<ServiceLoggerProps> = ({
     }
   };
 
+  const serviceFeeNum = Math.max(0, Number(serviceFee) || 0);
+  const partsTotalNum = parts.reduce((sum, p) => sum + Math.max(0, Number(partCosts[p]) || 0), 0);
+  const totalCostNum = serviceFeeNum + partsTotalNum;
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!isAdmin) return;
 
     const finalKm = Number(km);
     if (isNaN(finalKm) || finalKm <= 0) return;
+
+    // Compile items list: service fee and each individual part with distinct costs
+    const items: ServiceItemCost[] = [];
+
+    if (serviceFeeNum > 0) {
+      items.push({
+        name: 'Workshop Service Charge & Labour Fee',
+        amount: serviceFeeNum,
+        category: 'labour_fee',
+      });
+    }
+
+    parts.forEach((p) => {
+      const pAmt = Math.max(0, Number(partCosts[p]) || 0);
+      if (pAmt > 0) {
+        items.push({
+          name: p,
+          amount: pAmt,
+          category: detectPartCategory(p),
+        });
+      }
+    });
 
     const newRecord: ServiceRecord = {
       id: uid('svc'),
@@ -169,7 +256,10 @@ export const ServiceLogger: React.FC<ServiceLoggerProps> = ({
       km: finalKm,
       dealer: dealer.trim() || 'M.V. Electronic & D.S. Motors (Matara)',
       note: note.trim() || 'Official periodic service completed.',
-      cost: cost ? Number(cost) : undefined,
+      cost: totalCostNum > 0 ? totalCostNum : undefined,
+      serviceFee: serviceFeeNum > 0 ? serviceFeeNum : undefined,
+      partsCost: partsTotalNum > 0 ? partsTotalNum : undefined,
+      items: items.length > 0 ? items : undefined,
       partsReplaced: parts,
       locked: false,
     };
@@ -180,7 +270,6 @@ export const ServiceLogger: React.FC<ServiceLoggerProps> = ({
 
     // Reset optional fields
     setNote('');
-    setCost('');
   };
 
   if (!isAdmin) {
@@ -391,76 +480,257 @@ export const ServiceLogger: React.FC<ServiceLoggerProps> = ({
             )}
           </div>
 
-          {/* FIELD 4: COST (OPTIONAL LKR) (with emerald dollar icon) */}
-          <div>
-            <label className="block text-xs font-bold text-zinc-300 tracking-wider uppercase mb-1.5 flex items-center gap-1.5">
-              <DollarSign className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Cost (Optional LKR)</span>
-            </label>
-            <input
-              type="number"
-              min="0"
-              value={cost}
-              onChange={(e) => setCost(e.target.value)}
-              placeholder="e.g. 3500"
-              className="w-full bg-[#060a12] border border-[#182438] focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-zinc-600 transition-colors outline-none"
-            />
-          </div>
+          {/* FIELD 4: WORKSHOP SERVICE & LABOUR FEE (SEPARATE FROM PARTS) */}
+          <div className="bg-[#070c16] border border-[#182438] rounded-2xl p-4 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-zinc-200 tracking-wider uppercase flex items-center gap-1.5">
+                <Wrench className="w-3.5 h-3.5 text-amber-400" />
+                <span>Workshop Service Charge / Labour Fee</span>
+              </label>
+              <span className="text-[11px] font-mono text-amber-300 font-bold">
+                {serviceFeeNum > 0 ? `Rs. ${serviceFeeNum.toLocaleString()}` : 'Free / No Charge'}
+              </span>
+            </div>
+            <p className="text-[11px] text-zinc-400 leading-snug">
+              Official service charge, labour, bike wash, and inspection fees (entered separately from replacement parts).
+            </p>
 
-          {/* FIELD 5: PARTS REPLACED / WORK CHECKLIST (EXACT PHOTO COLORS & SHAPES) */}
-          <div>
-            <label className="block text-xs font-bold text-zinc-300 tracking-wider uppercase mb-2">
-              Parts Replaced / Work Checklist ({parts.length})
-            </label>
-
-            {/* Checklist items in photo style */}
-            <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
-              {COMMON_PARTS.map((item) => {
-                const isChecked = parts.includes(item);
-                return (
-                  <button
-                    type="button"
-                    key={item}
-                    onClick={() => togglePart(item)}
-                    className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left text-xs sm:text-sm font-medium transition-all cursor-pointer ${
-                      isChecked
-                        ? 'bg-[#241a08] text-amber-200 border border-amber-500/80 shadow-sm'
-                        : 'bg-[#070c16] text-zinc-400 border border-[#182338] hover:border-zinc-700'
-                    }`}
-                  >
-                    {isChecked ? (
-                      <CheckSquare className="w-4 h-4 text-amber-400 shrink-0" />
-                    ) : (
-                      <Square className="w-4 h-4 text-zinc-600 shrink-0" />
-                    )}
-                    <span className="truncate">{item}</span>
-                  </button>
-                );
-              })}
+            <div className="relative">
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-zinc-400 font-mono">
+                Rs.
+              </span>
+              <input
+                type="number"
+                min="0"
+                value={serviceFee}
+                onChange={(e) => setServiceFee(e.target.value)}
+                placeholder="e.g. 1200"
+                className="w-full bg-[#060a12] border border-[#1c2940] focus:border-amber-400 focus:ring-1 focus:ring-amber-400 rounded-xl pl-11 pr-14 py-2.5 text-sm text-white font-mono placeholder-zinc-600 transition-colors outline-none"
+              />
+              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-zinc-500 font-medium">
+                LKR
+              </span>
             </div>
 
-            {/* Custom Part Input Bar */}
-            <div className="flex items-center gap-2 mt-2.5">
-              <input
-                type="text"
-                value={customPart}
-                onChange={(e) => setCustomPart(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleAddCustomPart();
-                  }
-                }}
-                placeholder="Add other custom part..."
-                className="flex-1 bg-[#060a12] border border-[#182438] focus:border-cyan-400 rounded-xl px-3.5 py-2 text-xs text-white placeholder-zinc-500 outline-none"
-              />
-              <button
-                type="button"
-                onClick={handleAddCustomPart}
-                className="px-4 py-2 rounded-xl bg-[#131d2f] hover:bg-[#1c2a42] text-xs font-bold text-zinc-200 border border-[#22334e] transition-colors cursor-pointer"
-              >
-                Add
-              </button>
+            {/* Quick preset buttons for routine service fees */}
+            <div className="flex items-center gap-1.5 flex-wrap pt-1">
+              <span className="text-[10px] text-zinc-500 font-medium mr-1">Presets:</span>
+              {[
+                { label: 'Free (Warranty)', val: '0' },
+                { label: 'Rs. 1,000', val: '1000' },
+                { label: 'Rs. 1,200', val: '1200' },
+                { label: 'Rs. 1,500', val: '1500' },
+              ].map((p) => (
+                <button
+                  type="button"
+                  key={p.val}
+                  onClick={() => setServiceFee(p.val)}
+                  className={`px-2.5 py-1 rounded-lg text-[10px] font-semibold border transition-all cursor-pointer ${
+                    serviceFee === p.val
+                      ? 'bg-amber-500/20 text-amber-300 border-amber-500/50'
+                      : 'bg-[#0f1726] text-zinc-400 border-[#1c283d] hover:text-zinc-200'
+                  }`}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* FIELD 5: INDIVIDUAL PARTS USED WITH SEPARATE ITEM COSTS */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-zinc-300 tracking-wider uppercase flex items-center gap-1.5">
+                <ClipboardList className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Parts Replaced & Consumables ({parts.length})</span>
+              </label>
+              <span className="text-[11px] font-mono text-cyan-400 font-bold">
+                Parts Total: Rs. {partsTotalNum.toLocaleString()}
+              </span>
+            </div>
+            <p className="text-[11px] text-zinc-400">
+              Input or edit the individual cost for each item used. These will be itemized under Maintenance Costs.
+            </p>
+
+            {/* Checklist items with inline price input */}
+            <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+              {COMMON_PARTS.map((item) => {
+                const isChecked = parts.includes(item);
+                const currentItemCost = partCosts[item] || DEFAULT_PART_PRICES[item] || '500';
+
+                return (
+                  <div
+                    key={item}
+                    className={`p-2.5 rounded-xl border transition-all ${
+                      isChecked
+                        ? 'bg-[#151d2a] border-amber-500/50 shadow-sm'
+                        : 'bg-[#070c16] border-[#182338] hover:border-zinc-700'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2.5">
+                      {/* Checkbox and Label */}
+                      <button
+                        type="button"
+                        onClick={() => togglePart(item)}
+                        className="flex items-center gap-2.5 text-left text-xs sm:text-sm font-medium transition-all cursor-pointer flex-1 min-w-0"
+                      >
+                        {isChecked ? (
+                          <CheckSquare className="w-4 h-4 text-amber-400 shrink-0" />
+                        ) : (
+                          <Square className="w-4 h-4 text-zinc-600 shrink-0" />
+                        )}
+                        <span className={`truncate ${isChecked ? 'text-zinc-100 font-semibold' : 'text-zinc-400'}`}>
+                          {item}
+                        </span>
+                      </button>
+
+                      {/* Individual Part Cost Input */}
+                      {isChecked ? (
+                        <div className="flex items-center gap-1.5 shrink-0 bg-[#090e17] border border-[#23334d] px-2 py-1 rounded-lg">
+                          <span className="text-[10px] text-zinc-400 font-mono">Rs.</span>
+                          <input
+                            type="number"
+                            min="0"
+                            value={partCosts[item] || ''}
+                            onChange={(e) => handleUpdatePartCost(item, e.target.value)}
+                            placeholder="Cost"
+                            className="w-16 bg-transparent text-right text-xs font-mono font-bold text-amber-300 outline-none"
+                            title={`Cost for ${item}`}
+                          />
+                        </div>
+                      ) : (
+                        <span className="text-[10px] font-mono text-zinc-600 shrink-0">
+                          ~Rs. {DEFAULT_PART_PRICES[item]}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+
+              {/* Any additional custom parts that were added */}
+              {parts
+                .filter((p) => !COMMON_PARTS.includes(p))
+                .map((customItem) => (
+                  <div
+                    key={customItem}
+                    className="p-2.5 rounded-xl border bg-[#151d2a] border-cyan-500/50 flex items-center justify-between gap-2.5"
+                  >
+                    <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                      <CheckSquare className="w-4 h-4 text-cyan-400 shrink-0" />
+                      <span className="text-xs sm:text-sm font-semibold text-cyan-100 truncate">
+                        {customItem}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex items-center gap-1.5 bg-[#090e17] border border-[#23334d] px-2 py-1 rounded-lg">
+                        <span className="text-[10px] text-zinc-400 font-mono">Rs.</span>
+                        <input
+                          type="number"
+                          min="0"
+                          value={partCosts[customItem] || ''}
+                          onChange={(e) => handleUpdatePartCost(customItem, e.target.value)}
+                          placeholder="Cost"
+                          className="w-16 bg-transparent text-right text-xs font-mono font-bold text-cyan-300 outline-none"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => togglePart(customItem)}
+                        className="p-1 text-zinc-500 hover:text-rose-400 transition-colors"
+                        title="Remove part"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+            </div>
+
+            {/* Custom Part Input Bar with dedicated name & cost */}
+            <div className="bg-[#080d17] border border-[#162134] rounded-xl p-2.5 space-y-2">
+              <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider">
+                Add Custom Part & Price
+              </span>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={customPart}
+                  onChange={(e) => setCustomPart(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddCustomPart();
+                    }
+                  }}
+                  placeholder="Part name (e.g. Brake Pads, O-Ring)"
+                  className="flex-1 bg-[#060a12] border border-[#1c2940] focus:border-cyan-400 rounded-xl px-3 py-1.5 text-xs text-white placeholder-zinc-500 outline-none"
+                />
+                <div className="relative w-24">
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-zinc-500 font-mono">
+                    Rs.
+                  </span>
+                  <input
+                    type="number"
+                    min="0"
+                    value={customPartCost}
+                    onChange={(e) => setCustomPartCost(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddCustomPart();
+                      }
+                    }}
+                    placeholder="Price"
+                    className="w-full bg-[#060a12] border border-[#1c2940] focus:border-cyan-400 rounded-xl pl-7 pr-2 py-1.5 text-xs text-white font-mono placeholder-zinc-500 outline-none"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={handleAddCustomPart}
+                  className="px-3.5 py-1.5 rounded-xl bg-[#142034] hover:bg-[#1d2d48] text-xs font-bold text-cyan-300 border border-[#233552] transition-colors cursor-pointer shrink-0"
+                >
+                  Add Part
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* LIVE TOTAL COST SUMMARY CARD */}
+          <div className="bg-gradient-to-br from-[#0c1422] to-[#080d16] border border-[#1e2f4a] rounded-2xl p-4 shadow-md space-y-2.5">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <span className="text-xs uppercase font-bold text-zinc-400 tracking-wider flex items-center gap-1.5">
+                <DollarSign className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Service Total Cost Summary</span>
+              </span>
+              <div className="text-right">
+                <span className="text-xs text-zinc-400 mr-2">Service Record Total:</span>
+                <span className="font-mono font-black text-base sm:text-lg text-emerald-400">
+                  Rs. {totalCostNum.toLocaleString()} LKR
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 text-xs font-mono pt-2 border-t border-[#162338]">
+              <div className="text-zinc-400">
+                Labour / Workshop:{' '}
+                <span className="text-zinc-200 font-semibold">
+                  Rs. {serviceFeeNum.toLocaleString()}
+                </span>
+              </div>
+              <div className="text-zinc-400 text-right">
+                Parts ({parts.length} items):{' '}
+                <span className="text-zinc-200 font-semibold">
+                  Rs. {partsTotalNum.toLocaleString()}
+                </span>
+              </div>
+            </div>
+
+            <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-2 text-[11px] text-emerald-300/90 leading-snug flex items-start gap-1.5">
+              <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+              <span>
+                <strong>Display Rule:</strong> The service record will display only the total cost (Rs. {totalCostNum.toLocaleString()} LKR). The individual parts and labour costs will be itemized under the <strong>'Maintenance Costs'</strong> tab.
+              </span>
             </div>
           </div>
 

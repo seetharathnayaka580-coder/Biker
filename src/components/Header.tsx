@@ -28,10 +28,11 @@ import {
   Send,
   Phone,
   Bell,
+  DollarSign,
 } from 'lucide-react';
 import { AppState, AuthSession } from '../types';
 
-export type ActiveTab = 'home' | 'vehicle' | 'service' | 'notes' | 'dealers' | 'owner_control';
+export type ActiveTab = 'home' | 'vehicle' | 'service' | 'costs' | 'notes' | 'dealers' | 'owner_control';
 
 interface HeaderProps {
   state: AppState;
@@ -41,6 +42,7 @@ interface HeaderProps {
   onSignOut: () => void;
   onOpenPrint: () => void;
   onOpenSchedule: () => void;
+  onOpenUserManual?: () => void;
   onExportData: () => void;
   onImportData: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onResetToDefaults: () => void;
@@ -65,6 +67,7 @@ export const Header: React.FC<HeaderProps> = ({
   onSignOut,
   onOpenPrint,
   onOpenSchedule,
+  onOpenUserManual,
   onExportData,
   onImportData,
   onResetToDefaults,
@@ -125,6 +128,17 @@ export const Header: React.FC<HeaderProps> = ({
       activeClass: 'bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-400 text-zinc-950 font-black shadow-[0_0_22px_rgba(245,158,11,0.55)] border-amber-300 scale-[1.02]',
       inactiveClass: 'bg-[#181207] text-amber-200/90 hover:text-amber-100 border-amber-500/30 hover:border-amber-400 hover:bg-amber-950/50',
       iconColor: 'text-amber-400',
+    },
+    {
+      id: 'costs' as ActiveTab,
+      label: 'Maintenance Cost',
+      sub: 'Expenses & Budget',
+      icon: DollarSign,
+      badge: 'LKR',
+      badgeColor: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40',
+      activeClass: 'bg-gradient-to-r from-emerald-500 via-teal-500 to-green-600 text-zinc-950 font-black shadow-[0_0_22px_rgba(16,185,129,0.55)] border-emerald-300 scale-[1.02]',
+      inactiveClass: 'bg-[#081812] text-emerald-200/90 hover:text-emerald-100 border-emerald-500/30 hover:border-emerald-400 hover:bg-emerald-950/50',
+      iconColor: 'text-emerald-400',
     },
     {
       id: 'notes' as ActiveTab,
@@ -337,6 +351,18 @@ export const Header: React.FC<HeaderProps> = ({
                 <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-amber-400/25 text-amber-200 border border-amber-400/35 uppercase tracking-widest hidden sm:inline">
                   AI
                 </span>
+              </button>
+            )}
+
+            {onOpenUserManual && (
+              <button
+                type="button"
+                onClick={onOpenUserManual}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold text-amber-300 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/35 hover:border-amber-400 transition-all cursor-pointer shadow-sm active:scale-95"
+                title="View Official Bajaj Pulsar N160 User Manual & Specs"
+              >
+                <BookOpen className="w-3.5 h-3.5 text-amber-400" />
+                <span>N160 Manual</span>
               </button>
             )}
 

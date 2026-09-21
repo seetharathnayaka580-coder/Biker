@@ -3,11 +3,13 @@ import { Header, ActiveTab } from './components/Header';
 import { HomeTab } from './components/HomeTab';
 import { VehicleRegistrationTab } from './components/VehicleRegistrationTab';
 import { ServiceTab } from './components/ServiceTab';
+import { MaintenanceCostTab } from './components/MaintenanceCostTab';
 import { MaintenanceNotesTab } from './components/MaintenanceNotesTab';
 import { GoogleMapsServiceLocator } from './components/GoogleMapsServiceLocator';
 import { OwnerManagerControlTab } from './components/OwnerManagerControlTab';
 import { PrintBookletModal } from './components/PrintBookletModal';
 import { ScheduleGuideModal } from './components/ScheduleGuideModal';
+import { UserManualModal } from './components/UserManualModal';
 import { LoginPage } from './components/LoginPage';
 import { AppSplashScreen } from './components/AppSplashScreen';
 import { InstallAppModal } from './components/InstallAppModal';
@@ -16,7 +18,7 @@ import { UserProfileModal } from './components/UserProfileModal';
 import { ServiceThresholdAlertModal } from './components/ServiceThresholdAlertModal';
 import { QuickFaqModal } from './components/QuickFaqModal';
 import { FloatingAiButton } from './components/FloatingAiButton';
-import { AppState, AuthSession, MaintenanceNote, ServiceRecord, VehicleDetails } from './types';
+import { AppState, AuthSession, MaintenanceExpense, MaintenanceNote, ServiceRecord, VehicleDetails } from './types';
 import { loadState, saveState, calculateServiceStats } from './utils/formatters';
 import {
   isThresholdReached,
@@ -36,6 +38,9 @@ import {
   deleteServiceFromCloud,
   addNoteToCloud,
   deleteNoteFromCloud,
+  addExpenseToCloud,
+  updateExpenseInCloud,
+  deleteExpenseFromCloud,
   clearAllBikeDataFromCloud,
   initializeFirestoreSeed,
   signOutFromFirebase,
@@ -68,6 +73,7 @@ export default function App() {
   const [syncStatus, setSyncStatus] = useState<'synced' | 'syncing' | 'offline' | 'error'>('syncing');
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [showUserManualModal, setShowUserManualModal] = useState(false);
   const [showClearModal, setShowClearModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showAlertModal, setShowAlertModal] = useState(false);
@@ -280,10 +286,69 @@ export default function App() {
     if (!isAdmin) return;
     try {
       clearSnooze();
+      const updatedServices = [newService, ...state.services];
+      let updatedExpenses = [...(state.expenses || [])];
+      const newExpensesToAdd: MaintenanceExpense[] = [];
+
+      // If service has individual item costs (service fee and/or parts), record each item separately in Maintenance Costs
+      if (newService.items && newService.items.length > 0) {
+        newService.items.forEach((item, index) => {
+          if (item.amount > 0) {
+            const isLabour =
+              item.category === 'labour_fee' ||
+              item.name.toLowerCase().includes('labour') ||
+              item.name.toLowerCase().includes('service charge') ||
+              item.name.toLowerCase().includes('service fee');
+
+            const itemExp: MaintenanceExpense = {
+              id: `exp-${newService.id}-${index}`,
+              title: `${newService.label} - ${item.name}`,
+              amount: item.amount,
+              category: item.category || (isLabour ? 'labour_fee' : 'spares_parts'),
+              date: newService.date,
+              km: newService.km,
+              vendor: newService.dealer || 'Authorized Workshop',
+              invoiceNo: `SVC-${newService.km}KM`,
+              paymentMethod: 'cash',
+              note: isLabour
+                ? `Official workshop service & labour fee for ${newService.label}`
+                : `Individual replacement part for ${newService.label}`,
+              serviceId: newService.id,
+              createdAt: new Date().toISOString(),
+            };
+            newExpensesToAdd.push(itemExp);
+            addExpenseToCloud(itemExp, activeBikeId).catch(console.warn);
+          }
+        });
+      } else if (newService.cost && newService.cost > 0) {
+        // Fallback for single total cost if no itemized list was provided
+        const linkedExp: MaintenanceExpense = {
+          id: `exp-${newService.id}`,
+          title: `${newService.label} (Routine Service Total)`,
+          amount: newService.cost,
+          category: 'service',
+          date: newService.date,
+          km: newService.km,
+          vendor: newService.dealer || 'Authorized Workshop',
+          invoiceNo: `SVC-${newService.km}KM`,
+          paymentMethod: 'cash',
+          note: newService.note || '',
+          serviceId: newService.id,
+          createdAt: new Date().toISOString(),
+        };
+        newExpensesToAdd.push(linkedExp);
+        addExpenseToCloud(linkedExp, activeBikeId).catch(console.warn);
+      }
+
+      if (newExpensesToAdd.length > 0) {
+        updatedExpenses = [...newExpensesToAdd, ...updatedExpenses];
+      }
+
       setState((prev) => ({
         ...prev,
         odometer: Math.max(prev.odometer, newService.km),
-        services: [newService, ...prev.services],
+        services: updatedServices,
+        expenses: updatedExpenses,
       }));
       setSyncStatus('syncing');
       await addServiceToCloud(newService, activeBikeId);
@@ -297,15 +362,76 @@ export default function App() {
   const handleDeleteService = async (id: string) => {
     if (!isAdmin) return;
     try {
+      const expensesToDelete = (state.expenses || []).filter(
+        (e) => e.serviceId === id || e.id === `exp-${id}` || e.id.startsWith(`exp-${id}-`)
+      );
+
       setState((prev) => ({
         ...prev,
         services: prev.services.filter((s) => s.id !== id),
+        expenses: (prev.expenses || []).filter(
+          (e) => e.serviceId !== id && e.id !== `exp-${id}` && !e.id.startsWith(`exp-${id}-`)
+        ),
       }));
       setSyncStatus('syncing');
+
+      // Delete linked expense items from cloud
+      expensesToDelete.forEach((exp) => {
+        deleteExpenseFromCloud(exp.id, activeBikeId).catch(console.warn);
+      });
+
       await deleteServiceFromCloud(id, activeBikeId);
       setSyncStatus('synced');
     } catch (e) {
       console.warn('Could not delete service from Firestore:', e);
+      setSyncStatus('offline');
+    }
+  };
+
+  const handleAddExpense = async (newExpense: MaintenanceExpense) => {
+    if (!isAdmin) return;
+    try {
+      setState((prev) => ({
+        ...prev,
+        expenses: [newExpense, ...(prev.expenses || [])],
+      }));
+      setSyncStatus('syncing');
+      await addExpenseToCloud(newExpense, activeBikeId);
+      setSyncStatus('synced');
+    } catch (e) {
+      console.warn('Could not persist expense to Firestore:', e);
+      setSyncStatus('offline');
+    }
+  };
+
+  const handleUpdateExpense = async (updatedExpense: MaintenanceExpense) => {
+    if (!isAdmin) return;
+    try {
+      setState((prev) => ({
+        ...prev,
+        expenses: (prev.expenses || []).map((e) => (e.id === updatedExpense.id ? updatedExpense : e)),
+      }));
+      setSyncStatus('syncing');
+      await updateExpenseInCloud(updatedExpense, activeBikeId);
+      setSyncStatus('synced');
+    } catch (e) {
+      console.warn('Could not update expense in Firestore:', e);
+      setSyncStatus('offline');
+    }
+  };
+
+  const handleDeleteExpense = async (id: string) => {
+    if (!isAdmin) return;
+    try {
+      setState((prev) => ({
+        ...prev,
+        expenses: (prev.expenses || []).filter((e) => e.id !== id),
+      }));
+      setSyncStatus('syncing');
+      await deleteExpenseFromCloud(id, activeBikeId);
+      setSyncStatus('synced');
+    } catch (e) {
+      console.warn('Could not delete expense from Firestore:', e);
       setSyncStatus('offline');
     }
   };
@@ -447,6 +573,7 @@ export default function App() {
         onSignOut={handleSignOut}
         onOpenPrint={() => setShowPrintModal(true)}
         onOpenSchedule={() => setShowScheduleModal(true)}
+        onOpenUserManual={() => setShowUserManualModal(true)}
         onOpenInstall={() => setShowInstallModal(true)}
         onOpenProfile={() => setShowProfileModal(true)}
         onOpenThresholdAlert={() => setShowAlertModal(true)}
@@ -470,6 +597,7 @@ export default function App() {
             onUpdateVehicle={handleUpdateVehicle}
             onNavigateToTab={setActiveTab}
             onOpenScheduleGuide={() => setShowScheduleModal(true)}
+            onOpenUserManual={() => setShowUserManualModal(true)}
             onOpenPrint={() => setShowPrintModal(true)}
             onOpenThresholdAlert={() => setShowAlertModal(true)}
             onOpenQuickFaq={(question) => {
@@ -486,6 +614,7 @@ export default function App() {
             isAdmin={isAdmin}
             onUpdateVehicle={handleUpdateVehicle}
             onOpenPrintBooklet={() => setShowPrintModal(true)}
+            onOpenUserManual={() => setShowUserManualModal(true)}
             onClearAllData={() => setShowClearModal(true)}
           />
         )}
@@ -500,10 +629,28 @@ export default function App() {
             onAddService={handleAddService}
             onDeleteService={handleDeleteService}
             onOpenScheduleGuide={() => setShowScheduleModal(true)}
+            onNavigateToCosts={() => setActiveTab('costs')}
           />
         )}
 
-        {/* TAB 4: MAINTENANCE NOTES (Garage Remarks & Quick Notes) */}
+        {/* TAB 4: MAINTENANCE COST MANAGEMENT (Expenses, Budget, Running Cost / KM) */}
+        {activeTab === 'costs' && (
+          <MaintenanceCostTab
+            expenses={state.expenses || []}
+            services={state.services}
+            odometer={state.odometer}
+            serviceInterval={state.serviceInterval}
+            targets={state.targets}
+            vehicle={state.vehicle}
+            isAdmin={isAdmin}
+            onAddExpense={handleAddExpense}
+            onUpdateExpense={handleUpdateExpense}
+            onDeleteExpense={handleDeleteExpense}
+            onOpenServiceTab={() => setActiveTab('service')}
+          />
+        )}
+
+        {/* TAB 5: MAINTENANCE NOTES (Garage Remarks & Quick Notes) */}
         {activeTab === 'notes' && (
           <MaintenanceNotesTab
             notes={state.notes}
@@ -564,6 +711,27 @@ export default function App() {
             setShowScheduleModal(false);
             setFaqInitialQuestion(question);
             setShowFaqModal(true);
+          }}
+          onOpenUserManual={() => {
+            setShowScheduleModal(false);
+            setShowUserManualModal(true);
+          }}
+        />
+      )}
+
+      {showUserManualModal && (
+        <UserManualModal
+          isOpen={showUserManualModal}
+          onClose={() => setShowUserManualModal(false)}
+          vehicle={state.vehicle}
+          onAskAi={(question) => {
+            setShowUserManualModal(false);
+            setFaqInitialQuestion(question);
+            setShowFaqModal(true);
+          }}
+          onOpenSchedule={() => {
+            setShowUserManualModal(false);
+            setShowScheduleModal(true);
           }}
         />
       )}
@@ -647,6 +815,10 @@ export default function App() {
           onNavigateToSchedule={() => {
             setShowFaqModal(false);
             setShowScheduleModal(true);
+          }}
+          onOpenUserManual={() => {
+            setShowFaqModal(false);
+            setShowUserManualModal(true);
           }}
           onAddNote={handleAddNote}
         />

@@ -24,6 +24,11 @@ service cloud.firestore {
       match /notes/{noteId} {
         allow read, write: if true;
       }
+
+      // Maintenance expenses subcollection
+      match /expenses/{expenseId} {
+        allow read, write: if true;
+      }
     }
   }
 }
